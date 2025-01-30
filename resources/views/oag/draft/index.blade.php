@@ -10,6 +10,25 @@
             <li class="breadcrumb-item active" aria-current="page" style="color: #333; font-weight: bold;">Legislation Board</li>
         </ol>
     </nav>
+<li class="nav-item dropdown" role="presentation">
+    <a class="nav-link dropdown-toggle" id="reference-dropdown" data-bs-toggle="dropdown" aria-expanded="false" 
+       style="background: radial-gradient(circle at top left, #ff416c, #ff4b2b); color: white; border-radius: 25px; font-weight: bold; text-transform: uppercase; box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6); transition: background 0.4s ease, transform 0.4s ease;">
+        Reference Tables
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="reference-dropdown" style="background: linear-gradient(145deg, #f0f0f0, #e0e0e0); border-radius: 20px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); padding: 10px;">
+    @foreach ([
+    ['name' => 'Counsels', 'route' => route('draft.counsels.index')],
+    ['name' => 'Bill Categories', 'route' => route('draft.bills.index')],
+    ['name' => 'Regulation Counsels', 'route' => route('draft.regulation_counsels.index')],
+    ['name' => 'Regulation Categories', 'route' => route('draft.regulations.index')],
+    ['name' => 'Ministries', 'route' => route('draft.ministry.index')],
+] as $item)
+    <li>
+        <a href="{{ $item['route'] }}">{{ $item['name'] }}</a>
+    </li>
+@endforeach
+    </ul>
+</li>
 
     <!-- Main Title -->
     <h1 class="text-center mb-4" style="font-family: 'Courier New', Courier, monospace; color: #333; text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3); border-bottom: 4px solid #ff4b2b; padding-bottom: 12px; transition: transform 0.3s ease;">
