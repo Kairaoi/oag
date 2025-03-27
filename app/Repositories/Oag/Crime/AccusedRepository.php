@@ -69,9 +69,9 @@ class AccusedRepository extends CustomBaseRepository
     $dataTableQuery = $this->getModelInstance()->newQuery()
         ->leftJoin('accused_offence', 'accused.id', '=', 'accused_offence.accused_id')
         ->leftJoin('offences', 'accused_offence.offence_id', '=', 'offences.id')
-        ->leftJoin('users', 'accused.lawyer_id', '=', 'users.id')
+ 
         ->leftJoin('offence_categories', 'offences.offence_category_id', '=', 'offence_categories.id')
-        ->select('accused.*', 'users.name as lawyer_name', 'offences.offence_name', 'offence_categories.category_name')
+        ->select('accused.*',  'offences.offence_name', 'offence_categories.category_name')
         ->distinct(); // To ensure distinct rows
 
     if (!empty($search)) {
@@ -93,7 +93,7 @@ class AccusedRepository extends CustomBaseRepository
     }
 
     if (!empty($order_by)) {
-        $validOrderBy = ['id', 'case_id', 'lawyer_id', 'island_id', 'first_name', 'last_name', 'accused_particulars', 'gender', 'date_of_birth', 'lawyer_name', 'offence_name', 'category_name'];
+        $validOrderBy = ['id', 'case_id',  'first_name', 'last_name', 'accused_particulars', 'gender', 'date_of_birth', 'lawyer_name', 'offence_name', 'category_name'];
         if (in_array($order_by, $validOrderBy)) {
             $dataTableQuery->orderBy($order_by, $sort);
         }

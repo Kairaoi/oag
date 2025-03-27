@@ -49,9 +49,57 @@ class CreateCriminalJusticeSystemTables extends Migration
             $table->foreignId('reason_for_closure_id')->nullable()->constrained('reasons_for_closure');
             $table->foreignId('lawyer_id')->constrained('users'); // Replaces council_id with lawyer_id
             $table->foreignId('island_id')->constrained('islands');
+            $table->string('court_case_number')->nullable();
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->softDeletes();
+            $table->timestamps();
+        });
+
+        Schema::create('case_reviews', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('case_id')->constrained('cases')->onDelete('cascade');
+            // Evidence status tracking
+            $table->enum('evidence_status', [
+                'pending_review',
+                'sufficient_evidence',
+                'insufficient_evidence',
+                'returned_to_police'
+            ])->default('pending_review');
+        
+            // Review details
+            $table->text('review_notes')->nullable(); // Made nullable for flexibility
+            $table->datetime('review_date');
+        
+            // Action tracking
+            $table->string('action_type')->nullable(); // Track review, reassignment, or court update
+            $table->foreignId('new_lawyer_id')->nullable()->constrained('users'); // Store reassigned lawyer
+            $table->text('reallocation_reason')->nullable(); // Store reason for reassignment
+            $table->string('court_case_number')->nullable(); // Store updated court case number
+        
+            // Record tracking
+            $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('updated_by')->nullable()->constrained('users');
+            $table->softDeletes();
+            $table->timestamps();
+        
+            // Performance indexing
+            $table->index('case_id');
+            // $table->index('lawyer_id');
+            $table->index('evidence_status');
+            $table->index('review_date');
+        });
+        
+
+        Schema::create('case_reallocations', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('case_id')->constrained('cases');
+            $table->foreignId('from_lawyer_id')->constrained('users');
+            $table->foreignId('to_lawyer_id')->constrained('users');
+            $table->text('reallocation_reason');
+            $table->date('reallocation_date');
+            $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->timestamps();
         });
 
@@ -59,8 +107,8 @@ class CreateCriminalJusticeSystemTables extends Migration
         Schema::create('accused', function (Blueprint $table) {
             $table->id();
             $table->foreignId('case_id')->constrained('cases');
-            $table->foreignId('lawyer_id')->constrained('users'); // Replaces council_id with lawyer_id
-            $table->foreignId('island_id')->constrained('islands');
+           
+          
             $table->string('first_name');
             $table->string('last_name');
             $table->text('accused_particulars');
@@ -146,6 +194,8 @@ class CreateCriminalJusticeSystemTables extends Migration
 
     public function down()
     {
+        
+       
         Schema::dropIfExists('reports');
         Schema::dropIfExists('report_groups');
         Schema::dropIfExists('accused_offence');
@@ -153,6 +203,8 @@ class CreateCriminalJusticeSystemTables extends Migration
         Schema::dropIfExists('offences');
         Schema::dropIfExists('victims');
         Schema::dropIfExists('accused');
+        Schema::dropIfExists('case_reallocations');
+        Schema::dropIfExists('case_reviews');
         Schema::dropIfExists('cases');
         Schema::dropIfExists('reasons_for_closure');
         Schema::dropIfExists('islands');

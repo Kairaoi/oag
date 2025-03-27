@@ -95,7 +95,7 @@ public function update(int $id, array $data): Model
     
     public function pluck(): \Illuminate\Support\Collection
     {
-        return $this->getModelInstance()->pluck('case_file_number', 'id');
+        return $this->getModelInstance()->pluck('case_name', 'id');
     }
   
 

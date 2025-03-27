@@ -16,13 +16,14 @@
 
     <form action="{{ route('crime.accused.store') }}" method="POST" class="p-4 shadow-lg rounded" style="background: linear-gradient(90deg, #ff416c, #ff4b2b); border-radius: 20px;">
         @csrf
+       
         <!-- Case Selection -->
         <div class="form-group">
             <label for="case_id" class="text-white">Case</label>
             <select class="form-control @error('case_id') is-invalid @enderror" id="case_id" name="case_id" required>
                 <option value="">Select a case</option>
                 @foreach($cases as $id => $name)
-                    <option value="{{ $id }}" {{ old('case_id') == $id ? 'selected' : '' }}>
+                    <option value="{{ $id }}" {{ (old('case_id') == $id || $selected_case_id == $id) ? 'selected' : '' }}>
                         {{ $name }}
                     </option>
                 @endforeach
@@ -34,42 +35,7 @@
             @enderror
         </div>
 
-        <!-- Council Selection -->
-        <div class="form-group">
-            <label for="lawyer_id" class="text-white">Council</label>
-            <select class="form-control @error('lawyer_id') is-invalid @enderror" id="lawyer_id" name="lawyer_id" required>
-                <option value="">Select a council</option>
-                @foreach($councils as $id => $name)
-                    <option value="{{ $id }}" {{ old('lawyer_id') == $id ? 'selected' : '' }}>
-                        {{ $name }}
-                    </option>
-                @endforeach
-            </select>
-            @error('lawyer_id')
-                <span class="invalid-feedback" role="alert">
-                    <strong>{{ $message }}</strong>
-                </span>
-            @enderror
-        </div>
-
-        <!-- Island Selection -->
-        <div class="form-group">
-            <label for="island_id" class="text-white">Island</label>
-            <select class="form-control @error('island_id') is-invalid @enderror" id="island_id" name="island_id" required>
-                <option value="">Select an island</option>
-                @foreach($islands as $id => $name)
-                    <option value="{{ $id }}" {{ old('island_id') == $id ? 'selected' : '' }}>
-                        {{ $name }}
-                    </option>
-                @endforeach
-            </select>
-            @error('island_id')
-                <span class="invalid-feedback" role="alert">
-                    <strong>{{ $message }}</strong>
-                </span>
-            @enderror
-        </div>
-
+       
         <!-- First Name -->
         <div class="form-group">
             <label for="first_name" class="text-white">First Name</label>
@@ -167,7 +133,7 @@
 
             <!-- Input for custom offence -->
             <input type="text" name="custom_offence" id="custom_offence_input" class="form-control mt-2" placeholder="Enter custom offence" style="display: none;">
-
+            
             @error('offences')
                 <span class="invalid-feedback" role="alert">
                     <strong>{{ $message }}</strong>
@@ -175,8 +141,29 @@
             @enderror
         </div>
 
-        <!-- Submit Button -->
-        <button type="submit" class="btn btn-primary btn-block">Create</button>
+        <!-- Workflow Options -->
+        <div class="form-group mt-3">
+            <div class="d-flex justify-content-between flex-wrap">
+                <div class="form-check mb-2">
+                    <input type="checkbox" name="add_another_accused" id="add_another_accused" value="1" class="form-check-input">
+                    <label class="form-check-label text-white" for="add_another_accused">
+                        Add another accused after saving
+                    </label>
+                </div>
+                
+                <div class="form-check mb-2">
+                    <input type="checkbox" name="continue_to_victim" id="continue_to_victim" value="1" class="form-check-input">
+                    <label class="form-check-label text-white" for="continue_to_victim">
+                        Continue to add victim after saving
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div class="form-group mt-4 text-center">
+            <button type="submit" class="btn btn-light btn-lg px-5">Create Accused</button>
+        </div>
     </form>
 </div>
 @endsection
@@ -185,6 +172,19 @@
 <script>
     document.getElementById('add_custom_offence').addEventListener('change', function() {
         document.getElementById('custom_offence_input').style.display = this.checked ? 'block' : 'none';
+    });
+    
+    // Make the workflow options mutually exclusive
+    document.getElementById('add_another_accused').addEventListener('change', function() {
+        if(this.checked) {
+            document.getElementById('continue_to_victim').checked = false;
+        }
+    });
+    
+    document.getElementById('continue_to_victim').addEventListener('change', function() {
+        if(this.checked) {
+            document.getElementById('add_another_accused').checked = false;
+        }
     });
 </script>
 @endpush

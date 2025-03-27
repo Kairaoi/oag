@@ -18,8 +18,8 @@ class Accused extends Model
 
     protected $fillable = [
         'case_id',
-        'lawyer_id',
-        'island_id',
+        
+      
         'first_name',
         'last_name',
         'accused_particulars',
@@ -31,8 +31,8 @@ class Accused extends Model
 
     public static $rules = [
         'case_id' => 'required|exists:cases,id',
-        'lawyer_id' => 'required|exists:users,id',  // Update to 'lawyer_id'
-        'island_id' => 'required|exists:islands,id',
+       
+      
         'first_name' => 'required|string',
         'last_name' => 'required|string',
         'accused_particulars' => 'required|string',

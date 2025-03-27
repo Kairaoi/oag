@@ -57,6 +57,7 @@ class CriminalCase extends Model
         'date_of_allocation',
         'date_file_closed',
         'reason_for_closure_id',
+        'court_case_number',
         'lawyer_id',
         'island_id',
         'created_by',

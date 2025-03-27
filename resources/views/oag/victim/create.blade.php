@@ -17,13 +17,18 @@
     <!-- Form -->
     <form action="{{ route('crime.victim.store') }}" method="POST" class="p-4 shadow-lg rounded" style="background: linear-gradient(90deg, #ff416c, #ff4b2b); border-radius: 20px;">
         @csrf
+        
+        <!-- Hidden field to track if coming from case view -->
+        @if(isset($selected_case_id))
+        <input type="hidden" name="from_case" value="1">
+        @endif
 
         <div class="form-group">
             <label for="case_id" class="text-white">Case</label>
             <select class="form-control @error('case_id') is-invalid @enderror" id="case_id" name="case_id" required>
                 <option value="">Select a case</option>
                 @foreach($cases as $id => $name)
-                    <option value="{{ $id }}" {{ old('case_id') == $id ? 'selected' : '' }}>
+                    <option value="{{ $id }}" {{ old('case_id', $selected_case_id ?? '') == $id ? 'selected' : '' }}>
                         {{ $name }}
                     </option>
                 @endforeach
@@ -40,7 +45,7 @@
             <select class="form-control @error('lawyer_id') is-invalid @enderror" id="lawyer_id" name="lawyer_id" required>
                 <option value="">Select a council</option>
                 @foreach($councils as $id => $name)
-                    <option value="{{ $id }}" {{ old('lawyer_id') == $id ? 'selected' : '' }}>
+                    <option value="{{ $id }}" {{ old('lawyer_id', $selected_lawyer_id ?? '') == $id ? 'selected' : '' }}>
                         {{ $name }}
                     </option>
                 @endforeach
@@ -124,7 +129,9 @@
             @enderror
         </div>
 
-        <button type="submit" class="btn btn-light btn-lg btn-block" style="border-radius: 30px; font-weight: bold;">Create</button>
+        <div class="form-group mt-4 text-center">
+            <button type="submit" class="btn btn-light btn-lg px-5">Create Victim</button>
+        </div>
     </form>
 </div>
 @endsection

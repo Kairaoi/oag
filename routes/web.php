@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Oag\Crime\CrimeBoardController;
 use App\Http\Controllers\Oag\Crime\CriminalCaseController;
+use App\Http\Controllers\Oag\Crime\CaseReviewController;
 use App\Http\Controllers\Oag\Crime\OffenceController;
 use App\Http\Controllers\Oag\Crime\OffenceCategoryController;
 use App\Http\Controllers\Oag\Crime\AccusedController;
@@ -52,6 +53,19 @@ Route::group([
 ], function () {
     Route::resource('boards', \App\Http\Controllers\OAG\crime\CrimeBoardController::class, ['only' => ['index']]);
 
+    
+
+    Route::match(['get', 'post'], 'CaseReview/datatables', [CaseReviewController::class, 'getDataTables'])->name('CaseReview.datatables');
+    Route::get('CaseReview/{id}/create', [CaseReviewController::class, 'create'])->name('CaseReview.create');
+    // Route to store case review data
+Route::post('CaseReview/store', [CaseReviewController::class, 'store'])->name('CaseReview.store');
+
+// You can also use a resource route if you want to handle all the standard actions:
+Route::resource('CaseReview', CaseReviewController::class)->except(['create', 'store']);
+
+    Route::get('crime/criminalCase/{id}/createAccused', [App\Http\Controllers\Oag\Crime\CriminalCaseController::class, 'createAccused'])
+    ->name('criminalCase.createAccused');
+
     Route::match(['get', 'post'], 'criminalCase/datatables', [CriminalCaseController::class, 'getDataTables'])->name('criminalCase.datatables');
     Route::resource('criminalCase', CriminalCaseController::class);
 
@@ -69,7 +83,8 @@ Route::group([
 
     // Route::match(['get', 'post'], 'council/datatables', [CouncilController::class, 'getDataTables'])->name('council.datatables');
     // Route::resource('council', CouncilController::class);
-
+    Route::get('crime/criminalCase/{id}/create-victim', [App\Http\Controllers\Oag\Crime\CriminalCaseController::class, 'createVictim'])
+    ->name('criminalCase.createVictim');
     Route::match(['get', 'post'], 'victim/datatables', [VictimController::class, 'getDataTables'])->name('victim.datatables');
     Route::resource('victim', VictimController::class);
 

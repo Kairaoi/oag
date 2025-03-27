@@ -31,6 +31,7 @@
                     <th>Case File Number</th>
                     <th>Case Name</th>
                     <th>Date File Received</th>
+                    <th>Date File Closed</th>
                     <th>Date of Allocation</th>
                     <th>Reason for Closure</th>
                     <th>Island Name</th>
@@ -92,6 +93,16 @@ $(document).ready(function() {
                 }
             },
             {
+    data: 'date_file_closed',
+    name: 'date_file_closed',
+    defaultContent: 'Not Close', // Set default content for null or undefined values
+    render: function(data, type, row) {
+        // Convert ISO 8601 date to a more readable format or show 'N/A' if empty
+        return data ? new Date(data).toLocaleDateString() : 'N/A';
+    }
+},
+
+            {
                 data: 'date_of_allocation',
                 name: 'date_of_allocation',
                 render: function(data, type, row) {
@@ -103,33 +114,39 @@ $(document).ready(function() {
             { data: 'island_name', name: 'island_name', defaultContent: 'N/A' },
             { data: 'lawyer_name', name: 'lawyer_name', defaultContent: 'N/A' },
             {
-                data: null,
-                title: 'Actions',
-                render: function(data, type, row) {
-                    return `
-                        <div class="dropdown">
-                            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton${row.id}" data-bs-toggle="dropdown" aria-expanded="false">
-                                Actions
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton${row.id}">
-                                <li>
-                                    <a class="dropdown-item" href="${"{{ route('crime.criminalCase.edit', ':id') }}".replace(':id', row.id)}">Edit</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="${"{{ route('crime.criminalCase.show', ':id') }}".replace(':id', row.id)}">Show</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); if(confirm('Are you sure you want to delete this item?')) document.getElementById('delete-form-${row.id}').submit();">Delete</a>
-                                    <form id="delete-form-${row.id}" action="${"{{ route('crime.criminalCase.destroy', ':id') }}".replace(':id', row.id)}" method="POST" class="d-none">
-                                        @csrf
-                                        @method('DELETE')
-                                    </form>
-                                </li>
-                            </ul>
-                        </div>
-                    `;
-                }
-            }
+    data: null,
+    title: 'Actions',
+    render: function(data, type, row) {
+        return `
+            <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton${row.id}" data-bs-toggle="dropdown" aria-expanded="false">
+                    Actions
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton${row.id}">
+                    <li>
+                        <a class="dropdown-item" href="${@json(route('crime.criminalCase.edit', ':id')).replace(':id', row.id)}">Edit</a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="${@json(route('crime.criminalCase.show', ':id')).replace(':id', row.id)}">Show</a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="${@json(route('crime.CaseReview.create', ':id')).replace(':id', row.id)}">Case Review</a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); if(confirm('Are you sure you want to delete this item?')) document.getElementById('delete-form-${row.id}').submit();">Delete</a>
+                        <form id="delete-form-${row.id}" action="${@json(route('crime.criminalCase.destroy', ':id')).replace(':id', row.id)}" method="POST" class="d-none">
+                            @csrf
+                            @method('DELETE')
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        `;
+    }
+}
+
+
+
         ],
         dom: 'lBfrtip',
         buttons: [

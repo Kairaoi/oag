@@ -65,7 +65,7 @@
         </div>
 
         <!-- Date File Closed -->
-        <div class="form-group">
+        <!-- <div class="form-group">
             <label for="date_file_closed" class="text-white">Date File Closed</label>
             <input type="date" class="form-control @error('date_file_closed') is-invalid @enderror" id="date_file_closed" name="date_file_closed" value="{{ old('date_file_closed') }}">
             @error('date_file_closed')
@@ -73,10 +73,10 @@
                     <strong>{{ $message }}</strong>
                 </span>
             @enderror
-        </div>
+        </div> -->
 
         <!-- Reason for Closure -->
-        <div class="form-group">
+        <!-- <div class="form-group">
             <label for="reason_for_closure_id" class="text-white">Reason for Closure</label>
             <select class="form-control @error('reason_for_closure_id') is-invalid @enderror" id="reason_for_closure_id" name="reason_for_closure_id">
                 <option value="">Select a reason</option>
@@ -91,7 +91,7 @@
                     <strong>{{ $message }}</strong>
                 </span>
             @enderror
-        </div>
+        </div> -->
 
         <!-- Lawyer Field -->
         <div class="form-group">
@@ -131,6 +131,12 @@
 
         <!-- Submit Button -->
         <button type="submit" class="btn btn-light btn-lg btn-block" style="border-radius: 30px; font-weight: bold;">Create Case</button>
+        @if(isset($criminalCase))
+    <a href="{{ route('crime.criminalCase.createAccused', $criminalCase->id) }}" class="btn btn-success">
+        Add Accused to this Case
+    </a>
+@endif
+
     </form>
 </div>
 @endsection

@@ -77,8 +77,8 @@ class CriminalJusticeSystemSeeder extends Seeder
         for ($i = 1; $i <= 100; $i++) {
             DB::table('accused')->insert([
                 'case_id' => $caseIds[$i - 1],
-                'lawyer_id' => $lawyerIds[array_rand($lawyerIds)],
-                'island_id' => $islandIds[array_rand($islandIds)],
+               
+               
                 'first_name' => $faker->firstName,
                 'last_name' => $faker->lastName,
                 'accused_particulars' => 'The accused, ' . $faker->firstName . ' ' . $faker->lastName . ', is alleged to have committed a crime on ' . $faker->date . '. The charge involves theft of property valued at $' . $faker->numberBetween(1000, 10000) . '. The accused has a history of similar offenses and faces potential legal consequences.',

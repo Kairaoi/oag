@@ -3,9 +3,11 @@
 namespace App\Repositories\Oag\Crime;
 
 use App\Models\OAG\Crime\OffenceCategory;
+use App\Models\OAG\Crime\Offence;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Collection;
 use App\Repositories\CustomBaseRepository;
+use DB;
 
 class OffenceCategoryRepository extends CustomBaseRepository
 {
@@ -90,6 +92,21 @@ class OffenceCategoryRepository extends CustomBaseRepository
     public function pluck(): \Illuminate\Support\Collection
 {
     return $this->getModelInstance()->pluck('category_name', 'id');
+}
+public function groupOffencesByCategory()
+{
+    return DB::table('offences')
+        ->join('offence_categories', 'offences.offence_category_id', '=', 'offence_categories.id')
+        ->select(
+            'offence_categories.category_name as category',
+            'offences.id',
+            'offences.offence_name as name'
+        )
+        ->get()
+        ->groupBy('category')
+        ->map(function ($offences) {
+            return $offences->pluck('name', 'id');
+        });
 }
 
 }
