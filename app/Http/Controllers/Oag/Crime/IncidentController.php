@@ -62,42 +62,107 @@ class IncidentController extends Controller
      *
      * @return Response
      */
-    public function create()
-    {
-        $cases = $this->criminalCaseRepository->pluck();
-        $islands = $this->islandRepository->pluck();
-        $lawyers = $this->userRepository->pluck();
-        return view('oag.incident.create')
-            ->with('cases', $cases)
-            ->with('islands', $islands)
-            ->with('lawyers', $lawyers);
-    }
+   /**
+ * Show the form for creating a new incident.
+ *
+ * @return Response
+ */
+public function create()
+{
+    $cases = $this->criminalCaseRepository->pluck();
+    $islands = $this->islandRepository->pluck();
+    $lawyers = $this->userRepository->pluck();
+    return view('oag.incident.create', [
+        'cases' => $cases,
+        'islands' => $islands,
+        'lawyers' => $lawyers,
+        'selected_case_id' => null,
+        'selected_lawyer_id' => null
+    ]);
+}
 
     /**
-     * Store a newly created incident in storage.
-     *
-     * @param Request $request
-     * @return Response
-     */
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'case_id' => 'required|exists:cases,id',
-            'lawyer_id' => 'required|exists:users,id',
-            'island_id' => 'required|exists:islands,id',
-            'date_of_incident_start' => 'nullable|date',
-            'date_of_incident_end' => 'nullable|date',
-            'place_of_incident' => 'required|string|max:255',
-        ]);
-
-        $data['created_by'] = auth()->id();
-        $data['updated_by'] = null;
-
-        $incident = $this->incidentRepository->create($data);
-
-        return redirect()->route('crime.incident.index')->with('success', 'Incident created successfully.');
+ * Show form for creating an incident for a specific case.
+ * 
+ * @param int $id Criminal case ID
+ * @return \Illuminate\Http\RedirectResponse|\Illuminate\View\View
+ */
+public function createForCase($id)
+{
+    // Verify case exists
+    $criminalCase = $this->criminalCaseRepository->getById($id);
+    
+    if (!$criminalCase) {
+        return redirect()->route('crime.criminalCase.index')
+            ->with('error', 'Criminal Case not found');
     }
+    
+    // Get necessary data for dropdowns
+    $cases = $this->criminalCaseRepository->pluck();
+    $islands = $this->islandRepository->pluck();
+    $lawyers = $this->userRepository->pluck();
+    
+    // If lawyer is assigned to case, pre-select them
+    $preSelectedLawyer = $criminalCase->lawyer_id ?? null;
+    
+    return view('oag.incident.create', [
+        'cases' => $cases,
+        'islands' => $islands,
+        'lawyers' => $lawyers,
+        'selected_case_id' => $id,
+        'selected_lawyer_id' => $preSelectedLawyer
+    ]);
+}
 
+   /**
+ * Store a newly created incident in storage.
+ *
+ * @param Request $request
+ * @return Response
+ */
+public function store(Request $request)
+{
+    // Validate request data
+    $data = $request->validate([
+        'case_id' => 'required|exists:cases,id',
+        'lawyer_id' => 'required|exists:users,id',
+        'island_id' => 'required|exists:islands,id',
+        'date_of_incident_start' => 'required|date',
+        'date_of_incident_end' => 'nullable|date|after_or_equal:date_of_incident_start',
+        'place_of_incident' => 'required|string|max:255',
+    ]);
+    
+    // Add tracking fields
+    $data['created_by'] = auth()->id();
+    $data['updated_by'] = null;
+    
+    // Optional logging
+    \Log::info('Creating incident with data:', $data);
+    
+    // Create the incident
+    $incident = $this->incidentRepository->create($data);
+
+    if ($incident) {
+        // Check if we should add another incident
+        if ($request->has('add_another_incident') && $request->input('add_another_incident') == 1) {
+            return redirect()->route('crime.criminalCase.createIncident', ['id' => $data['case_id']])
+                ->with('success', 'Incident added successfully. Add another incident.');
+        }
+        
+        // Check if we should return to case
+        if ($request->has('return_to_case') && $request->input('return_to_case') == 1) {
+            return redirect()->route('crime.criminalCase.show', $data['case_id'])
+                ->with('success', 'Incident added successfully.');
+        }
+        
+        // Default: go to incident index
+        return redirect()->route('crime.incident.index')
+            ->with('success', 'Incident created successfully.');
+    } else {
+        return redirect()->back()
+            ->with('error', 'Failed to create incident.');
+    }
+}
     /**
      * Display the specified incident.
      *

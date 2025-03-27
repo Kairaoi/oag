@@ -130,7 +130,7 @@ class CreateCriminalJusticeSystemTables extends Migration
             $table->string('last_name');
             $table->text('victim_particulars');
             $table->enum('gender', ['Male', 'Female', 'Other']);
-            $table->date('date_of_birth');
+            $table->date('date_of_birth'); $table->enum('age_group', ['Under 13', 'Under 15', 'Under 18', 'Above 18'])->nullable();
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->softDeletes();

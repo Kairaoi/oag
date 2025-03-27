@@ -357,4 +357,25 @@ public function createVictim($id)
     // Call the victim controller's createForCase method
     return app(VictimController::class)->createForCase($id);
 }
+/**
+ * Show the form for creating a new incident for a specific case.
+ *
+ * @param int $id
+ * @return \Illuminate\Http\RedirectResponse|\Illuminate\View\View
+ */
+public function createIncident($id)
+{
+    // Attempt to find the criminal case
+    $criminalCase = $this->criminalCaseRepository->getById($id);
+    
+    // If case not found, redirect with an error
+    if (!$criminalCase) {
+        return redirect()->route('crime.criminalCase.index')
+            ->with('error', 'Criminal Case not found');
+    }
+    
+    // Call the incident controller's createForCase method
+    return app(IncidentController::class)->createForCase($id);
+}
+
 }

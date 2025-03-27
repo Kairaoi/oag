@@ -119,43 +119,46 @@ class VictimController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
-    {
-        // Validate data
-        $data = $request->validate([
-            'case_id' => 'required|exists:cases,id',
-            'lawyer_id' => 'required|exists:users,id',
-            'island_id' => 'required|exists:islands,id',
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'victim_particulars' => 'required|string',
-            'gender' => 'required|in:Male,Female,Other',
-            'date_of_birth' => 'required|date',
-        ]);
+    /**
+ * Store a newly created victim in storage.
+ *
+ * @param Request $request
+ * @return \Illuminate\Http\RedirectResponse
+ */
+public function store(Request $request)
+{
+    $data = $request->validate([
+        'case_id' => 'required|exists:cases,id',
+        'lawyer_id' => 'required|exists:users,id',
+        'island_id' => 'required|exists:islands,id',
+        'first_name' => 'required|string|max:255',
+        'last_name' => 'required|string|max:255',
+        'victim_particulars' => 'required|string',
+        'gender' => 'required|in:Male,Female,Other',
+        'date_of_birth' => 'required|date',
+        'age_group' => 'required|in:Under 13,Under 15,Under 18,Above 18',
+    ]);
+    // Add additional fields
+    $data['created_by'] = auth()->id();
+    $data['updated_by'] = null;
 
-        // Add additional fields
-        $data['created_by'] = auth()->id();
-        $data['updated_by'] = null;
+    // Create the victim
+    $victim = $this->victimRepository->create($data);
 
-        // Create the victim
-        $victim = $this->victimRepository->create($data);
-
-        // Check if creation was successful
-        if ($victim) {
-            // If redirected from case view, return to case detail
-            if ($request->has('from_case')) {
-                return redirect()->route('crime.criminalCase.show', $data['case_id'])
-                    ->with('success', 'Victim added successfully to case.');
-            }
-            
-            return redirect()->route('crime.victim.index')
-                ->with('success', 'Victim created successfully.');
-        } else {
-            return redirect()->back()
-                ->with('error', 'Failed to create victim.');
-        }
+    // For debugging
+    \Log::info('Victim created', ['id' => $victim->id, 'case_id' => $data['case_id']]);
+    \Log::info('Request has continue_to_incident?', ['has_flag' => $request->has('continue_to_incident')]);
+    
+    // Check if creation was successful
+    if ($victim) {
+        // ALWAYS redirect to incident creation view after creating a victim
+        return redirect()->route('crime.criminalCase.createIncident', ['id' => $data['case_id']])
+            ->with('success', 'Victim added successfully. Please add incident details now.');
+    } else {
+        return redirect()->back()
+            ->with('error', 'Failed to create victim.');
     }
-
+}
     /**
      * Display the specified victim.
      *
@@ -241,6 +244,7 @@ class VictimController extends Controller
             'victim_particulars' => 'required|string',
             'gender' => 'required|in:Male,Female,Other',
             'date_of_birth' => 'required|date',
+            'age_group' => 'required|in:Under 13,Under 15,Under 18,Above 18',
         ]);
 
         $data['updated_by'] = auth()->id();

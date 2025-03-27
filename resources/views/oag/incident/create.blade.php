@@ -6,7 +6,7 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-4">
             <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
-            <li class="breadcrumb-item"><a href="{{ route('crime.incident.index') }}">Incidents</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('crime.incident.index') }}">crime.s</a></li>
             <li class="breadcrumb-item active" aria-current="page">Create New Incident</li>
         </ol>
     </nav>
@@ -18,12 +18,18 @@
     <form action="{{ route('crime.incident.store') }}" method="POST" class="p-4 shadow-lg rounded" style="background: linear-gradient(90deg, #ff416c, #ff4b2b); border-radius: 20px;">
         @csrf
 
+        <!-- Hidden field for tracking if from case -->
+        @if(isset($selected_case_id))
+        <input type="hidden" name="from_case" value="1">
+        @endif
+
+        <!-- Case Selection -->
         <div class="form-group">
             <label for="case_id" class="text-white">Case</label>
             <select class="form-control @error('case_id') is-invalid @enderror" id="case_id" name="case_id" required>
                 <option value="">Select a case</option>
                 @foreach($cases as $id => $name)
-                    <option value="{{ $id }}" {{ old('case_id') == $id ? 'selected' : '' }}>
+                    <option value="{{ $id }}" {{ old('case_id', $selected_case_id ?? '') == $id ? 'selected' : '' }}>
                         {{ $name }}
                     </option>
                 @endforeach
@@ -35,12 +41,13 @@
             @enderror
         </div>
 
+        <!-- Lawyer Selection -->
         <div class="form-group">
             <label for="lawyer_id" class="text-white">Lawyer</label>
             <select class="form-control @error('lawyer_id') is-invalid @enderror" id="lawyer_id" name="lawyer_id" required>
                 <option value="">Select a lawyer</option>
                 @foreach($lawyers as $id => $name)
-                    <option value="{{ $id }}" {{ old('lawyer_id') == $id ? 'selected' : '' }}>
+                    <option value="{{ $id }}" {{ old('lawyer_id', $selected_lawyer_id ?? '') == $id ? 'selected' : '' }}>
                         {{ $name }}
                     </option>
                 @endforeach
@@ -99,7 +106,21 @@
             @enderror
         </div>
 
-        <button type="submit" class="btn btn-light btn-lg btn-block" style="border-radius: 30px; font-weight: bold;">Create</button>
+        <div class="form-group mt-4">
+            <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-light" style="border-radius: 30px; font-weight: bold;">
+                    Create Incident
+                </button>
+                
+                <button type="submit" name="add_another_incident" value="1" class="btn btn-info" style="border-radius: 30px; font-weight: bold;">
+                    Create & Add Another Incident
+                </button>
+                
+                <button type="submit" name="return_to_case" value="1" class="btn btn-success" style="border-radius: 30px; font-weight: bold;">
+                    Create & Return to Case
+                </button>
+            </div>
+        </div>
     </form>
 </div>
 @endsection

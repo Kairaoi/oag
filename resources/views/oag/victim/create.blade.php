@@ -118,6 +118,21 @@
                 </span>
             @enderror
         </div>
+        <div class="form-group">
+    <label for="age_group" class="text-white">Age Group</label>
+    <select class="form-control @error('age_group') is-invalid @enderror" id="age_group" name="age_group">
+        <option value="">Select age group</option>
+        <option value="Under 13" {{ old('age_group') == 'Under 13' ? 'selected' : '' }}>Under 13</option>
+        <option value="Under 15" {{ old('age_group') == 'Under 15' ? 'selected' : '' }}>Under 15</option>
+        <option value="Under 18" {{ old('age_group') == 'Under 18' ? 'selected' : '' }}>Under 18</option>
+        <option value="Above 18" {{ old('age_group') == 'Above 18' ? 'selected' : '' }}>Above 18</option>
+    </select>
+    @error('age_group')
+        <span class="invalid-feedback" role="alert">
+            <strong>{{ $message }}</strong>
+        </span>
+    @enderror
+</div>
 
         <div class="form-group">
             <label for="date_of_birth" class="text-white">Date of Birth</label>

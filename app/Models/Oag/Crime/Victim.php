@@ -52,14 +52,15 @@ class Victim extends Model
     protected $fillable = [
         'case_id',
         'lawyer_id',
+        'island_id',
         'first_name',
         'last_name',
-        'island_id',
         'victim_particulars',
         'gender',
         'date_of_birth',
+        'age_group', // Add this line
         'created_by',
-        'updated_by',
+        'updated_by'
     ];
 
     /**
