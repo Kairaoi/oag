@@ -51,17 +51,20 @@ class Victim extends Model
      */
     protected $fillable = [
         'case_id',
-        'lawyer_id',
-        'island_id',
         'first_name',
         'last_name',
-        'victim_particulars',
+        'address',
+        'contact',
+        'phone',
         'gender',
+        'age',
         'date_of_birth',
-        'age_group', // Add this line
+        'island_id',
+        'age_group',
         'created_by',
-        'updated_by'
+        'updated_by',
     ];
+    
 
     /**
      * Validation rules for the model.

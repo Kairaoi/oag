@@ -13,6 +13,7 @@ use App\Http\Controllers\Oag\Crime\VictimController;
 use App\Http\Controllers\Oag\Crime\ReasonsForClosureController;
 use App\Http\Controllers\Oag\Crime\IncidentController;
 use App\Http\Controllers\Oag\Crime\ReportController;
+use App\Http\Controllers\Oag\Crime\CourtHearingController;
 
 
 
@@ -25,6 +26,8 @@ use App\Http\Controllers\Oag\Civil\CourtAttendanceController;
 
 
 use App\Http\Controllers\OAG\Legal\LegalTaskController;
+
+use App\Http\Controllers\RolePermissionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -83,7 +86,7 @@ Route::resource('CaseReview', CaseReviewController::class)->except(['create', 's
 
     // Route::match(['get', 'post'], 'council/datatables', [CouncilController::class, 'getDataTables'])->name('council.datatables');
     // Route::resource('council', CouncilController::class);
-    Route::get('crime/criminalCase/{id}/create-victim', [App\Http\Controllers\Oag\Crime\CriminalCaseController::class, 'createVictim'])
+    Route::get('criminalCase/{id}/create-victim', [App\Http\Controllers\Oag\Crime\CriminalCaseController::class, 'createVictim'])
     ->name('criminalCase.createVictim');
     Route::match(['get', 'post'], 'victim/datatables', [VictimController::class, 'getDataTables'])->name('victim.datatables');
     Route::resource('victim', VictimController::class);
@@ -100,7 +103,25 @@ Route::resource('CaseReview', CaseReviewController::class)->except(['create', 's
     Route::get('execute-report/{reportId}', [ReportController::class, 'executeReport'])->name('executeReport');
     Route::get('show-results/{reportId}', [ReportController::class, 'showResults'])->name('showResults');
     Route::get('pims-dashboard/{reportId}', [ReportController::class, 'pimsDashboard'])->name('dashboard');
-    
+
+   // Karina te optional parameter {id?} nakon te route
+Route::get('criminalCase/appeal/create/{id?}', [CriminalCaseController::class, 'createAppeal'])
+->name('criminalCase.createAppeal');
+
+// Add new criminal case accept/reject routes here
+Route::post('criminalCase/{id}/accept', [CriminalCaseController::class, 'accept'])->name('criminalCase.accept');
+Route::post('criminalCase/{id}/reject', [CriminalCaseController::class, 'reject'])->name('criminalCase.reject');
+
+Route::post('criminalCase/appeal/store', [CriminalCaseController::class, 'storeAppeal'])
+->name('criminalCase.storeAppeal');
+
+// Ngkana ko kainnanoia te appeal datatables route
+Route::match(['get', 'post'], 'criminalCase/appeal/datatables', [CriminalCaseController::class, 'getAppealDataTables'])
+->name('criminalCase.appealDatatables');
+
+// Court Hearings Routes
+Route::match(['get', 'post'], 'court-hearings/datatables', [CourtHearingController::class, 'getDataTables'])->name('court-hearings.datatables');
+Route::resource('court-hearings', CourtHearingController::class);
 
  
 });
@@ -179,3 +200,17 @@ Route::group([
     Route::resource('regulation_counsels', \App\Http\Controllers\OAG\Draft\RegulationCounselController::class);
 });
 
+
+
+
+
+Route::group([
+    'as' => 'admin.',
+    'prefix' => 'admin',
+    'middleware' => ['auth'],
+], function () {
+    Route::get('/roles', [RolePermissionController::class, 'index'])->name('roles.index');
+    Route::post('/roles', [RolePermissionController::class, 'storeRole'])->name('roles.store');
+    Route::post('/permissions', [RolePermissionController::class, 'storePermission'])->name('permissions.store');
+    Route::post('/assign-role', [RolePermissionController::class, 'assignRole'])->name('roles.assign');
+});

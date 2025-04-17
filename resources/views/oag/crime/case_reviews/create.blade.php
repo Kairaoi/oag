@@ -9,7 +9,7 @@
             <li class="breadcrumb-item active" aria-current="page">Create Case Review</li>
         </ol>
     </nav>
-    
+
     <h1 class="text-center mb-4" style="font-family: 'Courier New', Courier, monospace; color: #333; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);">Create Case Review</h1>
 
     <form action="{{ route('crime.CaseReview.store') }}" method="POST" class="p-4 shadow-lg rounded" style="background: linear-gradient(90deg, #ff416c, #ff4b2b); border-radius: 20px;">
@@ -31,13 +31,11 @@
             @enderror
         </div>
 
-        <!-- Action Type Selection -->
+        <!-- Action Type -->
         <div class="form-group">
             <label for="action_type" class="text-white">Action Type</label>
             <select class="form-control" id="action_type" name="action_type" required>
-                <option value="review">Review Case</option>
-                <option value="reallocate">Reallocate Case</option>
-                <option value="update_court_info">Update Court Information</option>
+                <option value="review" selected>Review Case</option>
             </select>
         </div>
 
@@ -57,31 +55,7 @@
             @enderror
         </div>
 
-        <!-- Conditionally displayed fields based on action type -->
-        <div id="reallocation_container" style="display: none;">
-            <div class="form-group">
-                <label for="new_lawyer_id" class="text-white">Reallocate To</label>
-                <select class="form-control" id="new_lawyer_id" name="new_lawyer_id">
-                    <option value="">Select new lawyer</option>
-                    @foreach($councils as $id => $name)
-                        <option value="{{ $id }}">{{ $name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="reallocation_reason" class="text-white">Reason for Reallocation</label>
-                <textarea class="form-control" id="reallocation_reason" name="reallocation_reason" rows="2"></textarea>
-            </div>
-        </div>
-
-        <!-- Court Info -->
-        <div class="form-group" id="court_info_container" style="display: none;">
-            <label for="court_case_number" class="text-white">Court Case Number</label>
-            <input type="text" class="form-control" id="court_case_number" name="court_case_number">
-        </div>
-
-        <!-- Reason for Closure (moved below Evidence Status) -->
+        <!-- Reason for Closure -->
         <div class="form-group" id="reason_for_closure_container" style="display: none;">
             <label for="reason_for_closure_id" class="text-white">Reason for Closure</label>
             <select class="form-control @error('reason_for_closure_id') is-invalid @enderror" id="reason_for_closure_id" name="reason_for_closure_id">
@@ -96,6 +70,53 @@
                 </span>
             @enderror
         </div>
+
+       <!-- Offence, Category & Particulars Row -->
+<div class="row">
+    <!-- Offence -->
+    <div class="form-group col-md-4" id="offence_container" style="display: none;">
+        <label for="offence_id" class="text-white">Offence</label>
+        <select class="form-control @error('offence_id') is-invalid @enderror" id="offence_id" name="offence_id">
+            <option value="">Select an offence</option>
+            @foreach($offences as $id => $offence)
+                <option value="{{ $id }}" {{ old('offence_id') == $id ? 'selected' : '' }}>{{ $offence }}</option>
+            @endforeach
+        </select>
+        @error('offence_id')
+            <span class="invalid-feedback" role="alert">
+                <strong>{{ $message }}</strong>
+            </span>
+        @enderror
+    </div>
+
+    <!-- Category -->
+    <div class="form-group col-md-4" id="category_container" style="display: none;">
+        <label for="category_id" class="text-white">Offence Category</label>
+        <select class="form-control @error('category_id') is-invalid @enderror" id="category_id" name="category_id">
+            <option value="">Select a category</option>
+            @foreach($categories as $id => $category)
+                <option value="{{ $id }}" {{ old('category_id') == $id ? 'selected' : '' }}>{{ $category }}</option>
+            @endforeach
+        </select>
+        @error('category_id')
+            <span class="invalid-feedback" role="alert">
+                <strong>{{ $message }}</strong>
+            </span>
+        @enderror
+    </div>
+
+    <!-- Offence Particulars -->
+    <div class="form-group col-md-4" id="offence_particulars_container" style="display: none;">
+        <label for="offence_particulars" class="text-white">Offence Particulars</label>
+        <input type="text" class="form-control @error('offence_particulars') is-invalid @enderror" id="offence_particulars" name="offence_particulars" value="{{ old('offence_particulars') }}">
+        @error('offence_particulars')
+            <span class="invalid-feedback" role="alert">
+                <strong>{{ $message }}</strong>
+            </span>
+        @enderror
+    </div>
+</div>
+
 
         <!-- Review Notes -->
         <div class="form-group">
@@ -119,7 +140,8 @@
             @enderror
         </div>
 
-        <!-- Hidden Fields for Created By and Updated By -->
+        <!-- Hidden Fields -->
+        <input type="hidden" id="date_file_closed" name="date_file_closed" value="">
         <input type="hidden" name="created_by" value="{{ auth()->id() }}">
         <input type="hidden" name="updated_by" value="{{ auth()->id() }}">
 
@@ -131,47 +153,41 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const actionTypeSelect = document.getElementById('action_type');
-        const reallocationContainer = document.getElementById('reallocation_container');
-        const courtInfoContainer = document.getElementById('court_info_container');
-        const reasonForClosureContainer = document.getElementById('reason_for_closure_container');
-        const evidenceStatusSelect = document.getElementById('evidence_status');
-        
-        // Function to toggle display of fields based on selected action and evidence status
-        function toggleActionFields() {
-            const action = actionTypeSelect.value;
-            const evidenceStatus = evidenceStatusSelect.value;
+        const evidenceStatus = document.getElementById('evidence_status');
+        const reasonContainer = document.getElementById('reason_for_closure_container');
+        const dateFileClosed = document.getElementById('date_file_closed');
 
-            // Toggle Reallocation Fields
-            if (action === 'reallocate') {
-                reallocationContainer.style.display = 'block';
-            } else {
-                reallocationContainer.style.display = 'none';
+        const offenceContainer = document.getElementById('offence_container');
+        const categoryContainer = document.getElementById('category_container');
+        const offenceParticularsContainer = document.getElementById('offence_particulars_container');
+
+        function updateFields() {
+            const status = evidenceStatus.value;
+
+            // Hide all dynamic fields initially
+            reasonContainer.style.display = 'none';
+            offenceContainer.style.display = 'none';
+            categoryContainer.style.display = 'none';
+            offenceParticularsContainer.style.display = 'none';
+            dateFileClosed.value = '';
+
+            if (status === 'insufficient_evidence' || status === 'returned_to_police') {
+                reasonContainer.style.display = 'block';
+                dateFileClosed.value = new Date().toISOString().slice(0, 16);
             }
 
-            // Toggle Court Info Fields
-            if (action === 'update_court_info') {
-                courtInfoContainer.style.display = 'block';
-            } else {
-                courtInfoContainer.style.display = 'none';
-            }
-
-            // Toggle Reason for Closure Fields based on Evidence Status
-            if (evidenceStatus === 'insufficient_evidence' || evidenceStatus === 'returned_to_police') {
-                reasonForClosureContainer.style.display = 'block';
-            } else {
-                reasonForClosureContainer.style.display = 'none';
+            if (status === 'sufficient_evidence') {
+                offenceContainer.style.display = 'block';
+                categoryContainer.style.display = 'block';
+                offenceParticularsContainer.style.display = 'block';
             }
         }
 
-        // Initial call to function to set field visibility on page load
-        toggleActionFields();
-
-        // Event listeners for dynamic field display
-        actionTypeSelect.addEventListener('change', toggleActionFields);
-        evidenceStatusSelect.addEventListener('change', toggleActionFields);
+        updateFields();
+        evidenceStatus.addEventListener('change', updateFields);
     });
 </script>
 @endpush
+
 
 @endsection

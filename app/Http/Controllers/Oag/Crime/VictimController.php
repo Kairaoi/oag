@@ -129,15 +129,19 @@ public function store(Request $request)
 {
     $data = $request->validate([
         'case_id' => 'required|exists:cases,id',
-        'lawyer_id' => 'required|exists:users,id',
-        'island_id' => 'required|exists:islands,id',
         'first_name' => 'required|string|max:255',
         'last_name' => 'required|string|max:255',
-        'victim_particulars' => 'required|string',
+        'address' => 'nullable|string',
+        'contact' => 'nullable|string',
+        'phone' => 'nullable|string',
         'gender' => 'required|in:Male,Female,Other',
+        'age' => 'required|string|max:10',
         'date_of_birth' => 'required|date',
-        'age_group' => 'required|in:Under 13,Under 15,Under 18,Above 18',
+        'island_id' => 'required|exists:islands,id',
+        'age_group' => 'nullable|in:Under 13,Under 15,Under 18,Above 18',
     ]);
+    
+
     // Add additional fields
     $data['created_by'] = auth()->id();
     $data['updated_by'] = null;
@@ -145,20 +149,19 @@ public function store(Request $request)
     // Create the victim
     $victim = $this->victimRepository->create($data);
 
-    // For debugging
+    // Log for debugging
     \Log::info('Victim created', ['id' => $victim->id, 'case_id' => $data['case_id']]);
-    \Log::info('Request has continue_to_incident?', ['has_flag' => $request->has('continue_to_incident')]);
-    
-    // Check if creation was successful
+
+    // Redirect to victim index after successful creation
     if ($victim) {
-        // ALWAYS redirect to incident creation view after creating a victim
-        return redirect()->route('crime.criminalCase.createIncident', ['id' => $data['case_id']])
-            ->with('success', 'Victim added successfully. Please add incident details now.');
+        return redirect()->route('crime.victim.index')
+            ->with('success', 'Victim created successfully.');
     } else {
         return redirect()->back()
             ->with('error', 'Failed to create victim.');
     }
 }
+
     /**
      * Display the specified victim.
      *

@@ -38,18 +38,73 @@ class CreateCriminalJusticeSystemTables extends Migration
             $table->timestamps();
         });
 
-        // Create Cases Table
+        // Create Courts of Appeal Table
+        Schema::create('courts_of_appeal', function (Blueprint $table) {
+            $table->id();
+            $table->string('court_name');
+            $table->text('description')->nullable();
+            $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('updated_by')->nullable()->constrained('users');
+            $table->softDeletes();
+            $table->timestamps();
+        });
+
+        // Create Cases Table - Modified to include appeal-related fields
         Schema::create('cases', function (Blueprint $table) {
             $table->id();
             $table->string('case_file_number')->unique();
             $table->date('date_file_received');
             $table->string('case_name');
             $table->date('date_of_allocation')->nullable();
-            $table->date('date_file_closed')->nullable();
-            $table->foreignId('reason_for_closure_id')->nullable()->constrained('reasons_for_closure');
-            $table->foreignId('lawyer_id')->constrained('users'); // Replaces council_id with lawyer_id
+            $table->foreignId('lawyer_id')->constrained('users');
             $table->foreignId('island_id')->constrained('islands');
-            $table->string('court_case_number')->nullable();
+            $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('updated_by')->nullable()->constrained('users');
+            // New fields for review status
+            $table->enum('status', ['pending', 'accepted', 'rejected', 'reallocate'])->default('pending');
+            $table->foreignId('reviewer_id')->nullable()->constrained('users');
+            $table->timestamp('reviewed_at')->nullable();
+            $table->text('rejection_reason')->nullable(); // Optional: To store reason for rejection
+            $table->softDeletes();
+            $table->timestamps();
+        });
+        // Create CourtHearings Table - ADD HERE
+        Schema::create('court_hearings', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('case_id')->constrained('cases')->onDelete('cascade');
+            $table->date('hearing_date');
+            $table->string('hearing_type'); 
+            $table->text('hearing_notes')->nullable();
+            $table->boolean('is_completed')->default(false);
+            
+            // Verdict fields
+            $table->boolean('has_verdict')->default(false);
+            $table->enum('verdict', ['guilty', 'not_guilty', 'dismissed', 'withdrawn', 'other'])->nullable();
+            $table->text('verdict_details')->nullable();
+            $table->date('verdict_date')->nullable();
+            $table->text('sentencing_details')->nullable();
+            
+            // Record tracking
+            $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('updated_by')->nullable()->constrained('users');
+            $table->softDeletes();
+            $table->timestamps();
+            
+            // Performance indexing
+            $table->index(['case_id', 'hearing_date']);
+            $table->index('has_verdict');
+        });
+
+        // Create Appeal Details Table
+        Schema::create('appeal_details', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('case_id')->constrained('cases')->onDelete('cascade');
+            $table->string('appeal_case_number')->nullable();
+            $table->date('appeal_filing_date')->nullable();
+            $table->enum('appeal_status', ['pending', 'in_progress', 'decided', 'withdrawn'])->default('pending');
+            $table->text('appeal_grounds')->nullable();
+            $table->text('appeal_decision')->nullable();
+            $table->date('appeal_decision_date')->nullable();
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->softDeletes();
@@ -59,38 +114,34 @@ class CreateCriminalJusticeSystemTables extends Migration
         Schema::create('case_reviews', function (Blueprint $table) {
             $table->id();
             $table->foreignId('case_id')->constrained('cases')->onDelete('cascade');
-            // Evidence status tracking
+        
+            // Review tracking
             $table->enum('evidence_status', [
                 'pending_review',
                 'sufficient_evidence',
                 'insufficient_evidence',
                 'returned_to_police'
             ])->default('pending_review');
-        
-            // Review details
-            $table->text('review_notes')->nullable(); // Made nullable for flexibility
+            $table->text('review_notes')->nullable();
             $table->datetime('review_date');
         
-            // Action tracking
-            $table->string('action_type')->nullable(); // Track review, reassignment, or court update
-            $table->foreignId('new_lawyer_id')->nullable()->constrained('users'); // Store reassigned lawyer
-            $table->text('reallocation_reason')->nullable(); // Store reason for reassignment
-            $table->string('court_case_number')->nullable(); // Store updated court case number
+            // Case closure fields moved here
+            $table->date('date_file_closed')->nullable();
+            $table->foreignId('reason_for_closure_id')->nullable()->constrained('reasons_for_closure');
         
-            // Record tracking
+                    
+            // Auditing
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->softDeletes();
             $table->timestamps();
         
-            // Performance indexing
             $table->index('case_id');
-            // $table->index('lawyer_id');
             $table->index('evidence_status');
             $table->index('review_date');
         });
         
-
+        
         Schema::create('case_reallocations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('case_id')->constrained('cases');
@@ -107,13 +158,15 @@ class CreateCriminalJusticeSystemTables extends Migration
         Schema::create('accused', function (Blueprint $table) {
             $table->id();
             $table->foreignId('case_id')->constrained('cases');
-           
-          
             $table->string('first_name');
             $table->string('last_name');
-            $table->text('accused_particulars');
+            $table->text('address')->nullable();
+            $table->text('contact')->nullable();
+            $table->text('phone')->nullable();            
             $table->enum('gender', ['Male', 'Female', 'Other']);
+            $table->string('age');
             $table->date('date_of_birth');
+            $table->foreignId('island_id')->constrained('islands');
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->softDeletes();
@@ -124,13 +177,16 @@ class CreateCriminalJusticeSystemTables extends Migration
         Schema::create('victims', function (Blueprint $table) {
             $table->id();
             $table->foreignId('case_id')->constrained('cases');
-            $table->foreignId('lawyer_id')->constrained('users'); // Replaces council_id with lawyer_id
-            $table->foreignId('island_id')->constrained('islands');
             $table->string('first_name');
             $table->string('last_name');
-            $table->text('victim_particulars');
+            $table->text('address')->nullable();
+            $table->text('contact')->nullable();
+            $table->text('phone')->nullable();            
             $table->enum('gender', ['Male', 'Female', 'Other']);
-            $table->date('date_of_birth'); $table->enum('age_group', ['Under 13', 'Under 15', 'Under 18', 'Above 18'])->nullable();
+            $table->string('age');
+            $table->date('date_of_birth');
+            $table->foreignId('island_id')->constrained('islands');
+            $table->enum('age_group', ['Under 13', 'Under 15', 'Under 18', 'Above 18'])->nullable();
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->softDeletes();
@@ -152,7 +208,7 @@ class CreateCriminalJusticeSystemTables extends Migration
         Schema::create('incidents', function (Blueprint $table) {
             $table->id();
             $table->foreignId('case_id')->constrained('cases');
-            $table->foreignId('lawyer_id')->constrained('users'); // Replaces council_id with lawyer_id
+            $table->foreignId('lawyer_id')->constrained('users');
             $table->foreignId('island_id')->constrained('islands');
             $table->date('date_of_incident_start')->nullable();
             $table->date('date_of_incident_end')->nullable();
@@ -177,7 +233,7 @@ class CreateCriminalJusticeSystemTables extends Migration
             $table->string('name');
             $table->text('description');
             $table->timestamps();
-            $table->softDeletes(); // Soft delete column
+            $table->softDeletes();
         });
 
         // Create Reports Table
@@ -186,16 +242,14 @@ class CreateCriminalJusticeSystemTables extends Migration
             $table->foreignId('report_group_id')->constrained('report_groups')->onDelete('cascade');
             $table->string('name');
             $table->text('description');
-            $table->longText('query'); // Use longText for SQL queries
+            $table->longText('query');
             $table->timestamps();
-            $table->softDeletes(); // Soft delete column
+            $table->softDeletes();
         });
     }
 
     public function down()
     {
-        
-       
         Schema::dropIfExists('reports');
         Schema::dropIfExists('report_groups');
         Schema::dropIfExists('accused_offence');
@@ -205,7 +259,10 @@ class CreateCriminalJusticeSystemTables extends Migration
         Schema::dropIfExists('accused');
         Schema::dropIfExists('case_reallocations');
         Schema::dropIfExists('case_reviews');
+        Schema::dropIfExists('appeal_details');
+        Schema::dropIfExists('court_hearings');
         Schema::dropIfExists('cases');
+        Schema::dropIfExists('courts_of_appeal');
         Schema::dropIfExists('reasons_for_closure');
         Schema::dropIfExists('islands');
         Schema::dropIfExists('offence_categories');

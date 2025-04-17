@@ -33,7 +33,7 @@
                     <th>Gender</th>
                     <th>Date of Birth</th>
                     <th>Age</th>
-                    <th>Accused Particulars</th>
+                    
                     
                     <th>Offence Name</th>
                     <th>Offence Category</th>
@@ -171,7 +171,7 @@ $(document).ready(function() {
                 return '';
             }
         },
-            { data: 'accused_particulars', name: 'accused_particulars' },
+           
             
             { data: 'offence_name', name: 'offence_name' },
             { data: 'category_name', name: 'category_name' },

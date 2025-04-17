@@ -2,12 +2,12 @@
 
 namespace App\Repositories\Oag\Crime;
 
-use App\Models\Oag\Crime\Victim;
+use App\Models\Oag\Crime\CourtsOfAppeal;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Collection;
 use App\Repositories\CustomBaseRepository;
 
-class VictimRepository extends CustomBaseRepository
+class CourtsOfAppealRepository extends CustomBaseRepository
 {
     /**
      * Return the model class name.
@@ -16,7 +16,7 @@ class VictimRepository extends CustomBaseRepository
      */
     public function model()
     {
-        return Victim::class;
+        return CourtsOfAppeal::class;
     }
 
     /**
@@ -66,51 +66,43 @@ class VictimRepository extends CustomBaseRepository
      */
     public function getForDataTable($search = '', $order_by = '', $sort = 'asc', $trashed = false): Collection
     {
-        // Create a new query instance for the model
-        $dataTableQuery = $this->getModelInstance()->newQuery();
-    
-        // Join the users table to get the creator's name
-        $dataTableQuery->leftJoin('users', 'victims.created_by', '=', 'users.id')
-                       ->select('victims.*', 'users.name as created_by_name');
-    
-        // Apply search filters
+        $dataTableQuery = $this->getModelInstance()->newQuery()
+            ->leftJoin('users as creators', 'courts_of_appeal.created_by', '=', 'creators.id')
+            ->leftJoin('users as updaters', 'courts_of_appeal.updated_by', '=', 'updaters.id')
+            ->select('courts_of_appeal.*', 'creators.name as created_by_name', 'updaters.name as updated_by_name')
+            ->distinct();
+
         if (!empty($search)) {
             $search = '%' . strtolower($search) . '%';
             $dataTableQuery->where(function ($query) use ($search) {
-                $query->whereRaw('LOWER(victims.first_name) LIKE ?', [$search])
-                      ->orWhereRaw('LOWER(victims.last_name) LIKE ?', [$search])
-                      ->orWhereRaw('LOWER(victims.gender) LIKE ?', [$search])
-                      ->orWhereRaw('LOWER(victims.age_group) LIKE ?', [$search])
-                      ->orWhereRaw('LOWER(victims.age) LIKE ?', [$search])
-                      ->orWhereRaw('LOWER(users.name) LIKE ?', [$search]);
+                $query->whereRaw('LOWER(courts_of_appeal.court_name) LIKE ?', [$search])
+                      ->orWhereRaw('LOWER(courts_of_appeal.description) LIKE ?', [$search])
+                      ->orWhereRaw('LOWER(creators.name) LIKE ?', [$search])
+                      ->orWhereRaw('LOWER(updaters.name) LIKE ?', [$search]);
             });
         }
-    
-        // Apply trashed logic if needed
+
         if ($trashed) {
             $dataTableQuery->onlyTrashed();
         }
-    
-        // Apply ordering
+
         if (!empty($order_by)) {
-            // Ensure $order_by is a valid column name
-            $validOrderBy = ['id', 'case_id', 'island_id', 'first_name', 'last_name', 'gender', 'date_of_birth', 'age', 'age_group', 'created_by', 'updated_by', 'created_at', 'updated_at'];
+            $validOrderBy = ['id', 'court_name', 'description', 'created_by', 'updated_by'];
             if (in_array($order_by, $validOrderBy)) {
                 $dataTableQuery->orderBy($order_by, $sort);
             }
         }
-    
-        // Execute the query and return results
+
         return $dataTableQuery->get();
     }
-    
+
     /**
-     * Get a collection of victim names by their IDs.
+     * Pluck court names.
      *
      * @return \Illuminate\Support\Collection
      */
     public function pluck(): \Illuminate\Support\Collection
     {
-        return $this->getModelInstance()->pluck('first_name', 'id');
+        return $this->getModelInstance()->pluck('court_name', 'id');
     }
 }

@@ -32,8 +32,9 @@
                     <th>Last Name</th>
                     <th>Gender</th>
                     <th>Date of Birth</th>
-                    <th>Victim Particulars</th>
-                    <th>Council Name</th>
+                    <th>Age</th>
+                    <th>Age Group</th>
+                    <th>Created By</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -150,13 +151,14 @@ $(document).ready(function() {
             { data: 'last_name', name: 'last_name' },
             { data: 'gender', name: 'gender' },
             { data: 'date_of_birth', name: 'date_of_birth' },
-            { data: 'victim_particulars', name: 'victim_particulars' },
-            { data: 'name', name: 'name' },
+            { data: 'age', name: 'age' },
+            { data: 'age_group', name: 'age_group' },
+            { data: 'created_by_name', name: 'created_by_name' },
             {
                 data: null,
                 title: 'Actions',
                 render: function(data, type, row) {
-                    return `
+                    return ` 
                         <div class="dropdown">
                             <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton${row.id}" data-bs-toggle="dropdown" aria-expanded="false">
                                 Actions

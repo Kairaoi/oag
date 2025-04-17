@@ -89,57 +89,54 @@ class AccusedController extends Controller
  */
 public function store(Request $request)
 {
-    \Log::info('Store method called'); // Basic log entry to confirm method execution
-    
+    \Log::info('Store method called');
+    \Log::info($request->all());
+
+    // Inject created_by before validation
+    $request->merge([
+        'created_by' => auth()->id(),
+        'updated_by' => null,
+    ]);
+
     // Validate request data
     $data = $request->validate([
-        'case_id' => 'required|exists:cases,id',
-        'first_name' => 'required|string|max:255',
-        'last_name' => 'required|string|max:255',
-        'accused_particulars' => 'required|string',
-        'gender' => 'required|in:Male,Female,Other',
+        'case_id'       => 'required|exists:cases,id',
+        'first_name'    => 'required|string|max:255',
+        'last_name'     => 'required|string|max:255',
+        'gender'        => 'required|in:Male,Female,Other',
         'date_of_birth' => 'required|date',
-        'offences' => 'nullable|array',
-        'offences.*' => 'exists:offences,id',
-        'custom_offence' => 'nullable|string|max:255',
+        'age'           => 'required|string|max:3',
+        'address'       => 'nullable|string',
+        'contact'       => 'nullable|string|max:255',
+        'phone'         => 'nullable|string|max:20',
+        'island_id'     => 'required|exists:islands,id',
+        'created_by'    => 'required|exists:users,id',
+        'updated_by'    => 'nullable|exists:users,id',
     ]);
-    
+
     \Log::info('Validated Data:', $data);
-    
-    $data['created_by'] = auth()->id(); 
-    $data['updated_by'] = null;
-    
+
+    // Create accused
     $accused = $this->accusedRepository->create($data);
-    
-    \Log::info('Request Data:', $request->all());
-    
-    if (!empty($data['offences'])) {
-        $accused->offences()->attach($data['offences']);
-    }
-    
-    // Check if custom offence is provided
-    if (!empty($data['custom_offence'])) {
-        $accused->custom_offence = $data['custom_offence'];
-        $accused->save();
-    }
-    
-    // Check if we should continue to victim creation
+
+    \Log::info('Accused Created:', $accused->toArray());
+
+    // Redirect logic
     if ($request->has('continue_to_victim') && $request->input('continue_to_victim') == 1) {
         return redirect()->route('crime.criminalCase.createVictim', $data['case_id'])
             ->with('success', 'Accused created successfully. Please add victim details now.');
     }
-    
-    // If adding another accused, stay on the accused creation form with the same case ID
+
     if ($request->has('add_another_accused') && $request->input('add_another_accused') == 1) {
         return redirect()->route('crime.criminalCase.createAccused', $data['case_id'])
             ->with('success', 'Accused created successfully. Add another accused.');
     }
-    
-    // Default: go to accused index
+
     return redirect()->route('crime.accused.index')
         ->with('success', 'Accused created successfully.');
 }
-    
+
+
 
 
 

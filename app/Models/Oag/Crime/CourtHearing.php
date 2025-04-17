@@ -5,12 +5,13 @@ namespace App\Models\Oag\Crime;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\User;
+use App\Models\Oag\Crime\CriminalCase;
 
-class Accused extends Model
+class CourtHearing extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'accused';
+    protected $table = 'court_hearings';
     protected $primaryKey = 'id';
     public $incrementing = true;
     protected $keyType = 'int';
@@ -18,25 +19,30 @@ class Accused extends Model
 
     protected $fillable = [
         'case_id',
-        'first_name',
-        'last_name',
-        'address',
-        'contact',
-        'phone',
-        'gender',
-        'age',
-        'date_of_birth',
-        'island_id',
+        'hearing_date',
+        'hearing_type',
+        'hearing_notes',
+        'is_completed',
+        'has_verdict',
+        'verdict',
+        'verdict_details',
+        'verdict_date',
+        'sentencing_details',
         'created_by',
         'updated_by',
     ];
 
     public static $rules = [
         'case_id' => 'required|exists:cases,id',
-        'first_name' => 'required|string',
-        'last_name' => 'required|string',
-        'gender' => 'required|in:Male,Female,Other',
-        'date_of_birth' => 'required|date',
+        'hearing_date' => 'required|date',
+        'hearing_type' => 'required|string',
+        'hearing_notes' => 'nullable|string',
+        'is_completed' => 'boolean',
+        'has_verdict' => 'boolean',
+        'verdict' => 'nullable|in:guilty,not_guilty,dismissed,withdrawn,other',
+        'verdict_details' => 'nullable|string',
+        'verdict_date' => 'nullable|date',
+        'sentencing_details' => 'nullable|string',
         'created_by' => 'required|exists:users,id',
         'updated_by' => 'nullable|exists:users,id',
     ];
@@ -44,11 +50,6 @@ class Accused extends Model
     public function case()
     {
         return $this->belongsTo(CriminalCase::class, 'case_id');
-    }
-
-    public function island()
-    {
-        return $this->belongsTo(Island::class, 'island_id');
     }
 
     public function createdBy()
@@ -59,10 +60,5 @@ class Accused extends Model
     public function updatedBy()
     {
         return $this->belongsTo(User::class, 'updated_by');
-    }
-
-    public function getGenderAttribute($value)
-    {
-        return ucfirst($value);
     }
 }

@@ -116,5 +116,13 @@ class OffenceRepository extends CustomBaseRepository
             return $offences->pluck('offence_name', 'id');
         });
     }
+
+    public function pluck2(): \Illuminate\Support\Collection
+{
+    return $this->getModelInstance()
+        ->orderBy('offence_name')
+        ->pluck('offence_name', 'id');
+}
+
     
 }

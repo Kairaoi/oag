@@ -10,6 +10,7 @@ use App\Repositories\Oag\Crime\UserRepository;
 use App\Repositories\Oag\Crime\ReasonsForClosureRepository;
 use App\Repositories\Oag\Crime\OffenceRepository;
 use App\Repositories\Oag\Crime\OffenceCategoryRepository;
+use App\Repositories\OAG\Crime\CourtsOfAppealRepository;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use DataTables;
@@ -23,6 +24,7 @@ class CriminalCaseController extends Controller
     protected $reasonsForClosureRepository;
     protected $offenceRepository;
     protected $offenceCategoryRepository;
+    protected $courtOfAppealRepository;
 
     /**
      * CriminalCaseController constructor.
@@ -42,7 +44,8 @@ class CriminalCaseController extends Controller
         UserRepository $userRepository,
         ReasonsForClosureRepository $reasonsForClosureRepository,
         OffenceRepository $offenceRepository,
-        OffenceCategoryRepository $offenceCategoryRepository
+        OffenceCategoryRepository $offenceCategoryRepository,
+        CourtsOfAppealRepository $courtOfAppealRepository
     ) {
         $this->criminalCaseRepository = $criminalCaseRepository;
         $this->accusedRepository = $accusedRepository;
@@ -51,6 +54,7 @@ class CriminalCaseController extends Controller
         $this->reasonsForClosureRepository = $reasonsForClosureRepository;
         $this->offenceRepository = $offenceRepository;
         $this->offenceCategoryRepository = $offenceCategoryRepository;
+        $this->courtOfAppealRepository = $courtOfAppealRepository;
     }
 
     /**
@@ -237,17 +241,12 @@ class CriminalCaseController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // Get the current case to exclude its case_file_number from unique validation
+        // Retrieve the criminal case
         $criminalCase = $this->criminalCaseRepository->getById($id);
-        
-        if (!$criminalCase) {
-            return redirect()->route('crime.criminalCase.index')
-                ->with('error', 'Criminal Case not found');
-        }
-
-        // Validate with exclusion for current case number
+    
+        // Validation rules
         $data = $request->validate([
-            'case_file_number'      => 'required|string|max:255|unique:cases,case_file_number,'.$id,
+            'case_file_number'      => 'required|string|max:255|unique:cases,case_file_number,' . $criminalCase->id,
             'date_file_received'    => 'required|date',
             'case_name'             => 'required|string|max:255',
             'date_of_allocation'    => 'nullable|date',
@@ -257,66 +256,24 @@ class CriminalCaseController extends Controller
             'island_id'             => 'required|exists:islands,id',
             'court_case_number'     => 'nullable|string|max:255',
         ]);
-        
-        // Set updated_by to current user
-        $data['updated_by'] = auth()->id();
-        
-        // Check for lawyer reallocation
-        $isLawyerChanged = $criminalCase->lawyer_id != $data['lawyer_id'];
-        
-        // Update the criminal case
-        $updated = $this->criminalCaseRepository->update($id, $data);
-        
-        if (!$updated) {
-            return redirect()->route('crime.criminalCase.index')
-                ->with('error', 'Failed to update case');
+    
+        $data['updated_by'] = auth()->id(); // Track who updated it
+    
+        // Check if lawyer_id has changed
+        if ((int) $data['lawyer_id'] !== (int) $criminalCase->lawyer_id) {
+            $data['status'] = 'reallocate';
+            \Log::info('Status changed to reallocate');
         }
-        
-        // If lawyer has changed, log the reallocation
-        if ($isLawyerChanged) {
-            $reallocation = [
-                'case_id' => $id,
-                'from_lawyer_id' => $criminalCase->lawyer_id,
-                'to_lawyer_id' => $data['lawyer_id'],
-                'reallocation_reason' => $request->input('reallocation_reason', 'Case reassigned during update'),
-                'reallocation_date' => now(),
-                'created_by' => auth()->id(),
-            ];
-            
-            // Use a try/catch in case the case_reallocations functionality is needed
-            try {
-                \DB::table('case_reallocations')->insert($reallocation);
-            } catch (\Exception $e) {
-                // Log the error but continue with the update
-                \Log::error('Failed to record case reallocation: ' . $e->getMessage());
-            }
-        }
-        
-        // Check if case is being closed
-        $isBeingClosed = !$criminalCase->date_file_closed && $data['date_file_closed'];
-        
-        // Create case review entry if case is being closed
-        if ($isBeingClosed && isset($data['reason_for_closure_id'])) {
-            try {
-                $reviewData = [
-                    'case_id' => $id,
-                    'evidence_status' => $request->input('evidence_status', 'insufficient_evidence'),
-                    'review_notes' => $request->input('closure_notes', 'Case closed during update'),
-                    'review_date' => now(),
-                    'action_type' => 'review',
-                    'created_by' => auth()->id(),
-                ];
-                
-                \DB::table('case_reviews')->insert($reviewData);
-            } catch (\Exception $e) {
-                // Log the error but continue with the update
-                \Log::error('Failed to create case review for closure: ' . $e->getMessage());
-            }
-        }
-
-        return redirect()->route('crime.criminalCase.index')
+    
+        // Update the criminal case with the validated data
+        // Ensure the status is updated correctly here
+        $this->criminalCaseRepository->update($id, $data);
+    
+        return redirect()->route('crime.criminalCase.edit', $id)
             ->with('success', 'Case updated successfully.');
     }
+    
+
 
     /**
      * Remove the specified criminal case from storage.
@@ -377,5 +334,140 @@ public function createIncident($id)
     // Call the incident controller's createForCase method
     return app(IncidentController::class)->createForCase($id);
 }
+
+/**
+ * Show form for creating an appeal case
+ * 
+ * @return \Illuminate\View\View
+ */
+/**
+ * Show form for creating an appeal case
+ *
+ * @param int|null $id The ID of the original case (optional)
+ * @return \Illuminate\View\View
+ */
+public function createAppeal($id = null)
+{
+    if ($id) {
+        $originalCase = $this->criminalCaseRepository->getById($id);
+        
+        if (!$originalCase || $originalCase->is_appeal_case || $originalCase->is_on_appeal) {
+            return redirect()->route('crime.criminalCase.index')
+                ->with('error', 'Te case ae rineaki e aki tau ibukin appeal.');
+        }
+        
+        $originalCases = [$originalCase->id => $originalCase->case_name];
+        
+        // Prepare suggested values based on original case
+        $suggestedValues = [
+            'case_name' => "Appeal - {$originalCase->case_name}",
+            'island_id' => $originalCase->island_id,
+            'lawyer_id' => $originalCase->lawyer_id,
+        ];
+    } else {
+        $originalCases = $this->criminalCaseRepository->getNonAppealCases();
+        $suggestedValues = [];
+    }
+    
+    $courtsOfAppeal = $this->courtOfAppealRepository->pluck();
+    $islands = $this->islandRepository->pluck();
+    $lawyers = $this->userRepository->pluck();
+    
+    return view('oag.crime.create_appeal')
+        ->with('originalCases', $originalCases)
+        ->with('courtsOfAppeal', $courtsOfAppeal)
+        ->with('islands', $islands)
+        ->with('lawyers', $lawyers)
+        ->with('selectedCaseId', $id)
+        ->with('suggestedValues', $suggestedValues);
+}
+/**
+ * Store a newly created appeal case
+ * 
+ * @param Request $request
+ * @return \Illuminate\Http\RedirectResponse
+ */
+public function storeAppeal(Request $request)
+{
+    $validatedData = $request->validate([
+        'original_case_id' => 'required|exists:cases,id',
+        'case_file_number' => 'required|string|unique:cases,case_file_number',
+        'case_name' => 'required|string',
+        'date_file_received' => 'required|date',
+        'lawyer_id' => 'required|exists:users,id',
+        'island_id' => 'required|exists:islands,id',
+        'court_of_appeal_id' => 'required|exists:courts_of_appeal,id',
+        'appeal_grounds' => 'required|string',  // New field
+    ]);
+    
+    \DB::beginTransaction();
+    
+    try {
+        // Mark original case as on appeal
+        $originalCase = $this->criminalCaseRepository->getById($request->original_case_id);
+        $originalCase->update(['is_on_appeal' => true]);
+        
+        // Create the appeal case
+        $appealData = $validatedData;
+        $appealData['is_appeal_case'] = true;
+        $appealData['created_by'] = auth()->id();
+        
+        $appealCase = $this->criminalCaseRepository->create($appealData);
+        
+        // Create appeal details record
+        $appealDetails = [
+            'case_id' => $appealCase->id,
+            'appeal_case_number' => $validatedData['case_file_number'],
+            'appeal_filing_date' => $validatedData['date_file_received'],
+            'appeal_grounds' => $validatedData['appeal_grounds'] ?? 'Appeal grounds not specified',
+            'appeal_status' => 'pending',
+            'created_by' => auth()->id(),
+        ];
+        
+        \DB::table('appeal_details')->insert($appealDetails);
+        
+        \DB::commit();
+        
+        return redirect()->route('crime.criminalCase.show', $appealCase->id)
+            ->with('success', 'Appeal case created successfully');
+    } catch (\Exception $e) {
+        \DB::rollback();
+        return redirect()->back()
+            ->with('error', 'Error creating appeal case: ' . $e->getMessage())
+            ->withInput();
+    }
+}
+
+public function accept($id)
+{
+    $case = $this->criminalCaseRepository->getById($id);
+
+    if (auth()->user()->hasRole('cm.user')) {
+        $case->status = 'accepted';
+        $case->rejection_reason = null;
+        $case->save();
+
+        return back()->with('success', 'Case accepted successfully.');
+    }
+
+    abort(403);
+}
+
+public function reject(Request $request, $id)
+{
+    $request->validate(['rejection_reason' => 'required|string']);
+    $case = $this->criminalCaseRepository->getById($id);
+
+    if (auth()->user()->hasRole('cm.user')) {
+        $case->status = 'rejected';
+        $case->rejection_reason = $request->rejection_reason;
+        $case->save();
+
+        return back()->with('success', 'Case rejected with reason.');
+    }
+
+    abort(403);
+}
+
 
 }

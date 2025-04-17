@@ -44,52 +44,77 @@ public function create(array $data): Model
 }
 
 public function update(int $id, array $data): Model
-    {
-        // Use the parent's update method
-        return parent::update($id, $data);
+{
+    $model = $this->getModelInstance()->find($id);
+
+    if (!$model) {
+        throw new \Exception("Model not found.");
     }
+
+    $model->update($data); // <- This line is doing the update
+
+    return $model;
+}
+
     
     public function getForDataTable($search = '', $order_by = '', $sort = 'asc', $trashed = false)
-{
-    // Start a query on the cases table and join the users, islands, and reasons_for_closure tables
-    $dataTableQuery = $this->getModelInstance()->newQuery()
-        ->join('users', 'cases.lawyer_id', '=', 'users.id')
-        ->leftJoin('islands', 'cases.island_id', '=', 'islands.id') // Use left join to include cases even if there are no related islands
-        ->leftJoin('reasons_for_closure', 'cases.reason_for_closure_id', '=', 'reasons_for_closure.id') // Use left join for reasons_for_closure
-        ->select(
-            'cases.*', 
-            'users.name as lawyer_name', // Rename 'users.name' to 'lawyer_name' for clarity
-            'islands.island_name', // Select the island name
-            'reasons_for_closure.reason_description' // Select the reason description
-        );
-
-    // Apply search filters if needed
-    if (!empty($search)) {
-        $search = '%' . strtolower($search) . '%';
-        $dataTableQuery->where(function ($query) use ($search) {
-            $query->whereRaw('LOWER(case_file_number) LIKE ?', [$search])
-                ->orWhereRaw('LOWER(case_name) LIKE ?', [$search])
-                ->orWhereRaw('LOWER(date_file_received) LIKE ?', [$search])
-                ->orWhereRaw('LOWER(date_file_closed) LIKE ?', [$search])
-                ->orWhereRaw('LOWER(users.name) LIKE ?', [$search])
-                ->orWhereRaw('LOWER(islands.island_name) LIKE ?', [$search])
-                ->orWhereRaw('LOWER(reasons_for_closure.reason_description) LIKE ?', [$search]);
-        });
+    {
+        $user = auth()->user();
+    
+        $query = $this->getModelInstance()->newQuery()
+            ->join('users', 'cases.lawyer_id', '=', 'users.id')
+            ->leftJoin('islands', 'cases.island_id', '=', 'islands.id')
+            ->leftJoin('case_reviews', 'case_reviews.case_id', '=', 'cases.id')
+            ->leftJoin('reasons_for_closure', 'case_reviews.reason_for_closure_id', '=', 'reasons_for_closure.id')
+            ->select([
+                'cases.id as id',
+                'cases.case_file_number',
+                'cases.case_name',
+                'cases.status', // ✅ Keep status field
+                'cases.date_file_received',
+                'cases.date_of_allocation',
+                'cases.deleted_at',
+                'users.name as lawyer_name',
+                'islands.island_name',
+                'case_reviews.evidence_status',
+                'case_reviews.review_date',
+                'case_reviews.date_file_closed',
+                'reasons_for_closure.reason_description'
+            ]);
+    
+        // 🔐 Apply access control based on role
+        if ($user->hasRole('cm.user')) {
+            $query->where('cases.lawyer_id', $user->id); // Show only cases assigned to the user
+        }
+    
+        // 🔍 Optional search
+        if (!empty($search)) {
+            $search = '%' . strtolower($search) . '%';
+            $query->where(function ($q) use ($search) {
+                $q->whereRaw('LOWER(cases.case_file_number) LIKE ?', [$search])
+                    ->orWhereRaw('LOWER(cases.case_name) LIKE ?', [$search])
+                    ->orWhereRaw('LOWER(cases.date_file_received) LIKE ?', [$search])
+                    ->orWhereRaw('LOWER(cases.date_of_allocation) LIKE ?', [$search])
+                    ->orWhereRaw('LOWER(users.name) LIKE ?', [$search])
+                    ->orWhereRaw('LOWER(islands.island_name) LIKE ?', [$search])
+                    ->orWhereRaw('LOWER(case_reviews.evidence_status) LIKE ?', [$search])
+                    ->orWhereRaw('LOWER(reasons_for_closure.reason_description) LIKE ?', [$search]);
+            });
+        }
+    
+        if ($trashed) {
+            $query->withTrashed();
+        }
+    
+        if (!empty($order_by)) {
+            $query->orderBy($order_by, $sort);
+        }
+    
+        return $query->get();
     }
+    
 
-    // Handle soft deletes if required
-    if ($trashed) {
-        $dataTableQuery->onlyTrashed();
-    }
 
-    // Apply sorting if needed
-    if (!empty($order_by)) {
-        $dataTableQuery->orderBy($order_by, $sort);
-    }
-
-    // Return the results
-    return $dataTableQuery->get();
-}
 
 
     
@@ -98,5 +123,18 @@ public function update(int $id, array $data): Model
         return $this->getModelInstance()->pluck('case_name', 'id');
     }
   
+    /**
+ * Get cases that are not appeals and not already on appeal
+ * 
+ * @return array
+ */
+public function getNonAppealCases()
+{
+    return $this->model
+        ->where('is_appeal_case', false)
+        ->where('is_on_appeal', false)
+        ->pluck('case_name', 'id')
+        ->toArray();
+}
 
 }

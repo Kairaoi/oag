@@ -81,6 +81,12 @@
                                     <a class="dropdown-item" href="{{ route('civil.boards.index') }}">Civil Case</a>
                                     <a class="dropdown-item" href="{{ route('legal.boards.index') }}">Legal Advice</a>
                                     <a class="dropdown-item" href="{{ route('draft.boards.index') }}">Drafting</a>
+                                    @role('cm.sysadmin')
+                                        <li>
+                                            <a href="{{ route('admin.roles.index') }}">Roles Management</a>
+                                        </li>
+                                    @endrole
+
                                     <a class="dropdown-item" href="{{ route('logout') }}"
                                        onclick="event.preventDefault();
                                                      document.getElementById('logout-form').submit();">

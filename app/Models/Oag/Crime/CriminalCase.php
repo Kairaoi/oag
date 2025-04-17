@@ -50,18 +50,11 @@ class CriminalCase extends Model
      *
      * @var array
      */
+    // app/Models/CriminalCase.php
+
     protected $fillable = [
-        'case_file_number',
-        'date_file_received',
-        'case_name',
-        'date_of_allocation',
-        'date_file_closed',
-        'reason_for_closure_id',
-        'court_case_number',
-        'lawyer_id',
-        'island_id',
-        'created_by',
-        'updated_by',
+        'case_file_number', 'date_file_received', 'case_name', 'date_of_allocation',
+        'lawyer_id', 'island_id', 'created_by', 'updated_by', 'status', 'reviewer_id', 'reviewed_at', 'rejection_reason'
     ];
     
 
@@ -70,11 +63,7 @@ class CriminalCase extends Model
      *
      * @var array
      */
-    protected $casts = [
-        'date_file_received' => 'date',
-        'date_file_closed' => 'date',
-    ];
-
+   
     /**
      * The attributes that should be mutated to dates.
      *
