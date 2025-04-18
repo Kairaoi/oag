@@ -26,9 +26,10 @@ class CaseReview extends Model
         'action_type',        // New field to track review action
         'new_lawyer_id',      // Stores the new assigned lawyer (if reallocated)
         'reallocation_reason',// Stores reason for reassignment
-        'court_case_number',  // Stores court case number update
+       
+        'date_file_closed',   // Add this field
+        'reason_for_closure_id' // Add this field
     ];
-
     /**
      * Default relationships to prevent N+1 queries.
      */

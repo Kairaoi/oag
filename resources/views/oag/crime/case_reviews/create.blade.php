@@ -31,14 +31,7 @@
             @enderror
         </div>
 
-        <!-- Action Type -->
-        <div class="form-group">
-            <label for="action_type" class="text-white">Action Type</label>
-            <select class="form-control" id="action_type" name="action_type" required>
-                <option value="review" selected>Review Case</option>
-            </select>
-        </div>
-
+      
         <!-- Evidence Status -->
         <div class="form-group">
             <label for="evidence_status" class="text-white">Evidence Status</label>
@@ -71,52 +64,43 @@
             @enderror
         </div>
 
-       <!-- Offence, Category & Particulars Row -->
-<div class="row">
-    <!-- Offence -->
-    <div class="form-group col-md-4" id="offence_container" style="display: none;">
-        <label for="offence_id" class="text-white">Offence</label>
-        <select class="form-control @error('offence_id') is-invalid @enderror" id="offence_id" name="offence_id">
-            <option value="">Select an offence</option>
-            @foreach($offences as $id => $offence)
-                <option value="{{ $id }}" {{ old('offence_id') == $id ? 'selected' : '' }}>{{ $offence }}</option>
-            @endforeach
-        </select>
-        @error('offence_id')
-            <span class="invalid-feedback" role="alert">
-                <strong>{{ $message }}</strong>
-            </span>
-        @enderror
-    </div>
+        <!-- Dynamic Offences Group -->
+        <div id="offenceGroupsSection" style="display: none;">
+            <label class="text-white">Offences</label>
+            <div id="offenceGroupsContainer">
+                <div class="offence-group row mb-3">
+                    <div class="form-group col-md-4">
+                        <select class="form-control" name="offence_id[]">
+                            <option value="">Select an offence</option>
+                            @foreach($offences as $id => $offence)
+                                <option value="{{ $id }}">{{ $offence }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
-    <!-- Category -->
-    <div class="form-group col-md-4" id="category_container" style="display: none;">
-        <label for="category_id" class="text-white">Offence Category</label>
-        <select class="form-control @error('category_id') is-invalid @enderror" id="category_id" name="category_id">
-            <option value="">Select a category</option>
-            @foreach($categories as $id => $category)
-                <option value="{{ $id }}" {{ old('category_id') == $id ? 'selected' : '' }}>{{ $category }}</option>
-            @endforeach
-        </select>
-        @error('category_id')
-            <span class="invalid-feedback" role="alert">
-                <strong>{{ $message }}</strong>
-            </span>
-        @enderror
-    </div>
+                    <div class="form-group col-md-4">
+                        <select class="form-control" name="category_id[]">
+                            <option value="">Select a category</option>
+                            @foreach($categories as $id => $category)
+                                <option value="{{ $id }}">{{ $category }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
-    <!-- Offence Particulars -->
-    <div class="form-group col-md-4" id="offence_particulars_container" style="display: none;">
-        <label for="offence_particulars" class="text-white">Offence Particulars</label>
-        <input type="text" class="form-control @error('offence_particulars') is-invalid @enderror" id="offence_particulars" name="offence_particulars" value="{{ old('offence_particulars') }}">
-        @error('offence_particulars')
-            <span class="invalid-feedback" role="alert">
-                <strong>{{ $message }}</strong>
-            </span>
-        @enderror
-    </div>
-</div>
+                    <div class="form-group col-md-3">
+                        <input type="text" class="form-control" name="offence_particulars[]" placeholder="Offence Particulars">
+                    </div>
 
+                    <div class="form-group col-md-1 d-flex align-items-end">
+                        <button type="button" class="btn btn-danger btn-sm remove-offence-group">&times;</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-right mb-4">
+                <button type="button" class="btn btn-light btn-sm" id="addOffenceGroup">+ Add Offence</button>
+            </div>
+        </div>
 
         <!-- Review Notes -->
         <div class="form-group">
@@ -156,19 +140,13 @@
         const evidenceStatus = document.getElementById('evidence_status');
         const reasonContainer = document.getElementById('reason_for_closure_container');
         const dateFileClosed = document.getElementById('date_file_closed');
-
-        const offenceContainer = document.getElementById('offence_container');
-        const categoryContainer = document.getElementById('category_container');
-        const offenceParticularsContainer = document.getElementById('offence_particulars_container');
+        const offenceSection = document.getElementById('offenceGroupsSection');
 
         function updateFields() {
             const status = evidenceStatus.value;
 
-            // Hide all dynamic fields initially
             reasonContainer.style.display = 'none';
-            offenceContainer.style.display = 'none';
-            categoryContainer.style.display = 'none';
-            offenceParticularsContainer.style.display = 'none';
+            offenceSection.style.display = 'none';
             dateFileClosed.value = '';
 
             if (status === 'insufficient_evidence' || status === 'returned_to_police') {
@@ -177,17 +155,33 @@
             }
 
             if (status === 'sufficient_evidence') {
-                offenceContainer.style.display = 'block';
-                categoryContainer.style.display = 'block';
-                offenceParticularsContainer.style.display = 'block';
+                offenceSection.style.display = 'block';
             }
         }
 
         updateFields();
         evidenceStatus.addEventListener('change', updateFields);
+
+        // Dynamic offence groups logic
+        const container = document.getElementById('offenceGroupsContainer');
+        document.getElementById('addOffenceGroup').addEventListener('click', function () {
+            const original = container.querySelector('.offence-group');
+            const clone = original.cloneNode(true);
+
+            clone.querySelectorAll('select, input').forEach(el => el.value = '');
+            container.appendChild(clone);
+        });
+
+        container.addEventListener('click', function (e) {
+            if (e.target.classList.contains('remove-offence-group')) {
+                const groups = container.querySelectorAll('.offence-group');
+                if (groups.length > 1) {
+                    e.target.closest('.offence-group').remove();
+                }
+            }
+        });
     });
 </script>
 @endpush
-
 
 @endsection

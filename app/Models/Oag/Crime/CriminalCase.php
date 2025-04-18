@@ -126,4 +126,13 @@ class CriminalCase extends Model
     {
         return $this->hasMany(Accused::class, 'case_id');
     }
+
+    public function offences()
+{
+    return $this->belongsToMany(Offence::class, 'case_offence', 'case_id', 'offence_id')
+                ->withPivot('offence_particulars', 'category_id') // 👈 include this
+                ->withTimestamps();
+}
+
+
 }

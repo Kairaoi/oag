@@ -68,19 +68,13 @@ class CaseReviewRepository extends CustomBaseRepository
 {
     $dataTableQuery = $this->getModelInstance()->newQuery()
         ->leftJoin('cases', 'case_reviews.case_id', '=', 'cases.id')
-        // Join with users table for the creator of the review
         ->leftJoin('users as creator', 'case_reviews.created_by', '=', 'creator.id')
-        // Join with users table for the new lawyer (if reassigned)
         ->leftJoin('users as new_lawyer', 'case_reviews.new_lawyer_id', '=', 'new_lawyer.id')
-        // Join with case_reallocations to get reallocation information
         ->leftJoin('case_reallocations', function($join) {
-            $join->on('case_reviews.case_id', '=', 'case_reallocations.case_id')
-                // Match when case_reviews indicates a reallocation
-                ->where('case_reviews.action_type', 'reallocation');
+            $join->on('case_reviews.case_id', '=', 'case_reallocations.case_id');
         })
-        // Join with users table for the from_lawyer in reallocations
+        
         ->leftJoin('users as from_lawyer', 'case_reallocations.from_lawyer_id', '=', 'from_lawyer.id')
-        // Join with users table for the to_lawyer in reallocations
         ->leftJoin('users as to_lawyer', 'case_reallocations.to_lawyer_id', '=', 'to_lawyer.id')
         ->select([
             'case_reviews.*',
@@ -92,20 +86,20 @@ class CaseReviewRepository extends CustomBaseRepository
             'to_lawyer.name as to_lawyer_name',
             'case_reallocations.reallocation_reason as reallocation_details'
         ])
-        ->distinct(); // To ensure distinct rows
+        ->distinct();
 
     if (!empty($search)) {
         $search = '%' . strtolower($search) . '%';
         $dataTableQuery->where(function ($query) use ($search) {
             $query->whereRaw('LOWER(case_reviews.review_notes) LIKE ?', [$search])
-                  ->orWhereRaw('LOWER(creator.name) LIKE ?', [$search])
-                  ->orWhereRaw('LOWER(cases.case_name) LIKE ?', [$search])
-                  ->orWhereRaw('LOWER(new_lawyer.name) LIKE ?', [$search])
-                  ->orWhereRaw('LOWER(from_lawyer.name) LIKE ?', [$search])
-                  ->orWhereRaw('LOWER(to_lawyer.name) LIKE ?', [$search])
-                  ->orWhereRaw('LOWER(case_reviews.evidence_status) LIKE ?', [$search])
-                  ->orWhereRaw('LOWER(case_reviews.action_type) LIKE ?', [$search])
-                  ->orWhereRaw('LOWER(case_reallocations.reallocation_reason) LIKE ?', [$search]);
+                ->orWhereRaw('LOWER(creator.name) LIKE ?', [$search])
+                ->orWhereRaw('LOWER(cases.case_name) LIKE ?', [$search])
+                ->orWhereRaw('LOWER(new_lawyer.name) LIKE ?', [$search])
+                ->orWhereRaw('LOWER(from_lawyer.name) LIKE ?', [$search])
+                ->orWhereRaw('LOWER(to_lawyer.name) LIKE ?', [$search])
+                ->orWhereRaw('LOWER(case_reviews.evidence_status) LIKE ?', [$search])
+                ->orWhereRaw('LOWER(case_reviews.action_type) LIKE ?', [$search])
+                ->orWhereRaw('LOWER(case_reallocations.reallocation_reason) LIKE ?', [$search]);
         });
     }
 
@@ -120,7 +114,7 @@ class CaseReviewRepository extends CustomBaseRepository
             'new_lawyer_name', 'from_lawyer_name', 'to_lawyer_name', 
             'reallocation_date', 'reallocation_details'
         ];
-        
+
         if (in_array($order_by, $validOrderBy)) {
             $dataTableQuery->orderBy($order_by, $sort);
         }
@@ -128,6 +122,7 @@ class CaseReviewRepository extends CustomBaseRepository
 
     return $dataTableQuery->get();
 }
+
     /**
      * Pluck a list of values for a given column.
      *

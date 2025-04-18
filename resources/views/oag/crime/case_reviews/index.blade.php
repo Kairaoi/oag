@@ -30,7 +30,7 @@
                         <th>ID</th>
                         <th>Case Name</th>
                         <th>Current Lawyer</th>
-                        <th>Action Type</th>
+                        <!-- <th>Action Type</th> -->
                         <th>Evidence Status</th>
                         <th>Review Notes</th>
                         <th>Review Date</th>
@@ -221,20 +221,20 @@
                         return row.created_by.name || 'N/A';
                     }
                 },
-                { 
-                    data: 'action_type', 
-                    name: 'action_type',
-                    render: function(data, type, row) {
-                        if (data === 'reallocate') {
-                            return '<span class="action-badge action-reallocate">Reallocation</span>';
-                        } else if (data === 'review') {
-                            return '<span class="action-badge action-review">Review</span>';
-                        } else if (data === 'court_update') {
-                            return '<span class="action-badge action-court">Court Update</span>';
-                        }
-                        return data || 'N/A';
-                    }
-                },
+                // { 
+                //     data: 'action_type', 
+                //     name: 'action_type',
+                //     render: function(data, type, row) {
+                //         if (data === 'reallocate') {
+                //             return '<span class="action-badge action-reallocate">Reallocation</span>';
+                //         } else if (data === 'review') {
+                //             return '<span class="action-badge action-review">Review</span>';
+                //         } else if (data === 'court_update') {
+                //             return '<span class="action-badge action-court">Court Update</span>';
+                //         }
+                //         return data || 'N/A';
+                //     }
+                // },
                 { 
                     data: 'evidence_status', 
                     name: 'evidence_status',

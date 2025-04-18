@@ -31,7 +31,7 @@
                     <th>Case File Number</th>
                     <th>Case Name</th>
                     <th>Date File Received</th>
-                    <th>Date File Closed</th>
+                    
                     <th>Date of Allocation</th>
                     <th>Reason for Closure</th>
                     <th>Island Name</th>
@@ -111,10 +111,7 @@ $(document).ready(function() {
                 data: 'date_file_received',
                 render: data => data ? new Date(data).toLocaleDateString() : ''
             },
-            {
-                data: 'date_file_closed',
-                render: data => data ? new Date(data).toLocaleDateString() : 'N/A'
-            },
+           
             {
                 data: 'date_of_allocation',
                 render: data => data ? new Date(data).toLocaleDateString() : ''

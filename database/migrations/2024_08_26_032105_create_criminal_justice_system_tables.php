@@ -129,7 +129,9 @@ class CreateCriminalJusticeSystemTables extends Migration
             $table->date('date_file_closed')->nullable();
             $table->foreignId('reason_for_closure_id')->nullable()->constrained('reasons_for_closure');
         
-                    
+            // Lawyer reassignment (new addition)
+            $table->foreignId('new_lawyer_id')->nullable()->constrained('users');
+        
             // Auditing
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
@@ -140,6 +142,7 @@ class CreateCriminalJusticeSystemTables extends Migration
             $table->index('evidence_status');
             $table->index('review_date');
         });
+        
         
         
         Schema::create('case_reallocations', function (Blueprint $table) {
