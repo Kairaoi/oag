@@ -194,20 +194,23 @@ class CaseReviewController extends Controller
 
     public function edit($id)
     {
-        $caseReview = $this->caseReviewRepository->getById($id);
-
-        if (!$caseReview) {
-            return redirect()->route('crime.case_reviews.index')->with('error', 'Case review not found.');
-        }
-
-        $cases = $this->criminalCaseRepository->pluck();
-        $lawyers = $this->userRepository->pluck();
-
+        $case = $this->criminalCaseRepository->getById($id);
+        $review = $this->caseReviewRepository->getByCaseId($id); // Assuming 1 review per case
+    
+        $reasonsForClosure = $this->reasonsForClosureRepository->pluck();
+        $councils = $this->userRepository->pluck();
+        $offences = $this->offenceRepository->pluck2();
+        $categories = $this->offenceCategoryRepository->pluck();
+    
         return view('oag.crime.case_reviews.edit')
-            ->with('caseReview', $caseReview)
-            ->with('cases', $cases)
-            ->with('lawyers', $lawyers);
+            ->with('case', $case)
+            ->with('review', $review)
+            ->with('reasonsForClosure', $reasonsForClosure)
+            ->with('offences', $offences)
+            ->with('categories', $categories)
+            ->with('councils', $councils);
     }
+    
 
     public function update(Request $request, $id)
     {

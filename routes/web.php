@@ -14,6 +14,7 @@ use App\Http\Controllers\Oag\Crime\ReasonsForClosureController;
 use App\Http\Controllers\Oag\Crime\IncidentController;
 use App\Http\Controllers\Oag\Crime\ReportController;
 use App\Http\Controllers\Oag\Crime\CourtHearingController;
+use App\Http\Controllers\Oag\Crime\CourtCaseController;
 
 
 
@@ -99,10 +100,9 @@ Route::resource('CaseReview', CaseReviewController::class)->except(['create', 's
     Route::match(['get', 'post'], 'incident/datatables', [IncidentController::class, 'getDataTables'])->name('incident.datatables');
     Route::resource('incident', IncidentController::class);
 
-    Route::get('data-tables', [ReportController::class, 'index'])->name('reports.index');
-    Route::get('execute-report/{reportId}', [ReportController::class, 'executeReport'])->name('executeReport');
-    Route::get('show-results/{reportId}', [ReportController::class, 'showResults'])->name('showResults');
-    Route::get('pims-dashboard/{reportId}', [ReportController::class, 'pimsDashboard'])->name('dashboard');
+    // 🔍 Reports
+    Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('reports/{id}', [ReportController::class, 'show'])->name('reports.show');
 
    // Karina te optional parameter {id?} nakon te route
 Route::get('criminalCase/appeal/create/{id?}', [CriminalCaseController::class, 'createAppeal'])
@@ -122,6 +122,13 @@ Route::match(['get', 'post'], 'criminalCase/appeal/datatables', [CriminalCaseCon
 // Court Hearings Routes
 Route::match(['get', 'post'], 'court-hearings/datatables', [CourtHearingController::class, 'getDataTables'])->name('court-hearings.datatables');
 Route::resource('court-hearings', CourtHearingController::class);
+
+// Court Case DataTables route
+Route::match(['get', 'post'], 'court-cases/datatables', [CourtCaseController::class, 'getDataTables'])->name('court-cases.datatables');
+
+// Court Case CRUD routes
+Route::resource('court-cases',CourtCaseController::class);
+
 
  
 });

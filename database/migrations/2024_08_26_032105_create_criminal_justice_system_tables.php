@@ -95,6 +95,38 @@ class CreateCriminalJusticeSystemTables extends Migration
             $table->index('has_verdict');
         });
 
+        Schema::create('court_cases', function (Blueprint $table) {
+            $table->id();
+
+            // Reference to criminal case
+            $table->foreignId('case_id')->constrained('cases')->onDelete('cascade');
+
+            // Key fields
+            $table->date('charge_file_dated');
+            $table->string('high_court_case_number')->nullable();
+
+            // Court outcome summary
+            $table->enum('court_outcome', ['guilty', 'not_guilty', 'dismissed', 'withdrawn', 'other'])->nullable();
+            $table->text('court_outcome_details')->nullable();
+            $table->date('court_outcome_date')->nullable();
+
+            // Judgment details
+            $table->date('judgment_delivered_date')->nullable();
+            $table->enum('verdict', ['win', 'lose'])->nullable();
+            $table->text('decision_principle_established')->nullable();
+
+            // Record tracking
+            $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('updated_by')->nullable()->constrained('users');
+            $table->softDeletes();
+            $table->timestamps();
+
+            // Performance indexing
+            $table->index(['case_id', 'charge_file_dated']);
+            $table->index('court_outcome');
+            $table->index('verdict');
+        });
+
         // Create Appeal Details Table
         Schema::create('appeal_details', function (Blueprint $table) {
             $table->id();
@@ -263,6 +295,7 @@ class CreateCriminalJusticeSystemTables extends Migration
         Schema::dropIfExists('case_reallocations');
         Schema::dropIfExists('case_reviews');
         Schema::dropIfExists('appeal_details');
+        Schema::dropIfExists('court_cases');
         Schema::dropIfExists('court_hearings');
         Schema::dropIfExists('cases');
         Schema::dropIfExists('courts_of_appeal');
