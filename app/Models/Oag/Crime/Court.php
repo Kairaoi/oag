@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\User;
 
-class CourtsOfAppeal extends Model
+class Court extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'courts_of_appeal';
+    protected $table = 'courts';
     protected $primaryKey = 'id';
     public $incrementing = true;
     protected $keyType = 'int';

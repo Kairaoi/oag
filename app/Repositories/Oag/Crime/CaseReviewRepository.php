@@ -70,10 +70,9 @@ class CaseReviewRepository extends CustomBaseRepository
         ->leftJoin('cases', 'case_reviews.case_id', '=', 'cases.id')
         ->leftJoin('users as creator', 'case_reviews.created_by', '=', 'creator.id')
         ->leftJoin('users as new_lawyer', 'case_reviews.new_lawyer_id', '=', 'new_lawyer.id')
-        ->leftJoin('case_reallocations', function($join) {
+        ->leftJoin('case_reallocations', function ($join) {
             $join->on('case_reviews.case_id', '=', 'case_reallocations.case_id');
         })
-        
         ->leftJoin('users as from_lawyer', 'case_reallocations.from_lawyer_id', '=', 'from_lawyer.id')
         ->leftJoin('users as to_lawyer', 'case_reallocations.to_lawyer_id', '=', 'to_lawyer.id')
         ->select([
@@ -82,9 +81,13 @@ class CaseReviewRepository extends CustomBaseRepository
             'creator.name as created_by_name',
             'new_lawyer.name as new_lawyer_name',
             'case_reallocations.reallocation_date',
+            'case_reallocations.reallocation_reason as reallocation_details',
+            'case_reallocations.created_by as reallocation_created_by',
+            'case_reallocations.updated_by as reallocation_updated_by',
+            'case_reallocations.created_at as reallocation_created_at',
+            'case_reallocations.updated_at as reallocation_updated_at',
             'from_lawyer.name as from_lawyer_name',
-            'to_lawyer.name as to_lawyer_name',
-            'case_reallocations.reallocation_reason as reallocation_details'
+            'to_lawyer.name as to_lawyer_name'
         ])
         ->distinct();
 
@@ -109,10 +112,12 @@ class CaseReviewRepository extends CustomBaseRepository
 
     if (!empty($order_by)) {
         $validOrderBy = [
-            'id', 'case_id', 'created_by', 'review_notes', 'review_date', 
+            'id', 'case_id', 'created_by', 'review_notes', 'review_date',
             'evidence_status', 'action_type', 'created_by_name', 'case_name',
-            'new_lawyer_name', 'from_lawyer_name', 'to_lawyer_name', 
-            'reallocation_date', 'reallocation_details'
+            'new_lawyer_name', 'from_lawyer_name', 'to_lawyer_name',
+            'reallocation_date', 'reallocation_details',
+            'reallocation_created_by', 'reallocation_updated_by',
+            'reallocation_created_at', 'reallocation_updated_at'
         ];
 
         if (in_array($order_by, $validOrderBy)) {
@@ -122,6 +127,7 @@ class CaseReviewRepository extends CustomBaseRepository
 
     return $dataTableQuery->get();
 }
+
 
     /**
      * Pluck a list of values for a given column.

@@ -1,71 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
-    @if(session('caseid'))
-        @php
-            $caseid = session('caseid');
-        @endphp
-    @endif
+@if(session('caseid'))
+    @php
+        $caseid = session('caseid');
+    @endphp
+@endif
 
-    <div class="container mt-5">
-        <!-- Breadcrumbs -->
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url('/') }}">Home</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('crime.CaseReview.index') }}">Case Reviews</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Case Review DataTable</li>
-            </ol>
-        </nav>
-
-        <!-- Heading -->
-        <h2 class="text-center mb-4" style="font-family: 'Courier New', Courier, monospace; color: #f8f9fa; text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4); border-bottom: 4px double #ff6f61; padding-bottom: 20px;">
-            Case Review DataTable
-        </h2>
-
-        <!-- DataTables Table -->
-        <div class="table-responsive shadow-lg rounded-3 overflow-hidden" style="background: linear-gradient(145deg, #f1f1f1, #ffffff); border: 2px solid #007bff; border-radius: 20px;">
-            <table class="table table-striped table-hover" id="case-review-table" style="border-collapse: separate; border-spacing: 0; border-radius: 20px; overflow: hidden;">
-                <thead class="thead-dark" style="background: #343a40; color: #f8f9fa; text-transform: uppercase; letter-spacing: 1px;">
-                    <tr>
-                        <th>ID</th>
-                        <th>Case Name</th>
-                        <th>Current Lawyer</th>
-                        <!-- <th>Action Type</th> -->
-                        <th>Evidence Status</th>
-                        <th>Review Notes</th>
-                        <th>Review Date</th>
-                        <th>Reallocation Details</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Data will be inserted here by DataTables -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    @push('scripts')
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- DataTables JS -->
-    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
-    <!-- DataTables Buttons JS -->
-    <script src="https://cdn.datatables.net/buttons/1.7.1/js/dataTables.buttons.min.js"></script>
-    <!-- JSZip for CSV export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.2.2/jszip.min.js"></script>
-    <!-- DataTables Buttons HTML5 JS -->
-    <script src="https://cdn.datatables.net/buttons/1.7.1/js/buttons.html5.min.js"></script>
-    <!-- PDFMake for PDF export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.70/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.70/vfs_fonts.js"></script>
-
-    <!-- DataTables CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css">
-    <!-- DataTables Buttons CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.7.1/css/buttons.dataTables.min.css">
-
-    <style>
+<style>
         /* Pagination Buttons */
         .dataTables_wrapper .dataTables_paginate .paginate_button {
             padding: 0.6em 1.2em;
@@ -186,117 +128,121 @@
             color: white;
         }
     </style>
+<div class="container mt-5">
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url('/') }}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('crime.CaseReview.index') }}">Case Reviews</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Case Review DataTable</li>
+        </ol>
+    </nav>
 
-    <script>
-    $(document).ready(function() {
-        if ($.fn.DataTable.isDataTable('#case-review-table')) {
-            $('#case-review-table').DataTable().clear().destroy();
-        }
+    <!-- Heading -->
+    <h2 class="text-center mb-4" style="font-family: 'Courier New', Courier, monospace; color: #f8f9fa; text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4); border-bottom: 4px double #ff6f61; padding-bottom: 20px;">
+        Case Review DataTable
+    </h2>
 
-        $('#case-review-table').DataTable({
-            processing: true,
-            serverSide: true,
-            ajax: '{{ route('crime.CaseReview.datatables') }}',
-            columns: [
-                { data: 'id', name: 'id' },
-                { 
-                    data: 'case_name', 
-                    name: 'case_name',
-                    render: function(data, type, row) {
-                        if (row.case && row.case.court_case_number) {
-                            return `<strong>${data}</strong><br>
-                                    <small class="text-muted">Court Case #: ${row.case.court_case_number}</small>`;
-                        }
-                        return data;
+    <!-- DataTable -->
+    <div class="table-responsive shadow-lg rounded-3 overflow-hidden" style="background: linear-gradient(145deg, #f1f1f1, #ffffff); border: 2px solid #007bff; border-radius: 20px;">
+        <table class="table table-striped table-hover" id="case-review-table">
+            <thead class="thead-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Case Name</th>
+                    <th>Current Lawyer</th>
+                    <th>Evidence Status</th>
+                    <th>Review Notes</th>
+                    <th>Review Date</th>
+                    <th>Reallocation Details</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+@endsection
+
+@push('scripts')
+<!-- DataTables and Export Dependencies -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/1.7.1/js/dataTables.buttons.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.2.2/jszip.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/1.7.1/js/buttons.html5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.70/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.70/vfs_fonts.js"></script>
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.7.1/css/buttons.dataTables.min.css">
+
+<script>
+$(document).ready(function() {
+    $('#case-review-table').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: '{{ route('crime.CaseReview.datatables') }}',
+        dom: 'Bfrtip',
+        buttons: ['copyHtml5', 'excelHtml5', 'csvHtml5', 'pdfHtml5'],
+        columns: [
+            { data: 'id', name: 'id' },
+            {
+                data: 'case_name', name: 'case_name',
+                render: function(data, type, row) {
+                    if (row.case && row.case.court_case_number) {
+                        return `<strong>${data}</strong><br><small class="text-muted">Court Case #: ${row.case.court_case_number}</small>`;
                     }
-                },
-                { 
-                    data: null, 
-                    name: 'current_lawyer',
-                    render: function(data, type, row) {
-                        if (row.action_type === 'reallocate' && row.new_lawyer_name) {
-                            return `<span class="text-success">${row.new_lawyer_name}</span>
-                                   <br><small class="text-muted">Reassigned from: ${row.created_by.name || 'N/A'}</small>`;
-                        }
-                        return row.created_by.name || 'N/A';
+                    return data;
+                }
+            },
+            {
+                data: null, name: 'current_lawyer',
+                render: function(data, type, row) {
+                    if (row.action_type === 'reallocate' && row.new_lawyer_name) {
+                        return `<span class="text-success">${row.new_lawyer_name}</span><br><small class="text-muted">Reassigned from: ${row.created_by.name || 'N/A'}</small>`;
                     }
-                },
-                // { 
-                //     data: 'action_type', 
-                //     name: 'action_type',
-                //     render: function(data, type, row) {
-                //         if (data === 'reallocate') {
-                //             return '<span class="action-badge action-reallocate">Reallocation</span>';
-                //         } else if (data === 'review') {
-                //             return '<span class="action-badge action-review">Review</span>';
-                //         } else if (data === 'court_update') {
-                //             return '<span class="action-badge action-court">Court Update</span>';
-                //         }
-                //         return data || 'N/A';
-                //     }
-                // },
-                { 
-                    data: 'evidence_status', 
-                    name: 'evidence_status',
-                    render: function(data, type, row) {
-                        let badgeClass = '';
-                        let displayText = '';
-                        
-                        switch(data) {
-                            case 'pending_review':
-                                badgeClass = 'status-badge status-pending';
-                                displayText = 'Pending Review';
-                                break;
-                            case 'sufficient_evidence':
-                                badgeClass = 'status-badge status-sufficient';
-                                displayText = 'Sufficient Evidence';
-                                break;
-                            case 'insufficient_evidence':
-                                badgeClass = 'status-badge status-insufficient';
-                                displayText = 'Insufficient Evidence';
-                                break;
-                            case 'returned_to_police':
-                                badgeClass = 'status-badge status-returned';
-                                displayText = 'Returned to Police';
-                                break;
-                            default:
-                                badgeClass = 'status-badge';
-                                displayText = data;
-                        }
-                        
-                        return `<span class="${badgeClass}">${displayText}</span>`;
-                    }
-                },
-                { 
-                    data: 'review_notes', 
-                    name: 'review_notes',
-                    render: function(data, type, row) {
-                        if (data && data.length > 50) {
-                            return data.substring(0, 50) + '...';
-                        }
-                        return data || 'No notes';
-                    }
-                },
-                { 
-                    data: 'review_date', 
-                    name: 'review_date',
-                    render: function(data, type, row) {
-                        // Format date nicely for display
-                        let date = new Date(data);
-                        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    }
-                },
-                { 
-                    data: null, 
-                    name: 'reallocation_details',
-                    render: function(data, type, row) {
-                        if (row.action_type === 'reallocate' && row.reallocation_reason) {
-                            return row.reallocation_reason;
-                        }
-                        return 'N/A';
-                    }
-                },
-                {
+                    return row.created_by.name || 'N/A';
+                }
+            },
+            {
+                data: 'evidence_status', name: 'evidence_status',
+                render: function(data) {
+                    const statuses = {
+                        pending_review: 'status-pending',
+                        sufficient_evidence: 'status-sufficient',
+                        insufficient_evidence: 'status-insufficient',
+                        returned_to_police: 'status-returned'
+                    };
+                    const label = {
+                        pending_review: 'Pending Review',
+                        sufficient_evidence: 'Sufficient Evidence',
+                        insufficient_evidence: 'Insufficient Evidence',
+                        returned_to_police: 'Returned to Police'
+                    };
+                    return `<span class="status-badge ${statuses[data] || ''}">${label[data] || data}</span>`;
+                }
+            },
+            {
+                data: 'review_notes', name: 'review_notes',
+                render: function(data) {
+                    return data && data.length > 50 ? data.substring(0, 50) + '...' : (data || 'No notes');
+                }
+            },
+            {
+                data: 'review_date', name: 'review_date',
+                render: function(data) {
+                    const date = new Date(data);
+                    return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                }
+            },
+            {
+                data: 'reallocation_details', name: 'reallocation_details',
+                render: function(data) {
+                    return data || '<span class="text-muted">None</span>';
+                }
+            },
+            {
                     data: null,
                     title: 'Actions',
                     render: function(data, type, row) {
@@ -354,4 +300,3 @@
     });
     </script>
     @endpush
-@endsection

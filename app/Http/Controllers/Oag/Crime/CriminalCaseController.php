@@ -10,10 +10,20 @@ use App\Repositories\Oag\Crime\UserRepository;
 use App\Repositories\Oag\Crime\ReasonsForClosureRepository;
 use App\Repositories\Oag\Crime\OffenceRepository;
 use App\Repositories\Oag\Crime\OffenceCategoryRepository;
-use App\Repositories\OAG\Crime\CourtsOfAppealRepository;
+use App\Repositories\OAG\Crime\CourtRepository;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+
+use App\Models\Oag\Crime\CaseReallocation;
+
 use DataTables;
+
+use Illuminate\Support\Facades\Log;
+
+use Illuminate\Support\Facades\Auth;
+
+use Illuminate\Support\Facades\DB;
+
 
 class CriminalCaseController extends Controller
 {
@@ -24,7 +34,7 @@ class CriminalCaseController extends Controller
     protected $reasonsForClosureRepository;
     protected $offenceRepository;
     protected $offenceCategoryRepository;
-    protected $courtOfAppealRepository;
+    protected $courtRepository;
 
     /**
      * CriminalCaseController constructor.
@@ -45,7 +55,7 @@ class CriminalCaseController extends Controller
         ReasonsForClosureRepository $reasonsForClosureRepository,
         OffenceRepository $offenceRepository,
         OffenceCategoryRepository $offenceCategoryRepository,
-        CourtsOfAppealRepository $courtOfAppealRepository
+        CourtRepository $courtRepository
     ) {
         $this->criminalCaseRepository = $criminalCaseRepository;
         $this->accusedRepository = $accusedRepository;
@@ -54,7 +64,7 @@ class CriminalCaseController extends Controller
         $this->reasonsForClosureRepository = $reasonsForClosureRepository;
         $this->offenceRepository = $offenceRepository;
         $this->offenceCategoryRepository = $offenceCategoryRepository;
-        $this->courtOfAppealRepository = $courtOfAppealRepository;
+        $this->courtRepository = $courtRepository;
     }
 
     /**
@@ -369,7 +379,7 @@ public function createAppeal($id = null)
         $suggestedValues = [];
     }
     
-    $courtsOfAppeal = $this->courtOfAppealRepository->pluck();
+    $courtsOfAppeal = $this->courtRepository->pluck();
     $islands = $this->islandRepository->pluck();
     $lawyers = $this->userRepository->pluck();
     
@@ -396,7 +406,7 @@ public function storeAppeal(Request $request)
         'date_file_received' => 'required|date',
         'lawyer_id' => 'required|exists:users,id',
         'island_id' => 'required|exists:islands,id',
-        'court_of_appeal_id' => 'required|exists:courts_of_appeal,id',
+        'court_id' => 'required|exists:courts,id',
         'appeal_grounds' => 'required|string',  // New field
     ]);
     
@@ -467,6 +477,74 @@ public function reject(Request $request, $id)
     }
 
     abort(403);
+}
+
+public function showReallocationForm($id)
+{
+    $case = $this->criminalCaseRepository->getById($id);
+    $lawyers = $this->userRepository->pluck();
+    return view('oag.crime.reallocate', compact('case', 'lawyers'));
+}
+
+
+
+
+public function reallocateCase(Request $request, $caseId)
+{
+    Log::info("Reallocation request received", ['case_id' => $caseId, 'request' => $request->all()]);
+
+    $request->validate([
+        'to_lawyer_id' => 'required|exists:users,id',
+        'reallocation_reason' => 'required|string',
+        'reallocation_date' => 'required|date',
+    ]);
+
+    $user = Auth::user();
+    Log::info("Authenticated user", ['user_id' => $user->id, 'roles' => $user->getRoleNames()]);
+
+    // Check if the user has the 'cm.user' role
+    if (!$user->hasRole('cm.admin')) {
+        Log::warning("User does not have permission to reallocate", ['user_id' => $user->id]);
+        abort(403, 'Unauthorized action.');
+    }
+
+    try {
+        DB::transaction(function () use ($request, $caseId, $user) {
+
+            $case = $this->criminalCaseRepository->getById($caseId);
+            Log::info("Criminal case fetched", ['lawyer_id' => $case->lawyer_id]);
+
+            // Create a new reallocation record
+            $reallocation = CaseReallocation::create([
+                'case_id' => $case->id,
+                'from_lawyer_id' => $case->lawyer_id,
+                'to_lawyer_id' => $request->to_lawyer_id,
+                'reallocation_reason' => $request->reallocation_reason,
+                'reallocation_date' => $request->reallocation_date,
+                'created_by' => $user->id,
+                'updated_by' => $user->id,
+            ]);
+
+            Log::info("Case reallocation created", ['reallocation_id' => $reallocation->id]);
+
+            // Update the lawyer in the criminal case itself
+           // Update the lawyer in the criminal case itself and change status
+            $case->update([
+                'lawyer_id' => $request->to_lawyer_id,
+                'updated_by' => $user->id,
+                'status' => 'allocated',
+            ]);
+
+
+            Log::info("Case lawyer updated", ['new_lawyer_id' => $request->to_lawyer_id]);
+        });
+
+        return redirect()->route('crime.criminalCase.index')->with('success', 'Case reallocated successfully.');
+
+    } catch (\Exception $e) {
+        Log::error("Error during case reallocation", ['error' => $e->getMessage()]);
+        return redirect()->back()->with('error', 'Reallocation failed. Please try again.');
+    }
 }
 
 

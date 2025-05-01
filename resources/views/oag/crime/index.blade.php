@@ -125,38 +125,49 @@ $(document).ready(function () {
             { data: 'island_name', defaultContent: 'N/A' },
             { data: 'lawyer_name', defaultContent: 'N/A' },
             {
-                data: null,
-                render: function(row) {
-                    let statusLabel = '';
-                    let actionButtons = '';
-                    let status = row.status || '';
+                    data: null,
+                    render: function(row) {
+                        let statusLabel = '';
+                        let actionButtons = '';
+                        let status = row.status || '';
 
-                    @if(!auth()->user()->hasRole('cm.user'))
-                        if (status === 'accepted') statusLabel = '<span class="badge bg-success">Accepted</span>';
-                        else if (status === 'rejected') statusLabel = '<span class="badge bg-danger">Rejected</span>';
-                        else statusLabel = '<span class="badge bg-warning">Pending</span>';
-                    @else
-                        if (status === 'accepted') statusLabel = '<span class="badge bg-success">Accepted</span>';
-                        else if (status === 'rejected') statusLabel = '<span class="badge bg-danger">Rejected</span>';
-                    @endif
+                        @if(!auth()->user()->hasRole('cm.user'))
+                            if (status === 'accepted') {
+                                statusLabel = '<span class="badge bg-success">Accepted</span>';
+                            } else if (status === 'rejected') {
+                                statusLabel = '<span class="badge bg-danger">Rejected</span>';
+                            } else if (status === 'allocated') {
+                                statusLabel = '<span class="badge bg-primary">Allocated</span>';
+                            } else {
+                                statusLabel = '<span class="badge bg-warning">Pending</span>';
+                            }
+                        @else
+                            if (status === 'accepted') {
+                                statusLabel = '<span class="badge bg-success">Accepted</span>';
+                            } else if (status === 'rejected') {
+                                statusLabel = '<span class="badge bg-danger">Rejected</span>';
+                            } else if (status === 'allocated') {
+                                statusLabel = '<span class="badge bg-primary">Allocated</span>';
+                            }
+                        @endif
 
-                    @if(auth()->user()->hasRole('cm.user'))
-                        if (status !== 'accepted' && status !== 'rejected') {
-                            actionButtons = `
-                                <div class="d-flex justify-content-around mt-2">
-                                    <button class="btn btn-accept me-2" onclick="handleCaseAction(${row.id}, 'accept')">
-                                        <i class="fas fa-check"></i> Accept
-                                    </button>
-                                    <button class="btn btn-reject" data-bs-toggle="modal" data-bs-target="#rejectionModal" data-bs-case-id="${row.id}">
-                                        <i class="fas fa-times"></i> Reject
-                                    </button>
-                                </div>`;
-                        }
-                    @endif
+                        @if(auth()->user()->hasRole('cm.user'))
+                            if (status !== 'accepted' && status !== 'rejected') {
+                                actionButtons = `
+                                    <div class="d-flex justify-content-around mt-2">
+                                        <button class="btn btn-accept me-2" onclick="handleCaseAction(${row.id}, 'accept')">
+                                            <i class="fas fa-check"></i> Accept
+                                        </button>
+                                        <button class="btn btn-reject" data-bs-toggle="modal" data-bs-target="#rejectionModal" data-bs-case-id="${row.id}">
+                                            <i class="fas fa-times"></i> Reject
+                                        </button>
+                                    </div>`;
+                            }
+                        @endif
 
-                    return statusLabel + actionButtons;
-                }
-            },
+                        return statusLabel + actionButtons;
+                    }
+                },
             {
                 data: null,
                 render: function(row) {
@@ -174,6 +185,24 @@ $(document).ready(function () {
                             actions += `<li><a class="dropdown-item" href="${@json(route('crime.CaseReview.create', ':id')).replace(':id', row.id)}">Case Review</a></li>`;
                         }
                     @endif
+                    @if(auth()->user()->hasRole('cm.user'))
+                        if (row.status === 'accepted') {
+                            actions += `<li><a class="dropdown-item" href="${@json(route('crime.CourtCase.create', ':id')).replace(':id', row.id)}">Court Case</a></li>`;
+                        }
+                    @endif
+                    @if(auth()->user()->hasRole('cm.admin'))
+                    if (row.status === 'rejected') {
+                        actions += `
+                            <li>
+                                <a class="dropdown-item" href="${@json(route('crime.criminalCase.showReallocationForm', ':id')).replace(':id', row.id)}">
+                                    Case Reallocate
+                                </a>
+                            </li>`;
+                    }
+
+                    @endif
+
+
 
                     actions += `
                                 <li><a class="dropdown-item" href="${@json(route('crime.criminalCase.createAppeal', ':id')).replace(':id', row.id)}">Appeal</a></li>
@@ -230,5 +259,22 @@ function handleCaseAction(id, action) {
         form.submit();
     }
 }
+function reallocateCase(caseId) {
+        if (confirm('Are you sure you want to reallocate this case?')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `{{ route('crime.criminalCase.reallocate', ':id') }}`.replace(':id', caseId);
+            form.style.display = 'none';
+
+            const token = document.createElement('input');
+            token.type = 'hidden';
+            token.name = '_token';
+            token.value = '{{ csrf_token() }}';
+
+            form.appendChild(token);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
 </script>
 @endpush

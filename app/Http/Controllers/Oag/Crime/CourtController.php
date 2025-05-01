@@ -3,24 +3,24 @@
 namespace App\Http\Controllers\Oag\Crime;
 
 use App\Http\Controllers\Controller;
-use App\Repositories\OAG\Crime\CourtsOfAppealRepository;
+use App\Repositories\Oag\Crime\CourtRepository;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use DataTables;
 
-class CourtOfAppealController extends Controller
+class CourtController extends Controller
 {
-    protected $courtOfAppealRepository;
+    protected $courtRepository;
 
-    public function __construct(CourtOfAppealRepository $courtOfAppealRepository)
+    public function __construct(CourtRepository $courtRepository)
     {
-        $this->courtOfAppealRepository = $courtOfAppealRepository;
+        $this->courtRepository = $courtRepository;
     }
 
     public function getDataTables(Request $request)
     {
         $search = $request->input('search.value', '');
-        $query = $this->courtOfAppealRepository->getForDataTable($search);
+        $query = $this->courtRepository->getForDataTable($search);
         return DataTables::of($query)->make(true);
     }
 
@@ -44,7 +44,7 @@ class CourtOfAppealController extends Controller
         $data['created_by'] = auth()->id();
         $data['updated_by'] = null;
 
-        $this->courtOfAppealRepository->create($data);
+        $this->courtRepository->create($data);
 
         return redirect()->route('crime.courts.index')
             ->with('success', 'Court of Appeal created successfully.');
@@ -52,7 +52,7 @@ class CourtOfAppealController extends Controller
 
     public function show($id)
     {
-        $court = $this->courtOfAppealRepository->getById($id);
+        $court = $this->courtRepository->getById($id);
         if (!$court) {
             return response()->json(['message' => 'Court not found'], Response::HTTP_NOT_FOUND);
         }
@@ -61,7 +61,7 @@ class CourtOfAppealController extends Controller
 
     public function edit($id)
     {
-        $court = $this->courtOfAppealRepository->getById($id);
+        $court = $this->courtRepository->getById($id);
         if (!$court) {
             return redirect()->route('crime.courts.index')->with('error', 'Court not found.');
         }
@@ -77,7 +77,7 @@ class CourtOfAppealController extends Controller
 
         $data['updated_by'] = auth()->id();
 
-        $updated = $this->courtOfAppealRepository->update($id, $data);
+        $updated = $this->courtRepository->update($id, $data);
 
         if (!$updated) {
             return redirect()->route('crime.courts.index')->with('error', 'Failed to update court.');
@@ -89,7 +89,7 @@ class CourtOfAppealController extends Controller
 
     public function destroy($id)
     {
-        $deleted = $this->courtOfAppealRepository->deleteById($id);
+        $deleted = $this->courtRepository->deleteById($id);
 
         if (!$deleted) {
             return response()->json(['message' => 'Court not found or failed to delete'], Response::HTTP_NOT_FOUND);

@@ -38,10 +38,11 @@ class CourtCaseController extends Controller
         return DataTables::of($query)->make(true);
     }
 
-    public function create()
+    public function create($id)
     {
-        $cases = $this->criminalCaseRepository->pluck();
-        return view('oag.court_cases.create', compact('cases'));
+        $case = $this->criminalCaseRepository->getById($id);
+      
+        return view('oag.court_cases.create', compact('case'));
     }
 
     public function store(Request $request)

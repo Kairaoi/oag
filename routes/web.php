@@ -116,8 +116,15 @@ Route::post('criminalCase/appeal/store', [CriminalCaseController::class, 'storeA
 ->name('criminalCase.storeAppeal');
 
 // Ngkana ko kainnanoia te appeal datatables route
+
 Route::match(['get', 'post'], 'criminalCase/appeal/datatables', [CriminalCaseController::class, 'getAppealDataTables'])
 ->name('criminalCase.appealDatatables');
+Route::post('criminalCase/{id}/reallocate', [CriminalCaseController::class, 'reallocateCase'])
+->name('criminalCase.reallocate');
+// Show reallocation form
+Route::get('criminalCase/{id}/reallocate', [CriminalCaseController::class, 'showReallocationForm'])
+    ->name('criminalCase.showReallocationForm');
+
 
 // Court Hearings Routes
 Route::match(['get', 'post'], 'court-hearings/datatables', [CourtHearingController::class, 'getDataTables'])->name('court-hearings.datatables');
@@ -125,6 +132,7 @@ Route::resource('court-hearings', CourtHearingController::class);
 
 // Court Case DataTables route
 Route::match(['get', 'post'], 'court-cases/datatables', [CourtCaseController::class, 'getDataTables'])->name('court-cases.datatables');
+Route::get('CourtCase/{id}/create', [CourtCaseController::class, 'create'])->name('CourtCase.create');
 
 // Court Case CRUD routes
 Route::resource('court-cases',CourtCaseController::class);

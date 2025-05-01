@@ -39,7 +39,7 @@ class CreateCriminalJusticeSystemTables extends Migration
         });
 
         // Create Courts of Appeal Table
-        Schema::create('courts_of_appeal', function (Blueprint $table) {
+        Schema::create('courts', function (Blueprint $table) {
             $table->id();
             $table->string('court_name');
             $table->text('description')->nullable();
@@ -61,7 +61,7 @@ class CreateCriminalJusticeSystemTables extends Migration
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
             // New fields for review status
-            $table->enum('status', ['pending', 'accepted', 'rejected', 'reallocate'])->default('pending');
+            $table->enum('status', ['pending', 'accepted', 'rejected', 'reallocate','allocated'])->default('pending');
             $table->foreignId('reviewer_id')->nullable()->constrained('users');
             $table->timestamp('reviewed_at')->nullable();
             $table->text('rejection_reason')->nullable(); // Optional: To store reason for rejection
@@ -131,6 +131,7 @@ class CreateCriminalJusticeSystemTables extends Migration
         Schema::create('appeal_details', function (Blueprint $table) {
             $table->id();
             $table->foreignId('case_id')->constrained('cases')->onDelete('cascade');
+            $table->foreignId('court_case_id')->constrained('cases')->onDelete('cascade');
             $table->string('appeal_case_number')->nullable();
             $table->date('appeal_filing_date')->nullable();
             $table->enum('appeal_status', ['pending', 'in_progress', 'decided', 'withdrawn'])->default('pending');

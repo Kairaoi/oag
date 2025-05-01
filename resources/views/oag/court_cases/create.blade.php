@@ -8,15 +8,22 @@
         @csrf
 
         <!-- Case Selection -->
-        <div class="mb-3">
-            <label for="case_id" class="form-label">Case</label>
-            <select name="case_id" id="case_id" class="form-control" required>
-                <option value="">Select Case</option>
-                @foreach($cases as $id => $case)
-                    <option value="{{ $id }}">{{ $case }}</option>
-                @endforeach
+         <!-- Case Selection -->
+        <div class="form-group">
+            <label for="case_id" class="text-white">Case</label>
+            <select class="form-control @error('case_id') is-invalid @enderror" id="case_id" name="case_id" required>
+                <option value="">Select a case</option>
+                <option value="{{ $case->id }}" {{ old('case_id', $case->id) == $case->id ? 'selected' : '' }}>
+                    {{ $case->case_name }}
+                </option>
             </select>
+            @error('case_id')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+            @enderror
         </div>
+
 
         <!-- Charge File Date -->
         <div class="mb-3">
