@@ -42,9 +42,7 @@ class Offence extends Model
 
     public function criminalCases()
 {
-    return $this->belongsToMany(CriminalCase::class, 'case_offence', 'offence_id', 'case_id')
-                ->withPivot('offence_particulars')
-                ->withTimestamps();
+    return $this->belongsToMany(CriminalCase::class, 'case_offence', 'offence_id', 'case_id')->withTimestamps();
 }
 
 }

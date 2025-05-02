@@ -153,7 +153,8 @@
                     <th>Current Lawyer</th>
                     <th>Evidence Status</th>
                     <th>Review Notes</th>
-                    <th>Review Date</th>
+                    <th>Particulars</th>
+                    <!-- <th>Review Date</th> -->
                     <th>Reallocation Details</th>
                     <th>Actions</th>
                 </tr>
@@ -182,6 +183,7 @@ $(document).ready(function() {
     $('#case-review-table').DataTable({
         processing: true,
         serverSide: true,
+        destroy: true,
         ajax: '{{ route('crime.CaseReview.datatables') }}',
         dom: 'Bfrtip',
         buttons: ['copyHtml5', 'excelHtml5', 'csvHtml5', 'pdfHtml5'],
@@ -230,12 +232,18 @@ $(document).ready(function() {
                 }
             },
             {
-                data: 'review_date', name: 'review_date',
+                data: 'offence_particulars', name: 'offence_particulars',
                 render: function(data) {
-                    const date = new Date(data);
-                    return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+                    return data && data.length > 50 ? data.substring(0, 50) + '...' : (data || 'No particulars');
                 }
             },
+            // {
+            //     data: 'review_date', name: 'review_date',
+            //     render: function(data) {
+            //         const date = new Date(data);
+            //         return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+            //     }
+            // },
             {
                 data: 'reallocation_details', name: 'reallocation_details',
                 render: function(data) {

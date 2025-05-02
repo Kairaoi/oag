@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('case_id')->constrained('cases')->onDelete('cascade');
             $table->foreignId('offence_id')->constrained('offences')->onDelete('cascade');
             $table->foreignId('category_id')->constrained('offence_categories')->onDelete('cascade');
-            $table->text('offence_particulars')->nullable(); // Optional extra info per offence
+           
             $table->timestamps();
         });
         

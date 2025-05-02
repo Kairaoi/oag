@@ -108,12 +108,23 @@
         position: relative;
     }
 </style>
+<script>
+    const userRoles = {
+        canCaseReview: {{ auth()->user()->hasRole('cm.user') ? 'true' : 'false' }},
+        canCourtCase: {{ auth()->user()->hasRole('cm.user') ? 'true' : 'false' }},
+        canReallocate: {{ auth()->user()->hasRole('cm.admin') ? 'true' : 'false' }},
+        canAppeal: {{ auth()->user()->hasRole('cm.user') ? 'true' : 'false' }}
+    };
+</script>
+<!-- Bootstrap 5 JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 $(document).ready(function () {
     const table = $('#criminal-case-table').DataTable({
         processing: true,
         serverSide: true,
+        destroy: true, 
         ajax: '{{ route('crime.criminalCase.datatables') }}',
         columns: [
             { data: 'id' },
@@ -168,44 +179,37 @@ $(document).ready(function () {
                         return statusLabel + actionButtons;
                     }
                 },
-            {
-                data: null,
-                render: function(row) {
-                    let actions = `
-                        <div class="dropdown">
+                {
+            data: null,
+            render: function(row) {
+                let actions = `
+                    <div>
+                        <!-- Dropdown Menu -->
+                        <div class="dropdown d-inline">
                             <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton${row.id}" data-bs-toggle="dropdown" aria-expanded="false">
                                 Actions
                             </button>
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton${row.id}">
                                 <li><a class="dropdown-item" href="${@json(route('crime.criminalCase.edit', ':id')).replace(':id', row.id)}">Edit</a></li>
                                 <li><a class="dropdown-item" href="${@json(route('crime.criminalCase.show', ':id')).replace(':id', row.id)}">Show</a></li>`;
-                    
-                    @if(auth()->user()->hasRole('cm.user'))
-                        if (row.status === 'accepted') {
-                            actions += `<li><a class="dropdown-item" href="${@json(route('crime.CaseReview.create', ':id')).replace(':id', row.id)}">Case Review</a></li>`;
-                        }
-                    @endif
-                    @if(auth()->user()->hasRole('cm.user'))
-                        if (row.status === 'accepted') {
-                            actions += `<li><a class="dropdown-item" href="${@json(route('crime.CourtCase.create', ':id')).replace(':id', row.id)}">Court Case</a></li>`;
-                        }
-                    @endif
-                    @if(auth()->user()->hasRole('cm.admin'))
-                    if (row.status === 'rejected') {
-                        actions += `
-                            <li>
-                                <a class="dropdown-item" href="${@json(route('crime.criminalCase.showReallocationForm', ':id')).replace(':id', row.id)}">
-                                    Case Reallocate
-                                </a>
-                            </li>`;
-                    }
 
-                    @endif
+                if (userRoles.canCaseReview && row.status === 'accepted') {
+                    actions += `<li><a class="dropdown-item" href="${@json(route('crime.CaseReview.create', ':id')).replace(':id', row.id)}">Case Review</a></li>`;
+                }
 
+                if (userRoles.canCourtCase && row.status === 'accepted') {
+                    actions += `<li><a class="dropdown-item" href="${@json(route('crime.CourtCase.create', ':id')).replace(':id', row.id)}">Court Case</a></li>`;
+                }
 
+                if (userRoles.canReallocate && row.status === 'rejected') {
+                    actions += `<li><a class="dropdown-item" href="${@json(route('crime.criminalCase.showReallocationForm', ':id')).replace(':id', row.id)}">Case Reallocate</a></li>`;
+                }
 
-                    actions += `
-                                <li><a class="dropdown-item" href="${@json(route('crime.criminalCase.createAppeal', ':id')).replace(':id', row.id)}">Appeal</a></li>
+                if (userRoles.canAppeal) {
+                    actions += `<li><a class="dropdown-item" href="${@json(route('crime.criminalCase.createAppeal', ':id')).replace(':id', row.id)}">Appeal</a></li>`;
+                }
+
+                actions += `
                                 <li>
                                     <a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); if(confirm('Are you sure?')) document.getElementById('delete-form-${row.id}').submit();">Delete</a>
                                     <form id="delete-form-${row.id}" action="${@json(route('crime.criminalCase.destroy', ':id')).replace(':id', row.id)}" method="POST" class="d-none">
@@ -213,10 +217,34 @@ $(document).ready(function () {
                                     </form>
                                 </li>
                             </ul>
-                        </div>`;
-                    return actions;
-                }
+                        </div>
+
+                        <!-- Collapsible Panel -->
+                        <div class="accordion mt-2" id="panelActions${row.id}">
+                            <div class="accordion-item border border-secondary rounded">
+                                <h2 class="accordion-header" id="heading${row.id}">
+                                    <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${row.id}" aria-expanded="false" aria-controls="collapse${row.id}">
+                                        Additional Panel
+                                    </button>
+                                </h2>
+                                <div id="collapse${row.id}" class="accordion-collapse collapse" aria-labelledby="heading${row.id}" data-bs-parent="#panelActions${row.id}">
+                                    <div class="accordion-body py-2 px-3">
+                                        <ul class="list-unstyled mb-0">
+                                            <li><a href="${@json(route('crime.casereview.reviewed', ':id')).replace(':id', row.id)}">View Reviewed Cases</a></li>
+                                            <li><a href="#">Empty Route 2</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+
+                return actions;
             }
+        }
+
+
+
         ],
         dom: 'lBfrtip',
         buttons: ['copy', 'csv', 'excel', 'pdf']
@@ -276,5 +304,7 @@ function reallocateCase(caseId) {
             form.submit();
         }
     }
+    
+
 </script>
 @endpush

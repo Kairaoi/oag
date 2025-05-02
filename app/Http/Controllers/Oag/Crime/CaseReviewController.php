@@ -75,81 +75,77 @@ class CaseReviewController extends Controller
     
         // Define validation rules
         $rules = [
-           'case_id' => 'required|exists:cases,id',
-'evidence_status' => 'required|in:pending_review,sufficient_evidence,insufficient_evidence,returned_to_police',
-'review_notes' => 'required|string',
-'review_date' => 'required|date',
-'reason_for_closure_id' => 'required_if:evidence_status,insufficient_evidence,returned_to_police|nullable|exists:reasons_for_closure,id',
-'offence_id.*' => 'required_if:evidence_status,sufficient_evidence|nullable|exists:offences,id',
-'category_id.*' => 'required_if:evidence_status,sufficient_evidence|nullable|exists:offence_categories,id',
-'offence_particulars.*' => 'required_if:evidence_status,sufficient_evidence|nullable|string',
-
+            'case_id' => 'required|exists:cases,id',
+            'evidence_status' => 'required|in:pending_review,sufficient_evidence,insufficient_evidence,returned_to_police',
+            'review_notes' => 'required|string',
+            'review_date' => 'required|date',
+            'reason_for_closure_id' => 'required_if:evidence_status,insufficient_evidence,returned_to_police|nullable|exists:reasons_for_closure,id',
+            'offence_id.*' => 'required_if:evidence_status,sufficient_evidence|nullable|exists:offences,id',
+            'category_id.*' => 'required_if:evidence_status,sufficient_evidence|nullable|exists:offence_categories,id',
+            'offence_particulars' => 'required_if:evidence_status,sufficient_evidence|nullable|string', // changed to single field
         ];
     
-        // Define custom error messages
+        // Custom error messages
         $customMessages = [
             'reason_for_closure_id.required_if' => 'Please select a reason for closing the case.',
         ];
     
-        // Validate the incoming data
+        // Validate incoming data
         $data = $request->validate($rules, $customMessages);
-        $data['created_by'] = auth()->id(); // Set the created_by field
-        
-        // Add closure fields explicitly
+        $data['created_by'] = auth()->id();
+    
+        // If the case is closed, set closure date
         if (in_array($data['evidence_status'], ['insufficient_evidence', 'returned_to_police'])) {
             $data['date_file_closed'] = now()->format('Y-m-d');
-            // reason_for_closure_id is already in $data from the validation
         }
     
-        // Create the case review in the database
+        // Create the case review
         $caseReview = $this->caseReviewRepository->create($data);
         Log::info('Created Case Review:', ['caseReview' => $caseReview]);
     
         try {
-            // Handle case status update (evidence status)
+            // Update case status
             $this->handleCaseStatusUpdate($data);
     
-            // Handle offence data if evidence status is "sufficient_evidence"
+            // Handle offence syncing only for sufficient evidence
             if ($request->evidence_status === 'sufficient_evidence') {
                 $case = $this->criminalCaseRepository->getById($request->case_id);
-            
+    
                 if ($case) {
                     $offenceIds = $request->offence_id;
                     $categoryIds = $request->category_id;
-                    $particulars = $request->offence_particulars;
-            
+    
                     $syncData = [];
-            
+    
                     foreach ($offenceIds as $index => $offenceId) {
                         if ($offenceId) {
+                            // Include offence particulars in the sync data
                             $syncData[$offenceId] = [
                                 'category_id' => $categoryIds[$index] ?? null,
-                                'offence_particulars' => $particulars[$index] ?? null,
+                                'offence_particulars' => $request->offence_particulars, // adding offence particulars to sync
                             ];
                         }
                     }
-            
+    
                     $case->offences()->syncWithoutDetaching($syncData);
-            
-                    Log::info("Linked multiple offences to case ID {$request->case_id}", ['syncData' => $syncData]);
+                    Log::info("Linked offences to case ID {$request->case_id}", ['syncData' => $syncData]);
                 } else {
                     Log::warning("Case not found: {$request->case_id}");
                 }
             }
-            
     
-            // Redirect back with success message
             return redirect()->route('crime.CaseReview.index')
                 ->with('caseid', $caseId)
                 ->with('success', 'Case review created successfully.');
     
         } catch (\Exception $e) {
-            // Log error and return with error message
             Log::error("Error processing case review: " . $e->getMessage());
             return redirect()->route('crime.CaseReview.index')
                 ->with('error', 'There was an error processing your request: ' . $e->getMessage());
         }
     }
+    
+
     
     private function handleCaseStatusUpdate(array $data)
 {
@@ -195,7 +191,7 @@ class CaseReviewController extends Controller
     public function edit($id)
     {
         $case = $this->criminalCaseRepository->getById($id);
-        $review = $this->caseReviewRepository->getByCaseId($id); // Assuming 1 review per case
+        $review = $this->caseReviewRepository->getById($id); // Assuming 1 review per case
     
         $reasonsForClosure = $this->reasonsForClosureRepository->pluck();
         $councils = $this->userRepository->pluck();
@@ -203,12 +199,13 @@ class CaseReviewController extends Controller
         $categories = $this->offenceCategoryRepository->pluck();
     
         return view('oag.crime.case_reviews.edit')
-            ->with('case', $case)
-            ->with('review', $review)
-            ->with('reasonsForClosure', $reasonsForClosure)
-            ->with('offences', $offences)
-            ->with('categories', $categories)
-            ->with('councils', $councils);
+        ->with('case', $case)
+        ->with('caseReview', $review) // <- changed here
+        ->with('reasonsForClosure', $reasonsForClosure)
+        ->with('offences', $offences)
+        ->with('categories', $categories)
+        ->with('councils', $councils);
+    
     }
     
 

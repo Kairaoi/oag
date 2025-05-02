@@ -31,7 +31,6 @@
             @enderror
         </div>
 
-      
         <!-- Evidence Status -->
         <div class="form-group">
             <label for="evidence_status" class="text-white">Evidence Status</label>
@@ -64,7 +63,7 @@
             @enderror
         </div>
 
-        <!-- Dynamic Offences Group -->
+        <!-- Dynamic Offences Group (Moved above Review Notes) -->
         <div id="offenceGroupsSection" style="display: none;">
             <label class="text-white">Offences</label>
             <div id="offenceGroupsContainer">
@@ -87,10 +86,6 @@
                         </select>
                     </div>
 
-                    <div class="form-group col-md-3">
-                        <input type="text" class="form-control" name="offence_particulars[]" placeholder="Offence Particulars">
-                    </div>
-
                     <div class="form-group col-md-1 d-flex align-items-end">
                         <button type="button" class="btn btn-danger btn-sm remove-offence-group">&times;</button>
                     </div>
@@ -100,6 +95,17 @@
             <div class="text-right mb-4">
                 <button type="button" class="btn btn-light btn-sm" id="addOffenceGroup">+ Add Offence</button>
             </div>
+        </div>
+
+         <!-- Offence Particulars -->
+         <div class="form-group">
+            <label for="offence_particulars" class="text-white">Offence Particulars</label>
+            <textarea class="form-control @error('offence_particulars') is-invalid @enderror" id="offence_particulars" name="offence_particulars" rows="3" required>{{ old('offence_particulars') }}</textarea>
+            @error('offence_particulars')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+            @enderror
         </div>
 
         <!-- Review Notes -->

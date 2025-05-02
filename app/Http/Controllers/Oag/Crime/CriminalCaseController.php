@@ -11,6 +11,7 @@ use App\Repositories\Oag\Crime\ReasonsForClosureRepository;
 use App\Repositories\Oag\Crime\OffenceRepository;
 use App\Repositories\Oag\Crime\OffenceCategoryRepository;
 use App\Repositories\OAG\Crime\CourtRepository;
+use App\Repositories\Oag\Crime\CaseReviewRepository;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -35,6 +36,7 @@ class CriminalCaseController extends Controller
     protected $offenceRepository;
     protected $offenceCategoryRepository;
     protected $courtRepository;
+    protected $caseReviewRepository;
 
     /**
      * CriminalCaseController constructor.
@@ -47,7 +49,7 @@ class CriminalCaseController extends Controller
      * @param OffenceRepository $offenceRepository
      * @param OffenceCategoryRepository $offenceCategoryRepository
      */
-    public function __construct(
+    public function __construct( CaseReviewRepository $caseReviewRepository,
         CriminalCaseRepository $criminalCaseRepository,
         AccusedRepository $accusedRepository,
         IslandRepository $islandRepository,
@@ -65,6 +67,7 @@ class CriminalCaseController extends Controller
         $this->offenceRepository = $offenceRepository;
         $this->offenceCategoryRepository = $offenceCategoryRepository;
         $this->courtRepository = $courtRepository;
+        $this->caseReviewRepository = $caseReviewRepository;
     }
 
     /**
@@ -545,6 +548,15 @@ public function reallocateCase(Request $request, $caseId)
         Log::error("Error during case reallocation", ['error' => $e->getMessage()]);
         return redirect()->back()->with('error', 'Reallocation failed. Please try again.');
     }
+}
+
+public function showReviewedCases($id)
+{
+    $caseReviews = $this->caseReviewRepository->getReviewsByCaseId($id);
+
+    // dd($caseReviews);
+
+    return view('oag.crime.case_reviews.reviewed', compact('caseReviews'));
 }
 
 

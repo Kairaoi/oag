@@ -146,26 +146,19 @@ class CreateCriminalJusticeSystemTables extends Migration
 
         Schema::create('case_reviews', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('case_id')->constrained('cases')->onDelete('cascade');
-        
-            // Review tracking
+            $table->foreignId('case_id')->unique()->constrained('cases')->onDelete('cascade'); // Ensures only one review per case
             $table->enum('evidence_status', [
                 'pending_review',
                 'sufficient_evidence',
                 'insufficient_evidence',
                 'returned_to_police'
             ])->default('pending_review');
+            $table->text('offence_particulars')->nullable(); // <-- Added this line
             $table->text('review_notes')->nullable();
             $table->datetime('review_date');
-        
-            // Case closure fields moved here
             $table->date('date_file_closed')->nullable();
             $table->foreignId('reason_for_closure_id')->nullable()->constrained('reasons_for_closure');
-        
-            // Lawyer reassignment (new addition)
             $table->foreignId('new_lawyer_id')->nullable()->constrained('users');
-        
-            // Auditing
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->softDeletes();
@@ -175,6 +168,7 @@ class CreateCriminalJusticeSystemTables extends Migration
             $table->index('evidence_status');
             $table->index('review_date');
         });
+        
         
         
         
