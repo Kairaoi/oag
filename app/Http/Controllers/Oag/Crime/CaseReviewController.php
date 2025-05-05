@@ -119,13 +119,13 @@ class CaseReviewController extends Controller
     
                     foreach ($offenceIds as $index => $offenceId) {
                         if ($offenceId) {
-                            // Include offence particulars in the sync data
                             $syncData[$offenceId] = [
                                 'category_id' => $categoryIds[$index] ?? null,
-                                'offence_particulars' => $request->offence_particulars, // adding offence particulars to sync
+                                // 'offence_particulars' => $request->offence_particulars, // ❌ Remove this line
                             ];
                         }
                     }
+                    
     
                     $case->offences()->syncWithoutDetaching($syncData);
                     Log::info("Linked offences to case ID {$request->case_id}", ['syncData' => $syncData]);

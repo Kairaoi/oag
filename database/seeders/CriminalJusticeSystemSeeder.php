@@ -66,7 +66,7 @@ foreach ([
    
        // Seed cases table (ensuring date_of_allocation is not null)
 $caseIds = [];
-for ($i = 1; $i <= 300; $i++) {
+for ($i = 1; $i <= 10; $i++) {
     $caseIds[] = DB::table('cases')->insertGetId([
         'case_file_number' => 'CASE' . str_pad($i, 3, '0', STR_PAD_LEFT),
         'date_file_received' => now()->subDays($i),
@@ -85,7 +85,7 @@ for ($i = 1; $i <= 300; $i++) {
         
 
 
-for ($i = 1; $i <= 300; $i++) {
+for ($i = 1; $i <= 10; $i++) {
     $dob = $faker->dateTimeBetween('-60 years', '-18 years')->format('Y-m-d');
     $age = Carbon::parse($dob)->age;
 
@@ -107,7 +107,7 @@ for ($i = 1; $i <= 300; $i++) {
     ]);
 }
        // Seed victims table
-for ($i = 1; $i <= 300; $i++) {
+for ($i = 1; $i <= 10; $i++) {
     $firstName = $faker->firstName;
     $lastName = $faker->lastName;
     $dob = $faker->date('Y-m-d', '2010-01-01'); // safer date range for age logic
@@ -153,7 +153,7 @@ for ($i = 1; $i <= 300; $i++) {
         }
 
         // Seed accused_offence table
-        for ($i = 1; $i <= 300; $i++) {
+        for ($i = 1; $i <= 10; $i++) {
             DB::table('accused_offence')->insert([
                 'accused_id' => $i,
                 'offence_id' => $offenceIds[array_rand($offenceIds)],
@@ -161,7 +161,7 @@ for ($i = 1; $i <= 300; $i++) {
         }
 
         // Seed incidents table
-        for ($i = 1; $i <= 300; $i++) {
+        for ($i = 1; $i <= 10; $i++) {
             DB::table('incidents')->insert([
                 'case_id' => $caseIds[$i - 1],
                 'lawyer_id' => $lawyerIds[array_rand($lawyerIds)],
@@ -175,7 +175,7 @@ for ($i = 1; $i <= 300; $i++) {
         }
 
          // Insert court cases
-         for ($i = 1; $i <= 300; $i++) {
+         for ($i = 1; $i <= 10; $i++) {
             DB::table('court_cases')->insert([
                 'case_id' => $faker->randomElement($caseIds),
                 'charge_file_dated' => $faker->date(),

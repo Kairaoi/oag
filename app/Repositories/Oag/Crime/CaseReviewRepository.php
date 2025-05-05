@@ -183,7 +183,8 @@ class CaseReviewRepository extends CustomBaseRepository
         ->leftJoin('users as to_lawyer', 'case_reallocations.to_lawyer_id', '=', 'to_lawyer.id')
         ->leftJoin('case_offence', 'case_reviews.case_id', '=', 'case_offence.case_id')
         ->leftJoin('offences', 'case_offence.offence_id', '=', 'offences.id')
-        ->leftJoin('offence_categories', 'case_offence.category_id', '=', 'offence_categories.id')
+        ->leftJoin('offence_categories', 'offences.offence_category_id', '=', 'offence_categories.id')
+
         ->leftJoin('accused', 'case_reviews.case_id', '=', 'accused.case_id')
         ->leftJoin('victims', 'case_reviews.case_id', '=', 'victims.case_id')
         ->select([

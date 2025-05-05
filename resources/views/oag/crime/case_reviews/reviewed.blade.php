@@ -147,6 +147,7 @@
                 <div class="evidence-analysis">
                     {{ $review->offence_particulars }}
                 </div>
+
             </div>
         </div>
 
