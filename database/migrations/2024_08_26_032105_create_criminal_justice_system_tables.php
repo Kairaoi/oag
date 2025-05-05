@@ -60,14 +60,17 @@ class CreateCriminalJusticeSystemTables extends Migration
             $table->foreignId('island_id')->constrained('islands');
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
-            // New fields for review status
-            $table->enum('status', ['pending', 'accepted', 'rejected', 'reallocate','allocated'])->default('pending');
+            
+            // New fields for review status, including "closed"
+            $table->enum('status', ['pending', 'accepted', 'rejected', 'reallocate', 'allocated', 'closed'])->default('pending');
+            
             $table->foreignId('reviewer_id')->nullable()->constrained('users');
             $table->timestamp('reviewed_at')->nullable();
             $table->text('rejection_reason')->nullable(); // Optional: To store reason for rejection
             $table->softDeletes();
             $table->timestamps();
         });
+        
         // Create CourtHearings Table - ADD HERE
         Schema::create('court_hearings', function (Blueprint $table) {
             $table->id();

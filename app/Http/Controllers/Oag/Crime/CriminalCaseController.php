@@ -12,6 +12,7 @@ use App\Repositories\Oag\Crime\OffenceRepository;
 use App\Repositories\Oag\Crime\OffenceCategoryRepository;
 use App\Repositories\OAG\Crime\CourtRepository;
 use App\Repositories\Oag\Crime\CaseReviewRepository;
+use App\Repositories\Oag\Crime\CourtCaseRepository;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -37,6 +38,7 @@ class CriminalCaseController extends Controller
     protected $offenceCategoryRepository;
     protected $courtRepository;
     protected $caseReviewRepository;
+    protected $courtCaseRepository;
 
     /**
      * CriminalCaseController constructor.
@@ -49,7 +51,7 @@ class CriminalCaseController extends Controller
      * @param OffenceRepository $offenceRepository
      * @param OffenceCategoryRepository $offenceCategoryRepository
      */
-    public function __construct( CaseReviewRepository $caseReviewRepository,
+    public function __construct(CourtCaseRepository $courtCaseRepository, CaseReviewRepository $caseReviewRepository,
         CriminalCaseRepository $criminalCaseRepository,
         AccusedRepository $accusedRepository,
         IslandRepository $islandRepository,
@@ -68,6 +70,7 @@ class CriminalCaseController extends Controller
         $this->offenceCategoryRepository = $offenceCategoryRepository;
         $this->courtRepository = $courtRepository;
         $this->caseReviewRepository = $caseReviewRepository;
+        $this->courtCaseRepository = $courtCaseRepository;
     }
 
     /**
@@ -558,6 +561,16 @@ public function showReviewedCases($id)
 
     return view('oag.crime.case_reviews.reviewed', compact('caseReviews'));
 }
+
+public function showCourtCases($id)
+{
+    $courtCases = $this->courtCaseRepository->getCourtCasesByCaseId($id);
+
+    // dd($courtCases);
+
+    return view('oag.crime.case_reviews.courtcase', compact('courtCases'));
+}
+
 
 
 }

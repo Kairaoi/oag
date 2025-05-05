@@ -136,49 +136,56 @@ $(document).ready(function () {
             { data: 'island_name', defaultContent: 'N/A' },
             { data: 'lawyer_name', defaultContent: 'N/A' },
             {
-                    data: null,
-                    render: function(row) {
-                        let statusLabel = '';
-                        let actionButtons = '';
-                        let status = row.status || '';
+    data: null,
+    render: function(row) {
+        let statusLabel = '';
+        let actionButtons = '';
+        let status = row.status || '';
 
-                        @if(!auth()->user()->hasRole('cm.user'))
-                            if (status === 'accepted') {
-                                statusLabel = '<span class="badge bg-success">Accepted</span>';
-                            } else if (status === 'rejected') {
-                                statusLabel = '<span class="badge bg-danger">Rejected</span>';
-                            } else if (status === 'allocated') {
-                                statusLabel = '<span class="badge bg-primary">Allocated</span>';
-                            } else {
-                                statusLabel = '<span class="badge bg-warning">Pending</span>';
-                            }
-                        @else
-                            if (status === 'accepted') {
-                                statusLabel = '<span class="badge bg-success">Accepted</span>';
-                            } else if (status === 'rejected') {
-                                statusLabel = '<span class="badge bg-danger">Rejected</span>';
-                            } else if (status === 'allocated') {
-                                statusLabel = '<span class="badge bg-primary">Allocated</span>';
-                            }
-                        @endif
+        @if (!auth()->user()->hasRole('cm.user'))
+            if (status === 'accepted') {
+                statusLabel = '<span class="badge bg-success">Accepted</span>';
+            } else if (status === 'rejected') {
+                statusLabel = '<span class="badge bg-danger">Rejected</span>';
+            } else if (status === 'allocated') {
+                statusLabel = '<span class="badge bg-primary">Allocated</span>';
+            } else if (status === 'closed') {
+                statusLabel = '<span class="badge bg-secondary">Closed</span>';
+            } else {
+                statusLabel = '<span class="badge bg-warning">Pending</span>';
+            }
+        @else
+            if (status === 'accepted') {
+                statusLabel = '<span class="badge bg-success">Accepted</span>';
+            } else if (status === 'rejected') {
+                statusLabel = '<span class="badge bg-danger">Rejected</span>';
+            } else if (status === 'allocated') {
+                statusLabel = '<span class="badge bg-primary">Allocated</span>';
+            } else if (status === 'closed') {
+                statusLabel = '<span class="badge bg-secondary">Closed</span>';
+            } else {
+                statusLabel = '<span class="badge bg-secondary">N/A</span>';
+            }
+        @endif
 
-                        @if(auth()->user()->hasRole('cm.user'))
-                            if (status !== 'accepted' && status !== 'rejected') {
-                                actionButtons = `
-                                    <div class="d-flex justify-content-around mt-2">
-                                        <button class="btn btn-accept me-2" onclick="handleCaseAction(${row.id}, 'accept')">
-                                            <i class="fas fa-check"></i> Accept
-                                        </button>
-                                        <button class="btn btn-reject" data-bs-toggle="modal" data-bs-target="#rejectionModal" data-bs-case-id="${row.id}">
-                                            <i class="fas fa-times"></i> Reject
-                                        </button>
-                                    </div>`;
-                            }
-                        @endif
+        @if(auth()->user()->hasRole('cm.user'))
+            if (status !== 'accepted' && status !== 'rejected' && status !== 'closed') {
+                actionButtons = `
+                    <div class="d-flex justify-content-around mt-2">
+                        <button class="btn btn-accept me-2" onclick="handleCaseAction(${row.id}, 'accept')">
+                            <i class="fas fa-check"></i> Accept
+                        </button>
+                        <button class="btn btn-reject" data-bs-toggle="modal" data-bs-target="#rejectionModal" data-bs-case-id="${row.id}">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
+                    </div>`;
+            }
+        @endif
 
-                        return statusLabel + actionButtons;
-                    }
-                },
+        return statusLabel + actionButtons;
+    }
+},
+
                 {
             data: null,
             render: function(row) {
@@ -220,23 +227,29 @@ $(document).ready(function () {
                         </div>
 
                         <!-- Collapsible Panel -->
-                        <div class="accordion mt-2" id="panelActions${row.id}">
-                            <div class="accordion-item border border-secondary rounded">
-                                <h2 class="accordion-header" id="heading${row.id}">
-                                    <button class="accordion-button collapsed py-1 px-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${row.id}" aria-expanded="false" aria-controls="collapse${row.id}">
-                                        Additional Panel
-                                    </button>
-                                </h2>
-                                <div id="collapse${row.id}" class="accordion-collapse collapse" aria-labelledby="heading${row.id}" data-bs-parent="#panelActions${row.id}">
-                                    <div class="accordion-body py-2 px-3">
-                                        <ul class="list-unstyled mb-0">
-                                            <li><a href="${@json(route('crime.casereview.reviewed', ':id')).replace(':id', row.id)}">View Reviewed Cases</a></li>
-                                            <li><a href="#">Empty Route 2</a></li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                     <div class="mt-2" id="panelActions${row.id}">
+    <div class="border border-secondary rounded">
+        <h2 class="mb-0" id="heading${row.id}">
+            <button class="btn btn-sm btn-light w-100 text-start px-2 py-1"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapse${row.id}"
+                    aria-expanded="false"
+                    aria-controls="collapse${row.id}">
+                Additional Panel
+            </button>
+        </h2>
+        <div id="collapse${row.id}" class="collapse" aria-labelledby="heading${row.id}">
+            <div class="p-2 bg-light">
+                <ul class="list-unstyled mb-0">
+                    <li><a href="${@json(route('crime.casereview.reviewed', ':id')).replace(':id', row.id)}">View Reviewed Cases</a></li>
+                    <li><a href="${@json(route('crime.courtcase', ':id')).replace(':id', row.id)}">View Court Cases</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
                     </div>`;
 
                 return actions;

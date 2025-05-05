@@ -148,34 +148,34 @@ class CaseReviewController extends Controller
 
     
     private function handleCaseStatusUpdate(array $data)
-{
-    // Update the case's status based on evidence status
-    $caseStatus = '';
+    {
+        // Initialize case status
+        $caseStatus = null;
     
-    if (in_array($data['evidence_status'], ['insufficient_evidence', 'returned_to_police'])) {
-        // Case closed
-        $caseStatus = 'closed';
-        Log::info("Case Closure: Updating case ID {$data['case_id']} with closed status.");
-        
-        // The date_file_closed and reason_for_closure_id are already in the case_review
-        // record that was created earlier via $this->caseReviewRepository->create($data);
-    } 
-    elseif ($data['evidence_status'] === 'sufficient_evidence') {
-        // Case being processed
-        $caseStatus = 'accepted';
-        Log::info("Case Progress: Case ID {$data['case_id']} marked as in progress.");
+        // Determine case status based on evidence status
+        if (in_array($data['evidence_status'], ['insufficient_evidence', 'returned_to_police'])) {
+            $caseStatus = 'closed';
+            Log::info("Case Closure Triggered: Evidence marked as '{$data['evidence_status']}'. Case ID {$data['case_id']} will be closed.");
+            
+            // Assumes that reason_for_closure_id and date_file_closed are handled during the review creation
+        } elseif ($data['evidence_status'] === 'sufficient_evidence') {
+            $caseStatus = 'accepted';
+            Log::info("Case Processing: Sufficient evidence found. Case ID {$data['case_id']} marked as 'accepted'.");
+        } else {
+            Log::warning("Unknown Evidence Status: '{$data['evidence_status']}' provided for Case ID {$data['case_id']}. No status update performed.");
+        }
+    
+        // Update the case status only if it's determined
+        if ($caseStatus !== null) {
+            $updateResult = $this->criminalCaseRepository->update($data['case_id'], [
+                'status' => $caseStatus,
+                'updated_by' => auth()->id(),
+            ]);
+    
+            Log::info("Case Update Success: Case ID {$data['case_id']} status updated to '{$caseStatus}'.", ['result' => $updateResult]);
+        }
     }
     
-    // Only update the status field in the criminal case table
-    if (!empty($caseStatus)) {
-        $updateResult = $this->criminalCaseRepository->update($data['case_id'], [
-            'status' => $caseStatus,
-            'updated_by' => auth()->id(),
-        ]);
-        
-        Log::info("Updated case ID {$data['case_id']} status to {$caseStatus}", ['result' => $updateResult]);
-    }
-}
 
     public function show($id)
     {

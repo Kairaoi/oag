@@ -1,6 +1,34 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $review = $caseReviews->first(); // since it's a collection with 1 item
+    $overlayReasons = ['insufficient_evidence', 'returned_to_police'];
+@endphp
+
+@if($review && $review->case_status === 'closed' && in_array($review->evidence_status, $overlayReasons))
+    <div style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.75);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        text-align: center;
+        padding: 2rem;
+    ">
+        <div>
+            <h1>Case Closed</h1>
+            <p>This case was closed due to <strong>{{ ucwords(str_replace('_', ' ', $review->evidence_status)) }}</strong>.</p>
+        </div>
+    </div>
+@endif
+
 <div class="container mt-4 mb-5">
     @foreach($caseReviews as $review)
     <div class="case-review-document">
@@ -56,9 +84,18 @@
                             <td>{{ $review->accused_genders }}</td>
                         </tr>
                         <tr>
-                            <th>Date of Birth:</th>
-                            <td>{{ \Carbon\Carbon::parse($review->accused_dob)->format('F j, Y') }} ({{ $review->accused_ages }} years of age)</td>
-                        </tr>
+    <th>Date of Birth:</th>
+    @php
+        $dobParts = explode(',', $review->accused_dob);
+    @endphp
+    <td>
+        @foreach ($dobParts as $dob)
+            {{ \Carbon\Carbon::parse(trim($dob))->format('F j, Y') }}<br>
+        @endforeach
+        ({{ $review->accused_ages }} years of age)
+    </td>
+</tr>
+
                         <tr>
                             <th>Island of Origin:</th>
                             <td>{{ $review->accused_islands }}</td>

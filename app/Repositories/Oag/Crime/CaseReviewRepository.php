@@ -190,6 +190,7 @@ class CaseReviewRepository extends CustomBaseRepository
         ->select([
             'case_reviews.*',
             'cases.case_name',
+            'cases.status as case_status',
             'creator.name as created_by_name',
             'new_lawyer.name as new_lawyer_name',
             'case_reallocations.reallocation_date',

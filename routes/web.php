@@ -91,6 +91,8 @@ Route::resource('CaseReview', CaseReviewController::class)->except(['create', 's
     ->name('criminalCase.createVictim');
     Route::match(['get', 'post'], 'victim/datatables', [VictimController::class, 'getDataTables'])->name('victim.datatables');
     Route::resource('victim', VictimController::class);
+
+    Route::get('crime/courtcase/{id}', [CriminalCaseController::class, 'showCourtCases'])->name('courtcase');
     Route::get('crime/casereview/{id}', [CriminalCaseController::class, 'showReviewedCases'])->name('casereview.reviewed');
     Route::get('crime/criminalCase/{id}/create-incident', [CriminalCaseController::class, 'createIncident'])
         ->name('criminalCase.createIncident');
