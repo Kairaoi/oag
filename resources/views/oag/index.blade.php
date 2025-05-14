@@ -311,15 +311,34 @@
                                     </div>
                                     <div class="card-body">
                                         <div class="mb-3">
-                                            <label class="form-label small text-muted">Cases by Status</label>
-                                            <div class="progress" style="height: 25px;">
-                                                <div class="progress-bar bg-warning" style="width: {{ ($pendingCount/($pendingCount+$allocatedCount+$acceptedCount+$rejectedCount))*100 }}%" role="progressbar" aria-valuenow="{{ $pendingCount }}" aria-valuemin="0" aria-valuemax="100">Pending</div>
-                                                <div class="progress-bar bg-success" style="width: {{ ($allocatedCount/($pendingCount+$allocatedCount+$acceptedCount+$rejectedCount))*100 }}%" role="progressbar" aria-valuenow="{{ $allocatedCount }}" aria-valuemin="0" aria-valuemax="100">Allocated</div>
-                                                <div class="progress-bar bg-info" style="width: {{ ($acceptedCount/($pendingCount+$allocatedCount+$acceptedCount+$rejectedCount))*100 }}%" role="progressbar" aria-valuenow="{{ $acceptedCount }}" aria-valuemin="0" aria-valuemax="100">Accepted</div>
-                                                <div class="progress-bar bg-danger" style="width: {{ ($rejectedCount/($pendingCount+$allocatedCount+$acceptedCount+$rejectedCount))*100 }}%" role="progressbar" aria-valuenow="{{ $rejectedCount }}" aria-valuemin="0" aria-valuemax="100">Rejected</div>
-                                            </div>
-                                        </div>
-                                        <div class="text-center">
+                                            
+@php
+    $totalCount = $pendingCount + $allocatedCount + $acceptedCount + $rejectedCount;
+@endphp
+
+@if ($totalCount > 0)
+    <div class="mb-3">
+        <label class="form-label small text-muted">Cases by Status</label>
+        <div class="progress" style="height: 25px;">
+            <div class="progress-bar bg-warning" style="width: {{ ($pendingCount / $totalCount) * 100 }}%" role="progressbar" aria-valuenow="{{ $pendingCount }}" aria-valuemin="0" aria-valuemax="100">
+                Pending ({{ round(($pendingCount / $totalCount) * 100, 1) }}%)
+            </div>
+            <div class="progress-bar bg-success" style="width: {{ ($allocatedCount / $totalCount) * 100 }}%" role="progressbar" aria-valuenow="{{ $allocatedCount }}" aria-valuemin="0" aria-valuemax="100">
+                Allocated ({{ round(($allocatedCount / $totalCount) * 100, 1) }}%)
+            </div>
+            <div class="progress-bar bg-info" style="width: {{ ($acceptedCount / $totalCount) * 100 }}%" role="progressbar" aria-valuenow="{{ $acceptedCount }}" aria-valuemin="0" aria-valuemax="100">
+                Accepted ({{ round(($acceptedCount / $totalCount) * 100, 1) }}%)
+            </div>
+            <div class="progress-bar bg-danger" style="width: {{ ($rejectedCount / $totalCount) * 100 }}%" role="progressbar" aria-valuenow="{{ $rejectedCount }}" aria-valuemin="0" aria-valuemax="100">
+                Rejected ({{ round(($rejectedCount / $totalCount) * 100, 1) }}%)
+            </div>
+        </div>
+    </div>
+@else
+    <div class="alert alert-info">No case data available to display analytics.</div>
+@endif
+
+<div class="text-center">
                                             <a href="#" class="btn btn-sm btn-outline-secondary">View Detailed Reports</a>
                                         </div>
                                     </div>

@@ -4,6 +4,7 @@ namespace App\Models\Oag\Civil;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Oag\Civil2\CivilCase;
 
 class CourtCategory extends Model
 {
@@ -29,6 +30,11 @@ class CourtCategory extends Model
     }
 
     public function cases()
+    {
+        return $this->hasMany(CivilCase::class, 'case_category_id');
+    }
+
+    public function civilCases()
     {
         return $this->hasMany(CivilCase::class, 'case_category_id');
     }

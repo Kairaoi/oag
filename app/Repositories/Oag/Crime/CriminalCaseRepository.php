@@ -131,8 +131,8 @@ public function update(int $id, array $data): Model
 public function getNonAppealCases()
 {
     return $this->model
-        ->where('is_appeal_case', false)
-        ->where('is_on_appeal', false)
+        // ->where('is_appeal_case', false)
+        // ->where('is_on_appeal', false)
         ->pluck('case_name', 'id')
         ->toArray();
 }

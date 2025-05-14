@@ -18,5 +18,10 @@ class DatabaseSeeder extends Seeder
     $this->call(CourtAttendanceSeeder::class);
     $this->call(LegalTasksTableSeeder::class);
     $this->call(LegalSystemSeeder::class);
+    $this->call(CourtsTableSeeder::class);
+    $this->call(ReportSeeder::class);
+    $this->call([
+        CivilLitigationSeeder::class,
+    ]);
 }
 }

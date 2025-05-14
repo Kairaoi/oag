@@ -13,6 +13,7 @@ use App\Repositories\Oag\Crime\OffenceCategoryRepository;
 use App\Repositories\OAG\Crime\CourtRepository;
 use App\Repositories\Oag\Crime\CaseReviewRepository;
 use App\Repositories\Oag\Crime\CourtCaseRepository;
+use App\Repositories\Oag\Crime\AppealDetailRepository;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -39,6 +40,7 @@ class CriminalCaseController extends Controller
     protected $courtRepository;
     protected $caseReviewRepository;
     protected $courtCaseRepository;
+    protected $appealDetailRepository;
 
     /**
      * CriminalCaseController constructor.
@@ -51,7 +53,7 @@ class CriminalCaseController extends Controller
      * @param OffenceRepository $offenceRepository
      * @param OffenceCategoryRepository $offenceCategoryRepository
      */
-    public function __construct(CourtCaseRepository $courtCaseRepository, CaseReviewRepository $caseReviewRepository,
+    public function __construct(AppealDetailRepository $appealDetailRepository,CourtCaseRepository $courtCaseRepository, CaseReviewRepository $caseReviewRepository,
         CriminalCaseRepository $criminalCaseRepository,
         AccusedRepository $accusedRepository,
         IslandRepository $islandRepository,
@@ -71,6 +73,7 @@ class CriminalCaseController extends Controller
         $this->courtRepository = $courtRepository;
         $this->caseReviewRepository = $caseReviewRepository;
         $this->courtCaseRepository = $courtCaseRepository;
+        $this->appealDetailRepository = $appealDetailRepository;
     }
 
     /**
@@ -362,97 +365,14 @@ public function createIncident($id)
  * @param int|null $id The ID of the original case (optional)
  * @return \Illuminate\View\View
  */
-public function createAppeal($id = null)
-{
-    if ($id) {
-        $originalCase = $this->criminalCaseRepository->getById($id);
-        
-        if (!$originalCase || $originalCase->is_appeal_case || $originalCase->is_on_appeal) {
-            return redirect()->route('crime.criminalCase.index')
-                ->with('error', 'Te case ae rineaki e aki tau ibukin appeal.');
-        }
-        
-        $originalCases = [$originalCase->id => $originalCase->case_name];
-        
-        // Prepare suggested values based on original case
-        $suggestedValues = [
-            'case_name' => "Appeal - {$originalCase->case_name}",
-            'island_id' => $originalCase->island_id,
-            'lawyer_id' => $originalCase->lawyer_id,
-        ];
-    } else {
-        $originalCases = $this->criminalCaseRepository->getNonAppealCases();
-        $suggestedValues = [];
-    }
-    
-    $courtsOfAppeal = $this->courtRepository->pluck();
-    $islands = $this->islandRepository->pluck();
-    $lawyers = $this->userRepository->pluck();
-    
-    return view('oag.crime.create_appeal')
-        ->with('originalCases', $originalCases)
-        ->with('courtsOfAppeal', $courtsOfAppeal)
-        ->with('islands', $islands)
-        ->with('lawyers', $lawyers)
-        ->with('selectedCaseId', $id)
-        ->with('suggestedValues', $suggestedValues);
-}
+
 /**
  * Store a newly created appeal case
  * 
  * @param Request $request
  * @return \Illuminate\Http\RedirectResponse
  */
-public function storeAppeal(Request $request)
-{
-    $validatedData = $request->validate([
-        'original_case_id' => 'required|exists:cases,id',
-        'case_file_number' => 'required|string|unique:cases,case_file_number',
-        'case_name' => 'required|string',
-        'date_file_received' => 'required|date',
-        'lawyer_id' => 'required|exists:users,id',
-        'island_id' => 'required|exists:islands,id',
-        'court_id' => 'required|exists:courts,id',
-        'appeal_grounds' => 'required|string',  // New field
-    ]);
-    
-    \DB::beginTransaction();
-    
-    try {
-        // Mark original case as on appeal
-        $originalCase = $this->criminalCaseRepository->getById($request->original_case_id);
-        $originalCase->update(['is_on_appeal' => true]);
-        
-        // Create the appeal case
-        $appealData = $validatedData;
-        $appealData['is_appeal_case'] = true;
-        $appealData['created_by'] = auth()->id();
-        
-        $appealCase = $this->criminalCaseRepository->create($appealData);
-        
-        // Create appeal details record
-        $appealDetails = [
-            'case_id' => $appealCase->id,
-            'appeal_case_number' => $validatedData['case_file_number'],
-            'appeal_filing_date' => $validatedData['date_file_received'],
-            'appeal_grounds' => $validatedData['appeal_grounds'] ?? 'Appeal grounds not specified',
-            'appeal_status' => 'pending',
-            'created_by' => auth()->id(),
-        ];
-        
-        \DB::table('appeal_details')->insert($appealDetails);
-        
-        \DB::commit();
-        
-        return redirect()->route('crime.criminalCase.show', $appealCase->id)
-            ->with('success', 'Appeal case created successfully');
-    } catch (\Exception $e) {
-        \DB::rollback();
-        return redirect()->back()
-            ->with('error', 'Error creating appeal case: ' . $e->getMessage())
-            ->withInput();
-    }
-}
+
 
 public function accept($id)
 {
@@ -569,6 +489,15 @@ public function showCourtCases($id)
     // dd($courtCases);
 
     return view('oag.crime.case_reviews.courtcase', compact('courtCases'));
+}
+
+public function showAppealCases($id)
+{
+    $appealDetails = $this->appealDetailRepository->getAppealDetailsByCaseId($id);
+
+    // dd($appealDetails);
+
+    return view('oag.crime.appeal_details.appeal', compact('appealDetails'));
 }
 
 

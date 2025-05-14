@@ -107,6 +107,22 @@
         overflow: visible !important;
         position: relative;
     }
+     /* For arrow rotation on panel toggle */
+     .collapse.show + button .fa-chevron-down {
+        transform: rotate(180deg);
+    }
+    
+    /* Hover effects for panel items */
+    .list-group-item-action:hover {
+        background-color: #f8fafc;
+        transform: translateX(5px);
+        transition: all 0.2s ease;
+    }
+    
+    /* Animation for panel open/close */
+    .collapse {
+        transition: height 0.3s ease;
+    }
 </style>
 <script>
     const userRoles = {
@@ -200,9 +216,15 @@ $(document).ready(function () {
                                 <li><a class="dropdown-item" href="${@json(route('crime.criminalCase.edit', ':id')).replace(':id', row.id)}">Edit</a></li>
                                 <li><a class="dropdown-item" href="${@json(route('crime.criminalCase.show', ':id')).replace(':id', row.id)}">Show</a></li>`;
 
-                if (userRoles.canCaseReview && row.status === 'accepted') {
-                    actions += `<li><a class="dropdown-item" href="${@json(route('crime.CaseReview.create', ':id')).replace(':id', row.id)}">Case Review</a></li>`;
-                }
+                                if (userRoles.canCaseReview && row.status === 'accepted') {
+    actions += `<li>
+        <a class="dropdown-item d-flex justify-content-between align-items-center" href="${@json(route('crime.CaseReview.create', ':id')).replace(':id', row.id)}">
+            Case Review
+            ${row.is_reviewed ? '<i class="fas fa-check text-success ms-2"></i>' : ''}
+        </a>
+    </li>`;
+}
+
 
                 if (userRoles.canCourtCase && row.status === 'accepted') {
                     actions += `<li><a class="dropdown-item" href="${@json(route('crime.CourtCase.create', ':id')).replace(':id', row.id)}">Court Case</a></li>`;
@@ -213,7 +235,7 @@ $(document).ready(function () {
                 }
 
                 if (userRoles.canAppeal) {
-                    actions += `<li><a class="dropdown-item" href="${@json(route('crime.criminalCase.createAppeal', ':id')).replace(':id', row.id)}">Appeal</a></li>`;
+                    actions += `<li><a class="dropdown-item" href="${@json(route('crime.appeal.create', ':id')).replace(':id', row.id)}">Appeal</a></li>`;
                 }
 
                 actions += `
@@ -226,29 +248,97 @@ $(document).ready(function () {
                             </ul>
                         </div>
 
-                        <!-- Collapsible Panel -->
-                     <div class="mt-2" id="panelActions${row.id}">
-    <div class="border border-secondary rounded">
-        <h2 class="mb-0" id="heading${row.id}">
-            <button class="btn btn-sm btn-light w-100 text-start px-2 py-1"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#collapse${row.id}"
-                    aria-expanded="false"
-                    aria-controls="collapse${row.id}">
-                Additional Panel
-            </button>
-        </h2>
-        <div id="collapse${row.id}" class="collapse" aria-labelledby="heading${row.id}">
-            <div class="p-2 bg-light">
-                <ul class="list-unstyled mb-0">
-                    <li><a href="${@json(route('crime.casereview.reviewed', ':id')).replace(':id', row.id)}">View Reviewed Cases</a></li>
-                    <li><a href="${@json(route('crime.courtcase', ':id')).replace(':id', row.id)}">View Court Cases</a></li>
-                </ul>
-            </div>
-        </div>
+                      <!-- Replace the Collapsible Panel with this Dropdown Panel -->
+<div class="mt-2" id="caseRecordsDropdown${row.id}">
+    <div class="dropdown d-inline">
+        <button class="btn btn-info dropdown-toggle" 
+                type="button" 
+                id="caseRecordsButton${row.id}" 
+                data-bs-toggle="dropdown" 
+                aria-expanded="false"
+                style="background: linear-gradient(to right, #4299e1, #3182ce); border: none; box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11); color: white; font-weight: 500; padding: 0.5rem 1rem; border-radius: 0.5rem;">
+            <i class="fas fa-folder-open me-2"></i> Related Records
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" 
+            aria-labelledby="caseRecordsButton${row.id}"
+            style="min-width: 280px; border-radius: 0.5rem; overflow: hidden;">
+            
+            <li class="dropdown-header py-2 px-3" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                <span class="fw-bold">Case ID: ${row.id}</span>
+            </li>
+            
+            <li>
+                <a href="${@json(route('crime.casereview.reviewed', ':id')).replace(':id', row.id)}" 
+                   class="dropdown-item py-3 d-flex align-items-center">
+                    <div class="icon-wrapper me-3 d-flex justify-content-center align-items-center" 
+                         style="width: 35px; height: 35px; background-color: rgba(66, 153, 225, 0.15); border-radius: 8px; flex-shrink: 0;">
+                        <i class="fas fa-clipboard-check text-primary"></i>
+                    </div>
+                    <div>
+                        <span class="fw-medium d-block">Reviewed Cases</span>
+                        <small class="text-muted">View case review history</small>
+                    </div>
+                </a>
+            </li>
+            
+            <li><hr class="dropdown-divider" style="margin: 0;"></li>
+            
+            <li>
+                <a href="${@json(route('crime.courtcase', ':id')).replace(':id', row.id)}" 
+                   class="dropdown-item py-3 d-flex align-items-center">
+                    <div class="icon-wrapper me-3 d-flex justify-content-center align-items-center" 
+                         style="width: 35px; height: 35px; background-color: rgba(236, 201, 75, 0.15); border-radius: 8px; flex-shrink: 0;">
+                        <i class="fas fa-gavel text-warning"></i>
+                    </div>
+                    <div>
+                        <span class="fw-medium d-block">Court Cases</span>
+                        <small class="text-muted">View court proceedings</small>
+                    </div>
+                </a>
+            </li>
+            
+            <li><hr class="dropdown-divider" style="margin: 0;"></li>
+            
+            <li>
+                <a href="${@json(route('crime.appealcase', ':id')).replace(':id', row.id)}" 
+                   class="dropdown-item py-3 d-flex align-items-center">
+                    <div class="icon-wrapper me-3 d-flex justify-content-center align-items-center" 
+                         style="width: 35px; height: 35px; background-color: rgba(237, 100, 100, 0.15); border-radius: 8px; flex-shrink: 0;">
+                        <i class="fas fa-balance-scale text-danger"></i>
+                    </div>
+                    <div>
+                        <span class="fw-medium d-block">Appeal Cases</span>
+                        <small class="text-muted">View case appeals</small>
+                    </div>
+                </a>
+            </li>
+        </ul>
     </div>
 </div>
+
+<!-- Add these styles to your existing style section -->
+<style>
+    /* Enhanced dropdown styling */
+    .dropdown-item {
+        transition: all 0.2s ease;
+        border-left: 3px solid transparent;
+    }
+    
+    .dropdown-item:hover {
+        background-color: #f8fafc;
+        border-left: 3px solid #3182ce;
+        transform: translateX(5px);
+    }
+    
+    .dropdown-menu {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    .dropdown-header {
+        font-size: 0.85rem;
+        color: #4a5568;
+    }
+</style>
 
                     </div>`;
 
@@ -317,7 +407,12 @@ function reallocateCase(caseId) {
             form.submit();
         }
     }
+    $('[data-bs-toggle="collapse"]').on('click', function() {
+        $(this).find('.fa-chevron-down').toggleClass('rotate-180');
+    });
     
+    // Add the rotate class
+    $('.rotate-180').css('transform', 'rotate(180deg)');
 
 </script>
 @endpush

@@ -62,7 +62,8 @@ class CreateCriminalJusticeSystemTables extends Migration
             $table->foreignId('updated_by')->nullable()->constrained('users');
             
             // New fields for review status, including "closed"
-            $table->enum('status', ['pending', 'accepted', 'rejected', 'reallocate', 'allocated', 'closed'])->default('pending');
+            $table->enum('status', ['pending', 'accepted', 'rejected', 'reallocate', 'allocated', 'closed', 'reviewed', 'appealed', 'courtcased'])->default('pending');
+
             
             $table->foreignId('reviewer_id')->nullable()->constrained('users');
             $table->timestamp('reviewed_at')->nullable();
@@ -134,17 +135,26 @@ class CreateCriminalJusticeSystemTables extends Migration
         Schema::create('appeal_details', function (Blueprint $table) {
             $table->id();
             $table->foreignId('case_id')->constrained('cases')->onDelete('cascade');
-            $table->foreignId('court_case_id')->constrained('cases')->onDelete('cascade');
             $table->string('appeal_case_number')->nullable();
             $table->date('appeal_filing_date')->nullable();
-            $table->enum('appeal_status', ['pending', 'in_progress', 'decided', 'withdrawn'])->default('pending');
-            $table->text('appeal_grounds')->nullable();
-            $table->text('appeal_decision')->nullable();
-            $table->date('appeal_decision_date')->nullable();
+             // Court outcome summary
+             $table->enum('court_outcome', ['guilty', 'not_guilty', 'dismissed', 'withdrawn', 'other'])->nullable();
+             $table->text('court_outcome_details')->nullable();
+             $table->date('court_outcome_date')->nullable();
+ 
+                    // Judgment details
+            $table->date('judgment_delivered_date')->nullable();
+            $table->enum('verdict', ['win', 'lose'])->nullable();
+            $table->text('decision_principle_established')->nullable();
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->softDeletes();
             $table->timestamps();
+
+              // Performance indexing
+              $table->index(['case_id', 'appeal_filing_date']);
+              $table->index('court_outcome');
+              $table->index('verdict');
         });
 
         Schema::create('case_reviews', function (Blueprint $table) {

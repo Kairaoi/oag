@@ -16,7 +16,7 @@ use App\Http\Controllers\Oag\Crime\ReportController;
 use App\Http\Controllers\Oag\Crime\CourtHearingController;
 use App\Http\Controllers\Oag\Crime\CourtCaseController;
 
-
+use App\Http\Controllers\Oag\Crime\AppealDetailController;
 
 
 use App\Http\Controllers\Oag\Civil\CivilBoardController;
@@ -91,13 +91,18 @@ Route::resource('CaseReview', CaseReviewController::class)->except(['create', 's
     ->name('criminalCase.createVictim');
     Route::match(['get', 'post'], 'victim/datatables', [VictimController::class, 'getDataTables'])->name('victim.datatables');
     Route::resource('victim', VictimController::class);
-
+    Route::get('crime/appealcase/{id}', [CriminalCaseController::class, 'showAppealCases'])->name('appealcase');
     Route::get('crime/courtcase/{id}', [CriminalCaseController::class, 'showCourtCases'])->name('courtcase');
     Route::get('crime/casereview/{id}', [CriminalCaseController::class, 'showReviewedCases'])->name('casereview.reviewed');
     Route::get('crime/criminalCase/{id}/create-incident', [CriminalCaseController::class, 'createIncident'])
         ->name('criminalCase.createIncident');
     Route::match(['get', 'post'], 'reason/datatables', [ReasonsForClosureController::class, 'getDataTables'])->name('reason.datatables');
     Route::resource('reason', ReasonsForClosureController::class);
+
+    Route::get('appeal/create/{id?}', [AppealDetailController::class, 'create'])
+->name('appeal.create');
+    Route::match(['get', 'post'], 'appeal/datatables', [AppealDetailController::class, 'getDataTables'])->name('appeal.datatables');
+    Route::resource('appeal', AppealDetailController::class);
 
     Route::match(['get', 'post'], 'incident/datatables', [IncidentController::class, 'getDataTables'])->name('incident.datatables');
     Route::resource('incident', IncidentController::class);
@@ -106,9 +111,8 @@ Route::resource('CaseReview', CaseReviewController::class)->except(['create', 's
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('reports/{id}', [ReportController::class, 'show'])->name('reports.show');
 
-   // Karina te optional parameter {id?} nakon te route
-Route::get('criminalCase/appeal/create/{id?}', [CriminalCaseController::class, 'createAppeal'])
-->name('criminalCase.createAppeal');
+
+
 
 // Add new criminal case accept/reject routes here
 Route::post('criminalCase/{id}/accept', [CriminalCaseController::class, 'accept'])->name('criminalCase.accept');
@@ -230,4 +234,74 @@ Route::group([
     Route::post('/roles', [RolePermissionController::class, 'storeRole'])->name('roles.store');
     Route::post('/permissions', [RolePermissionController::class, 'storePermission'])->name('permissions.store');
     Route::post('/assign-role', [RolePermissionController::class, 'assignRole'])->name('roles.assign');
+});
+
+
+use App\Http\Controllers\Oag\Civil2\{
+    DashboardController,
+    // CounselController,
+    CaseController,
+    // CasePartyController,
+    CaseActivityController,
+    CaseStatusController,
+    CaseClosureController,
+    QuarterlyReportController,
+    ReportsController
+};
+
+Route::group([
+    'as' => 'civil2.',
+    'prefix' => 'civil2',
+    'middleware' => ['auth'],
+], function () {
+    // Dashboard
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Counsel management
+    // Route::resource('counsels', CounselController::class);
+
+    Route::get('cases/{case}/review', [CaseController::class, 'review'])->name('cases.review');
+    
+    // Case management
+    Route::match(['get', 'post'], 'case/datatables', [CaseController::class, 'getDataTables'])->name('case.datatables');
+    Route::resource('cases', CaseController::class);
+    Route::get('cases/{case}/timeline', [CaseController::class, 'timeline'])->name('cases.timeline');
+    
+    // Case parties
+    // Route::resource('cases.parties', CasePartyController::class);
+    
+    // Case activities
+    Route::resource('cases.activities', CaseActivityController::class);
+    
+    // Case status updates
+    Route::post('cases/{case}/status', [CaseStatusController::class, 'update'])->name('cases.status.update');
+    
+    // Case closures
+    // Show the closure form
+    Route::get('cases/{case}/close', [CaseClosureController::class, 'create'])->name('close.create');
+
+    // Handle form submission to create a closure
+    Route::post('cases/{case}/close', [CaseClosureController::class, 'store'])->name('close.store');
+
+    // Show a specific closure record
+    Route::get('cases/{case}/closure/{closure}', [CaseClosureController::class, 'show'])->name('closures.show');
+
+    // Reopen a previously closed case
+    Route::post('cases/{case}/reopen', [CaseClosureController::class, 'reopen'])->name('close.reopen');
+
+    // Explicit route for closing a case directly (not via form)
+    Route::post('cases/{case}/force-close', [CaseClosureController::class, 'close'])->name('close.force');
+
+    // Optional: Resource routes (for RESTful closure operations if needed)
+    Route::resource('cases.closures', CaseClosureController::class)->only(['index', 'destroy', 'update']);
+
+    
+    // Quarterly reports
+    Route::resource('quarterly-reports', QuarterlyReportController::class);
+    Route::post('quarterly-reports/{quarterlyReport}/submit', [QuarterlyReportController::class, 'submit'])->name('quarterly-reports.submit');
+    
+    // Reports and analytics
+    Route::get('reports/case-status', [ReportsController::class, 'caseStatus'])->name('reports.case-status');
+    Route::get('reports/counsel-workload', [ReportsController::class, 'counselWorkload'])->name('reports.counsel-workload');
+    Route::get('reports/case-types', [ReportsController::class, 'caseTypes'])->name('reports.case-types');
 });
