@@ -63,53 +63,6 @@
                 </span>
             @enderror
         </div>
-
-        <!-- Date File Closed -->
-        <!-- <div class="form-group">
-            <label for="date_file_closed" class="text-white">Date File Closed</label>
-            <input type="date" class="form-control @error('date_file_closed') is-invalid @enderror" id="date_file_closed" name="date_file_closed" value="{{ old('date_file_closed') }}">
-            @error('date_file_closed')
-                <span class="invalid-feedback" role="alert">
-                    <strong>{{ $message }}</strong>
-                </span>
-            @enderror
-        </div> -->
-
-        <!-- Reason for Closure -->
-        <!-- <div class="form-group">
-            <label for="reason_for_closure_id" class="text-white">Reason for Closure</label>
-            <select class="form-control @error('reason_for_closure_id') is-invalid @enderror" id="reason_for_closure_id" name="reason_for_closure_id">
-                <option value="">Select a reason</option>
-                @foreach($reasons as $id => $reason)
-                    <option value="{{ $id }}" {{ old('reason_for_closure_id') == $id ? 'selected' : '' }}>
-                        {{ $reason }}
-                    </option>
-                @endforeach
-            </select>
-            @error('reason_for_closure_id')
-                <span class="invalid-feedback" role="alert">
-                    <strong>{{ $message }}</strong>
-                </span>
-            @enderror
-        </div> -->
-
-        <!-- Lawyer Field -->
-        <div class="form-group">
-            <label for="lawyer_id" class="text-white">Lawyer</label>
-            <select class="form-control @error('lawyer_id') is-invalid @enderror" id="lawyer_id" name="lawyer_id" required>
-                <option value="">Select a lawyer</option>
-                @foreach($lawyers as $id => $name)
-                    <option value="{{ $id }}" {{ old('lawyer_id') == $id ? 'selected' : '' }}>
-                        {{ $name }}
-                    </option>
-                @endforeach
-            </select>
-            @error('lawyer_id')
-                <span class="invalid-feedback" role="alert">
-                    <strong>{{ $message }}</strong>
-                </span>
-            @enderror
-        </div>
         
         <!-- Island Field -->
         <div class="form-group">

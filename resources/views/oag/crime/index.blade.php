@@ -129,7 +129,8 @@
         canCaseReview: {{ auth()->user()->hasRole('cm.user') ? 'true' : 'false' }},
         canCourtCase: {{ auth()->user()->hasRole('cm.user') ? 'true' : 'false' }},
         canReallocate: {{ auth()->user()->hasRole('cm.admin') ? 'true' : 'false' }},
-        canAppeal: {{ auth()->user()->hasRole('cm.user') ? 'true' : 'false' }}
+        canAppeal: {{ auth()->user()->hasRole('cm.user') ? 'true' : 'false' }},
+        canallocate: {{ auth()->user()->hasRole('cm.admin') ? 'true' : 'false' }},
     };
 </script>
 <!-- Bootstrap 5 JavaScript -->
@@ -159,17 +160,19 @@ $(document).ready(function () {
         let status = row.status || '';
 
         @if (!auth()->user()->hasRole('cm.user'))
-            if (status === 'accepted') {
-                statusLabel = '<span class="badge bg-success">Accepted</span>';
-            } else if (status === 'rejected') {
-                statusLabel = '<span class="badge bg-danger">Rejected</span>';
-            } else if (status === 'allocated') {
-                statusLabel = '<span class="badge bg-primary">Allocated</span>';
-            } else if (status === 'closed') {
-                statusLabel = '<span class="badge bg-secondary">Closed</span>';
-            } else {
-                statusLabel = '<span class="badge bg-warning">Pending</span>';
-            }
+    if (status === 'accepted') {
+        statusLabel = '<span class="badge bg-success">Accepted</span>';
+    } else if (status === 'rejected') {
+        statusLabel = '<span class="badge bg-danger">Rejected</span>';
+    } else if (status === 'allocated') {
+        statusLabel = '<span class="badge bg-primary">Allocated</span>';
+    } else if (status === 'reallocated') {
+        statusLabel = '<span class="badge bg-info">Reallocated</span>';
+    } else if (status === 'closed') {
+        statusLabel = '<span class="badge bg-secondary">Closed</span>';
+    } else {
+        statusLabel = '<span class="badge bg-warning">Pending</span>';
+    }
         @else
             if (status === 'accepted') {
                 statusLabel = '<span class="badge bg-success">Accepted</span>';
@@ -177,6 +180,8 @@ $(document).ready(function () {
                 statusLabel = '<span class="badge bg-danger">Rejected</span>';
             } else if (status === 'allocated') {
                 statusLabel = '<span class="badge bg-primary">Allocated</span>';
+            } else if (status === 'reallocated') {
+                statusLabel = '<span class="badge bg-primary">Reallocated</span>';
             } else if (status === 'closed') {
                 statusLabel = '<span class="badge bg-secondary">Closed</span>';
             } else {
@@ -230,9 +235,14 @@ $(document).ready(function () {
                     actions += `<li><a class="dropdown-item" href="${@json(route('crime.CourtCase.create', ':id')).replace(':id', row.id)}">Court Case</a></li>`;
                 }
 
-                if (userRoles.canReallocate && row.status === 'rejected') {
-                    actions += `<li><a class="dropdown-item" href="${@json(route('crime.criminalCase.showReallocationForm', ':id')).replace(':id', row.id)}">Case Reallocate</a></li>`;
+                if (userRoles.canallocate && row.status === 'pending') {
+                    actions += `<li><a class="dropdown-item" href="${@json(route('crime.criminalCase.allocateForm', ':id')).replace(':id', row.id)}">Case Allocation</a></li>`;
                 }
+
+                if (userRoles.canReallocate && row.status === 'rejected') {
+    actions += `<li><a class="dropdown-item" href="${@json(route('crime.criminalCase.showReallocationForm', ':id')).replace(':id', row.id)}">Case Reallocate</a></li>`;
+}
+
 
                 if (userRoles.canAppeal) {
                     actions += `<li><a class="dropdown-item" href="${@json(route('crime.appeal.create', ':id')).replace(':id', row.id)}">Appeal</a></li>`;

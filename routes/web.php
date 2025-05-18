@@ -57,7 +57,10 @@ Route::group([
 ], function () {
     Route::resource('boards', \App\Http\Controllers\OAG\crime\CrimeBoardController::class, ['only' => ['index']]);
 
-    
+    Route::get('criminal-case/{id}/allocate', [CriminalCaseController::class, 'showAllocationForm'])
+        ->name('criminalCase.allocateForm');
+    Route::post('criminal-case/{id}/allocate', [CriminalCaseController::class, 'allocateLawyer'])
+        ->name('criminalCase.allocateLawyer');
 
     Route::match(['get', 'post'], 'CaseReview/datatables', [CaseReviewController::class, 'getDataTables'])->name('CaseReview.datatables');
     Route::get('CaseReview/{id}/create', [CaseReviewController::class, 'create'])->name('CaseReview.create');
@@ -142,6 +145,8 @@ Route::get('CourtCase/{id}/create', [CourtCaseController::class, 'create'])->nam
 
 // Court Case CRUD routes
 Route::resource('court-cases',CourtCaseController::class);
+
+
 
 
  

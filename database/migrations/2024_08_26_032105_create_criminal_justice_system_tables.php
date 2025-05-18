@@ -56,13 +56,13 @@ class CreateCriminalJusticeSystemTables extends Migration
             $table->date('date_file_received');
             $table->string('case_name');
             $table->date('date_of_allocation')->nullable();
-            $table->foreignId('lawyer_id')->constrained('users');
+            $table->foreignId('lawyer_id')->nullable()->constrained('users');
             $table->foreignId('island_id')->constrained('islands');
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
             
             // New fields for review status, including "closed"
-            $table->enum('status', ['pending', 'accepted', 'rejected', 'reallocate', 'allocated', 'closed', 'reviewed', 'appealed', 'courtcased'])->default('pending');
+            $table->enum('status', ['pending', 'accepted', 'rejected', 'reallocated', 'allocated', 'closed', 'reviewed', 'appealed', 'courtcased'])->default('pending');
 
             
             $table->foreignId('reviewer_id')->nullable()->constrained('users');
@@ -188,7 +188,10 @@ class CreateCriminalJusticeSystemTables extends Migration
         Schema::create('case_reallocations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('case_id')->constrained('cases');
-            $table->foreignId('from_lawyer_id')->constrained('users');
+            
+            // Make this nullable for initial allocation
+            $table->foreignId('from_lawyer_id')->nullable()->constrained('users');
+            
             $table->foreignId('to_lawyer_id')->constrained('users');
             $table->text('reallocation_reason');
             $table->date('reallocation_date');
@@ -196,7 +199,7 @@ class CreateCriminalJusticeSystemTables extends Migration
             $table->foreignId('updated_by')->nullable()->constrained('users');
             $table->timestamps();
         });
-
+        
         // Create Accused Table
         Schema::create('accused', function (Blueprint $table) {
             $table->id();

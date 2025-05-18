@@ -65,80 +65,80 @@ foreach ([
 
    
        // Seed cases table (ensuring date_of_allocation is not null)
-// $caseIds = [];
-// for ($i = 1; $i <= 2; $i++) {
-//     $caseIds[] = DB::table('cases')->insertGetId([
-//         'case_file_number' => 'CASE' . str_pad($i, 3, '0', STR_PAD_LEFT),
-//         'date_file_received' => now()->subDays($i),
-//         'case_name' => 'Republic vs ' . $faker->firstName . ' ' . $faker->lastName,
-//         'date_of_allocation' => $faker->dateTimeBetween('-5 days', 'now')->format('Y-m-d'), // ✅ always set
-//         'lawyer_id' => $faker->randomElement(array_values($lawyerIds)),
-//         'island_id' => $faker->randomElement(array_values($islandIds)),
-//         'created_by' => $adminUserId,
-//         'updated_by' => null,
-//         'deleted_at' => null,
-//         'created_at' => now(),
-//         'updated_at' => now(),
-//     ]);
-// }
+$caseIds = [];
+for ($i = 1; $i <= 2; $i++) {
+    $caseIds[] = DB::table('cases')->insertGetId([
+        'case_file_number' => 'CASE' . str_pad($i, 3, '0', STR_PAD_LEFT),
+        'date_file_received' => now()->subDays($i),
+        'case_name' => 'Republic vs ' . $faker->firstName . ' ' . $faker->lastName,
+        'date_of_allocation' => $faker->dateTimeBetween('-5 days', 'now')->format('Y-m-d'), // ✅ always set
+        'lawyer_id' => $faker->randomElement(array_values($lawyerIds)),
+        'island_id' => $faker->randomElement(array_values($islandIds)),
+        'created_by' => $adminUserId,
+        'updated_by' => null,
+        'deleted_at' => null,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+}
 
         
 
 
-// for ($i = 1; $i <= 2; $i++) {
-//     $dob = $faker->dateTimeBetween('-60 years', '-18 years')->format('Y-m-d');
-//     $age = Carbon::parse($dob)->age;
+for ($i = 1; $i <= 2; $i++) {
+    $dob = $faker->dateTimeBetween('-60 years', '-18 years')->format('Y-m-d');
+    $age = Carbon::parse($dob)->age;
 
-//     DB::table('accused')->insert([
-//         'case_id' => $caseIds[array_rand($caseIds)],
-//         'first_name' => $faker->firstName,
-//         'last_name' => $faker->lastName,
-//         'address' => $faker->address,
-//         'contact' => $faker->email,
-//         'phone' => $faker->phoneNumber,
-//         'gender' => $faker->randomElement(['Male', 'Female', 'Other']),
-//         'age' => $age,
-//         'date_of_birth' => $dob,
-//         'island_id' => $islandIds[array_rand($islandIds)],
-//         'created_by' => $adminUserId,
-//         'updated_by' => null,
-//         'created_at' => now(),
-//         'updated_at' => now(),
-//     ]);
-// }
+    DB::table('accused')->insert([
+        'case_id' => $caseIds[array_rand($caseIds)],
+        'first_name' => $faker->firstName,
+        'last_name' => $faker->lastName,
+        'address' => $faker->address,
+        'contact' => $faker->email,
+        'phone' => $faker->phoneNumber,
+        'gender' => $faker->randomElement(['Male', 'Female', 'Other']),
+        'age' => $age,
+        'date_of_birth' => $dob,
+        'island_id' => $islandIds[array_rand($islandIds)],
+        'created_by' => $adminUserId,
+        'updated_by' => null,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+}
        // Seed victims table
-// for ($i = 1; $i <= 2; $i++) {
-//     $firstName = $faker->firstName;
-//     $lastName = $faker->lastName;
-//     $dob = $faker->date('Y-m-d', '2010-01-01'); // safer date range for age logic
-//     $age = Carbon::parse($dob)->age;
-//     // Determine age group
-//     if ($age < 13) {
-//         $ageGroup = 'Under 13';
-//     } elseif ($age < 15) {
-//         $ageGroup = 'Under 15';
-//     } elseif ($age < 18) {
-//         $ageGroup = 'Under 18';
-//     } else {
-//         $ageGroup = 'Above 18';
-//     }
+for ($i = 1; $i <= 2; $i++) {
+    $firstName = $faker->firstName;
+    $lastName = $faker->lastName;
+    $dob = $faker->date('Y-m-d', '2010-01-01'); // safer date range for age logic
+    $age = Carbon::parse($dob)->age;
+    // Determine age group
+    if ($age < 13) {
+        $ageGroup = 'Under 13';
+    } elseif ($age < 15) {
+        $ageGroup = 'Under 15';
+    } elseif ($age < 18) {
+        $ageGroup = 'Under 18';
+    } else {
+        $ageGroup = 'Above 18';
+    }
 
-//     DB::table('victims')->insert([
-//         'case_id'       => $caseIds[$i - 1],
-//         'island_id'     => $islandIds[array_rand($islandIds)],
-//         'first_name'    => $firstName,
-//         'last_name'     => $lastName,
-//         'address'       => $faker->address,
-//         'contact'       => $faker->email,
-//         'phone'         => $faker->phoneNumber,
-//         'gender'        => $faker->randomElement(['Male', 'Female', 'Other']),
-//         'age'           => $age,
-//         'date_of_birth' => $dob,
-//         'age_group'     => $ageGroup,
-//         'created_by'    => $adminUserId,
-//         'updated_by'    => null,
-//     ]);
-// }
+    DB::table('victims')->insert([
+        'case_id'       => $caseIds[$i - 1],
+        'island_id'     => $islandIds[array_rand($islandIds)],
+        'first_name'    => $firstName,
+        'last_name'     => $lastName,
+        'address'       => $faker->address,
+        'contact'       => $faker->email,
+        'phone'         => $faker->phoneNumber,
+        'gender'        => $faker->randomElement(['Male', 'Female', 'Other']),
+        'age'           => $age,
+        'date_of_birth' => $dob,
+        'age_group'     => $ageGroup,
+        'created_by'    => $adminUserId,
+        'updated_by'    => null,
+    ]);
+}
 
 
         // Seed offences table
@@ -153,45 +153,45 @@ foreach ([
         }
 
         // // Seed accused_offence table
-        // for ($i = 1; $i <= 2; $i++) {
-        //     DB::table('accused_offence')->insert([
-        //         'accused_id' => $i,
-        //         'offence_id' => $offenceIds[array_rand($offenceIds)],
-        //     ]);
-        // }
+        for ($i = 1; $i <= 2; $i++) {
+            DB::table('accused_offence')->insert([
+                'accused_id' => $i,
+                'offence_id' => $offenceIds[array_rand($offenceIds)],
+            ]);
+        }
 
         // // Seed incidents table
-        // for ($i = 1; $i <= 2; $i++) {
-        //     DB::table('incidents')->insert([
-        //         'case_id' => $caseIds[$i - 1],
-        //         'lawyer_id' => $lawyerIds[array_rand($lawyerIds)],
-        //         'island_id' => $islandIds[array_rand($islandIds)],
-        //         'date_of_incident_start' => now()->subDays($i + 5),
-        //         'date_of_incident_end' => now()->subDays($i + 3),
-        //         'place_of_incident' => $faker->city,
-        //         'created_by' => $adminUserId,
-        //         'updated_by' => null,
-        //     ]);
-        // }
+        for ($i = 1; $i <= 2; $i++) {
+            DB::table('incidents')->insert([
+                'case_id' => $caseIds[$i - 1],
+                'lawyer_id' => $lawyerIds[array_rand($lawyerIds)],
+                'island_id' => $islandIds[array_rand($islandIds)],
+                'date_of_incident_start' => now()->subDays($i + 5),
+                'date_of_incident_end' => now()->subDays($i + 3),
+                'place_of_incident' => $faker->city,
+                'created_by' => $adminUserId,
+                'updated_by' => null,
+            ]);
+        }
 
         //  // Insert court cases
-        //  for ($i = 1; $i <= 2; $i++) {
-        //     DB::table('court_cases')->insert([
-        //         'case_id' => $faker->randomElement($caseIds),
-        //         'charge_file_dated' => $faker->date(),
-        //         'high_court_case_number' => $faker->optional()->word,
-        //         'court_outcome' => $faker->randomElement(['guilty', 'not_guilty', 'dismissed', 'withdrawn', 'other']),
-        //         'court_outcome_details' => $faker->optional()->text,
-        //         'court_outcome_date' => $faker->optional()->date(),
-        //         'judgment_delivered_date' => $faker->optional()->date(),
-        //         'verdict' => $faker->randomElement(['win', 'lose']),
-        //         'decision_principle_established' => $faker->optional()->text,
-        //         'created_by' => $faker->randomElement($userIds),
-        //         'updated_by' => $faker->randomElement($userIds),
-        //         'deleted_at' => null,
-        //         'created_at' => now(),
-        //         'updated_at' => now(),
-        //     ]);
-        // }
+         for ($i = 1; $i <= 2; $i++) {
+            DB::table('court_cases')->insert([
+                'case_id' => $faker->randomElement($caseIds),
+                'charge_file_dated' => $faker->date(),
+                'high_court_case_number' => $faker->optional()->word,
+                'court_outcome' => $faker->randomElement(['guilty', 'not_guilty', 'dismissed', 'withdrawn', 'other']),
+                'court_outcome_details' => $faker->optional()->text,
+                'court_outcome_date' => $faker->optional()->date(),
+                'judgment_delivered_date' => $faker->optional()->date(),
+                'verdict' => $faker->randomElement(['win', 'lose']),
+                'decision_principle_established' => $faker->optional()->text,
+                'created_by' => $faker->randomElement($userIds),
+                'updated_by' => $faker->randomElement($userIds),
+                'deleted_at' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
     }
 }
