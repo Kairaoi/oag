@@ -80,40 +80,47 @@ class AppealDetailController extends Controller
 
 
     public function store(Request $request, AppealDetailRepository $appealRepo)
-    {
-        \Log::info('Incoming Appeal Detail form submission: ', $request->all());
-    
-        $validatedData = $request->validate([
-            'case_id' => 'required|exists:cases,id',
-            'appeal_case_number' => 'required|string',
-            'appeal_filing_date' => 'required|date',
-            'court_outcome' => 'required|string',
-            'judgment_delivered_date' => 'nullable|date',
-            'verdict' => 'required|string',
-            'decision_principle_established' => 'nullable|string',
-        ]);
-    
-        $data = $validatedData;
-        $data['created_by'] = auth()->user()->id;
-        $data['updated_by'] = auth()->user()->id;
-    
-        try {
-            $originalCase = $this->criminalCaseRepository->getById($validatedData['case_id']);
-            if ($originalCase) {
-                $originalCase->status = 'appealed';
-                $originalCase->save();
-            }
-    
-            $appeal = $appealRepo->create($data);
-            \Log::info('Appeal stored successfully', $appeal->toArray());
-    
-            return redirect()->route('crime.criminalCase.index')->with('success', 'Appeal created successfully.');
-        } catch (\Exception $e) {
-            \Log::error('Error storing appeal: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to store appeal.');
-        }
+{
+    \Log::info('Incoming Appeal Detail form submission: ', $request->all());
+
+    $validatedData = $request->validate([
+        'case_id' => 'required|exists:cases,id',
+        'appeal_case_number' => 'required|string',
+        'appeal_filing_date' => 'required|date',
+        'court_outcome' => 'required|string',
+        'judgment_delivered_date' => 'nullable|date',
+        'verdict' => 'required|string',
+        'decision_principle_established' => 'nullable|string',
+    ]);
+
+    $data = $validatedData;
+    $data['created_by'] = auth()->user()->id;
+    $data['updated_by'] = auth()->user()->id;
+
+    try {
+        $originalCase = $this->criminalCaseRepository->getById($validatedData['case_id']);
+
+        // if ($originalCase) {
+        //     // Just mark status without touching any review logic
+        //     $originalCase->status = 'appealed';
+        //     $originalCase->save();
+
+        //     // Optional: Log current review status if needed
+        //     if (property_exists($originalCase, 'review') && $originalCase->review) {
+        //         \Log::info("Existing review status for case {$originalCase->id}: " . $originalCase->review->status);
+        //     }
+        // }
+
+        $appeal = $appealRepo->create($data);
+        \Log::info('Appeal stored successfully', $appeal->toArray());
+
+        return redirect()->route('crime.criminalCase.index')->with('success', 'Appeal created successfully.');
+    } catch (\Exception $e) {
+        \Log::error('Error storing appeal: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Failed to store appeal.');
     }
-    
+}
+
     
 
     public function edit($id)
