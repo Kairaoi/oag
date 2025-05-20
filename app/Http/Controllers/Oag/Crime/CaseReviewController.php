@@ -77,7 +77,7 @@ class CaseReviewController extends Controller
         $rules = [
             'case_id' => 'required|exists:cases,id',
             'evidence_status' => 'required|in:pending_review,sufficient_evidence,insufficient_evidence,returned_to_police',
-            'review_notes' => 'required|string',
+           
             'review_date' => 'required|date',
             'reason_for_closure_id' => 'required_if:evidence_status,insufficient_evidence,returned_to_police|nullable|exists:reasons_for_closure,id',
             'offence_id.*' => 'required_if:evidence_status,sufficient_evidence|nullable|exists:offences,id',
@@ -134,13 +134,13 @@ class CaseReviewController extends Controller
                 }
             }
     
-            return redirect()->route('crime.CaseReview.index')
+            return redirect()->route('crime.criminalCase.index')
                 ->with('caseid', $caseId)
                 ->with('success', 'Case review created successfully.');
     
         } catch (\Exception $e) {
             Log::error("Error processing case review: " . $e->getMessage());
-            return redirect()->route('crime.CaseReview.index')
+            return redirect()->route('crime.criminalCase.index')
                 ->with('error', 'There was an error processing your request: ' . $e->getMessage());
         }
     }
@@ -215,7 +215,7 @@ class CaseReviewController extends Controller
             'case_id' => 'required|exists:cases,id',
             'lawyer_id' => 'required|exists:users,id',
             'evidence_status' => 'required|in:pending_review,sufficient_evidence,insufficient_evidence,returned_to_police',
-            'review_notes' => 'required|string',
+         
             'review_date' => 'required|date',
             'reason_for_closure_id' => 'required_if:evidence_status,insufficient_evidence,returned_to_police|exists:reasons_for_closure,id|nullable',
         ]);

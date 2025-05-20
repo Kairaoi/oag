@@ -154,7 +154,7 @@ public function store(Request $request)
 
     // Redirect to victim index after successful creation
     if ($victim) {
-        return redirect()->route('crime.victim.index')
+        return redirect()->route('crime.criminalCase.index')
             ->with('success', 'Victim created successfully.');
     } else {
         return redirect()->back()

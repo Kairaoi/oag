@@ -162,7 +162,7 @@ class CriminalCaseController extends Controller
             'case_file_number'      => 'required|string|max:255|unique:cases,case_file_number',
             'date_file_received'    => 'required|date',
             'case_name'             => 'required|string|max:255',
-            'date_of_allocation'    => 'nullable|date',
+            'date_of_incident'    => 'nullable|date',
             'date_file_closed'      => 'nullable|date',
             'reason_for_closure_id' => 'nullable|exists:reasons_for_closure,id',
            'lawyer_id'              => 'nullable|exists:users,id',
@@ -216,7 +216,7 @@ class CriminalCaseController extends Controller
     
         // Ensure correct date formatting
         $criminalCase->date_file_received = $this->formatDate($criminalCase->date_file_received);
-        $criminalCase->date_of_allocation = $this->formatDate($criminalCase->date_of_allocation);
+        $criminalCase->date_of_incident = $this->formatDate($criminalCase->date_of_incident);
         $criminalCase->date_file_closed = $this->formatDate($criminalCase->date_file_closed);
     
         $islands = $this->islandRepository->pluck();
@@ -271,7 +271,7 @@ class CriminalCaseController extends Controller
             'case_file_number'      => 'required|string|max:255|unique:cases,case_file_number,' . $criminalCase->id,
             'date_file_received'    => 'required|date',
             'case_name'             => 'required|string|max:255',
-            'date_of_allocation'    => 'nullable|date',
+            'date_of_incident'    => 'nullable|date',
             'date_file_closed'      => 'nullable|date',
             'reason_for_closure_id' => 'nullable|exists:reasons_for_closure,id',
             'lawyer_id'             => 'required|exists:users,id',
@@ -591,7 +591,7 @@ public function allocateLawyer(Request $request, $id)
         DB::commit();
 
         return redirect()
-            ->route('crime.criminalCase.show', $id)
+            ->route('crime.criminalCase.index')
             ->with('success', $isReallocation ? 'Lawyer reallocated successfully.' : 'Lawyer allocated successfully.');
     } catch (\Exception $e) {
         DB::rollBack();

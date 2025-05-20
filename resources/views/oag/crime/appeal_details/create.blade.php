@@ -60,36 +60,18 @@
             @enderror
         </div>
 
-        <!-- Court Outcome -->
+        <!-- Verdict (Matches Schema Enum) -->
         <div class="form-group">
-            <label for="court_outcome" class="text-white">Court Outcome</label>
-            <select name="court_outcome" id="court_outcome" class="form-control @error('court_outcome') is-invalid @enderror">
-                <option value="">-- Select Outcome --</option>
-                @foreach(['guilty', 'not_guilty', 'dismissed', 'withdrawn', 'other'] as $outcome)
-                    <option value="{{ $outcome }}" {{ old('court_outcome') == $outcome ? 'selected' : '' }}>
-                        {{ ucfirst(str_replace('_', ' ', $outcome)) }}
+            <label for="verdict" class="text-white">Verdict</label>
+            <select name="verdict" id="verdict" class="form-control @error('verdict') is-invalid @enderror">
+                <option value="">-- Select Verdict --</option>
+                @foreach(['guilty', 'not_guilty', 'dismissed', 'withdrawn', 'other'] as $verdict)
+                    <option value="{{ $verdict }}" {{ old('verdict') == $verdict ? 'selected' : '' }}>
+                        {{ ucfirst(str_replace('_', ' ', $verdict)) }}
                     </option>
                 @endforeach
             </select>
-            @error('court_outcome')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-        </div>
-
-        <!-- Outcome Details -->
-        <div class="form-group">
-            <label for="court_outcome_details" class="text-white">Court Outcome Details</label>
-            <textarea name="court_outcome_details" id="court_outcome_details" class="form-control @error('court_outcome_details') is-invalid @enderror" rows="3">{{ old('court_outcome_details') }}</textarea>
-            @error('court_outcome_details')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-        </div>
-
-        <!-- Outcome Date -->
-        <div class="form-group">
-            <label for="court_outcome_date" class="text-white">Outcome Date</label>
-            <input type="date" name="court_outcome_date" id="court_outcome_date" class="form-control @error('court_outcome_date') is-invalid @enderror" value="{{ old('court_outcome_date') }}">
-            @error('court_outcome_date')
+            @error('verdict')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
@@ -103,18 +85,18 @@
             @enderror
         </div>
 
-        <!-- Verdict -->
+        <!-- Court Outcome (Matches Schema Enum) -->
         <div class="form-group">
-            <label for="verdict" class="text-white">Verdict</label>
-            <select name="verdict" id="verdict" class="form-control @error('verdict') is-invalid @enderror">
-                <option value="">-- Select Verdict --</option>
-                @foreach(['win', 'lose'] as $verdict)
-                    <option value="{{ $verdict }}" {{ old('verdict') == $verdict ? 'selected' : '' }}>
-                        {{ ucfirst($verdict) }}
+            <label for="court_outcome" class="text-white">Court Outcome</label>
+            <select name="court_outcome" id="court_outcome" class="form-control @error('court_outcome') is-invalid @enderror">
+                <option value="">-- Select Outcome --</option>
+                @foreach(['win', 'lose'] as $outcome)
+                    <option value="{{ $outcome }}" {{ old('court_outcome') == $outcome ? 'selected' : '' }}>
+                        {{ ucfirst($outcome) }}
                     </option>
                 @endforeach
             </select>
-            @error('verdict')
+            @error('court_outcome')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>

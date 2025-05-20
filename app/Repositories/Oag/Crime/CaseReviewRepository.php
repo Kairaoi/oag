@@ -70,20 +70,23 @@ class CaseReviewRepository extends CustomBaseRepository
      */
     public function getForDataTable($search = '', $order_by = '', $sort = 'asc', $trashed = false): Collection 
 {
-    $dataTableQuery = $this->getModelInstance()->newQuery()
+    $query = $this->getModelInstance()->newQuery()
         ->leftJoin('cases', 'case_reviews.case_id', '=', 'cases.id')
         ->leftJoin('users as creator', 'case_reviews.created_by', '=', 'creator.id')
+        ->leftJoin('users as updater', 'case_reviews.updated_by', '=', 'updater.id')
         ->leftJoin('users as new_lawyer', 'case_reviews.new_lawyer_id', '=', 'new_lawyer.id')
-        ->leftJoin('case_reallocations', function ($join) {
-            $join->on('case_reviews.case_id', '=', 'case_reallocations.case_id');
-        })
+        ->leftJoin('reasons_for_closure', 'case_reviews.reason_for_closure_id', '=', 'reasons_for_closure.id')
+        ->leftJoin('case_reallocations', 'case_reviews.case_id', '=', 'case_reallocations.case_id')
         ->leftJoin('users as from_lawyer', 'case_reallocations.from_lawyer_id', '=', 'from_lawyer.id')
         ->leftJoin('users as to_lawyer', 'case_reallocations.to_lawyer_id', '=', 'to_lawyer.id')
         ->select([
             'case_reviews.*',
             'cases.case_name',
             'creator.name as created_by_name',
+            'updater.name as updated_by_name',
             'new_lawyer.name as new_lawyer_name',
+            'reasons_for_closure.reason_description as reason_for_closure_name',
+
             'case_reallocations.reallocation_date',
             'case_reallocations.reallocation_reason as reallocation_details',
             'case_reallocations.created_by as reallocation_created_by',
@@ -92,56 +95,36 @@ class CaseReviewRepository extends CustomBaseRepository
             'case_reallocations.updated_at as reallocation_updated_at',
             'from_lawyer.name as from_lawyer_name',
             'to_lawyer.name as to_lawyer_name',
-            // Include offence particulars directly from case_reviews
-            'case_reviews.offence_particulars'
+            'case_reviews.offence_particulars',
+            'case_reviews.date_file_closed',
         ])
         ->distinct();
 
-    // 🔐 Role-based access control
+    // Role-based restriction
     $user = auth()->user();
     if ($user && $user->hasRole('cm.user')) {
-        $dataTableQuery->where('cases.lawyer_id', $user->id); // Restrict to user's cases only
+        $query->where('cases.lawyer_id', $user->id);
     }
 
     if (!empty($search)) {
         $search = '%' . strtolower($search) . '%';
-        $dataTableQuery->where(function ($query) use ($search) {
-            $query->whereRaw('LOWER(case_reviews.review_notes) LIKE ?', [$search])
-                ->orWhereRaw('LOWER(creator.name) LIKE ?', [$search])
-                ->orWhereRaw('LOWER(cases.case_name) LIKE ?', [$search])
-                ->orWhereRaw('LOWER(new_lawyer.name) LIKE ?', [$search])
-                ->orWhereRaw('LOWER(from_lawyer.name) LIKE ?', [$search])
-                ->orWhereRaw('LOWER(to_lawyer.name) LIKE ?', [$search])
-                ->orWhereRaw('LOWER(case_reviews.evidence_status) LIKE ?', [$search])
-                ->orWhereRaw('LOWER(case_reviews.action_type) LIKE ?', [$search])
-                ->orWhereRaw('LOWER(case_reallocations.reallocation_reason) LIKE ?', [$search])
-                // Add search filter for offence particulars
-                ->orWhereRaw('LOWER(case_reviews.offence_particulars) LIKE ?', [$search]);
+        $query->where(function ($q) use ($search) {
+            $q->whereRaw('LOWER(case_reviews.offence_particulars) LIKE ?', [$search])
+              ->orWhereRaw('LOWER(cases.case_name) LIKE ?', [$search]);
         });
     }
 
     if ($trashed) {
-        $dataTableQuery->onlyTrashed();
+        $query->onlyTrashed();
     }
 
     if (!empty($order_by)) {
-        $validOrderBy = [
-            'id', 'case_id', 'created_by', 'review_notes', 'review_date',
-            'evidence_status', 'action_type', 'created_by_name', 'case_name',
-            'new_lawyer_name', 'from_lawyer_name', 'to_lawyer_name',
-            'reallocation_date', 'reallocation_details',
-            'reallocation_created_by', 'reallocation_updated_by',
-            'reallocation_created_at', 'reallocation_updated_at',
-            'case_reviews.offence_particulars' // Include offence particulars in the orderable columns
-        ];
-
-        if (in_array($order_by, $validOrderBy)) {
-            $dataTableQuery->orderBy($order_by, $sort);
-        }
+        $query->orderBy($order_by, $sort);
     }
 
-    return $dataTableQuery->get();
+    return $query->get();
 }
+
 
     
 

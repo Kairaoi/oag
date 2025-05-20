@@ -19,7 +19,6 @@ class CaseReview extends Model
     protected $fillable = [
         'case_id',
         'evidence_status',
-        'review_notes',
         'review_date',
         'created_by',
         'updated_by',

@@ -31,9 +31,9 @@
                     <th>Case File Number</th>
                     <th>Case Name</th>
                     <th>Date File Received</th>
-                    <th>Date of Allocation</th>
-                    <th>Reason for Closure</th>
-                    <th>Island Name</th>
+                    <th>Date of Incident</th>
+                    <!-- <th>Reason for Closure</th> -->
+                    <th>Place of Incident</th>
                     <th>Council Name</th>
                     <th>Reviewer Action</th>
                     <th>Actions</th>
@@ -148,10 +148,10 @@ $(document).ready(function () {
             { data: 'case_file_number' },
             { data: 'case_name' },
             { data: 'date_file_received', render: data => data ? new Date(data).toLocaleDateString() : '' },
-            { data: 'date_of_allocation', render: data => data ? new Date(data).toLocaleDateString() : '' },
-            { data: 'reason_description', defaultContent: 'N/A' },
-            { data: 'island_name', defaultContent: 'N/A' },
-            { data: 'lawyer_name', defaultContent: 'N/A' },
+            { data: 'date_of_incident', render: data => data ? new Date(data).toLocaleDateString() : '' },
+            // { data: 'reason_description', defaultContent: '' },
+            { data: 'island_name', defaultContent: '' },
+            { data: 'lawyer_name', defaultContent: '' },
             {
     data: null,
     render: function(row) {
@@ -207,154 +207,141 @@ $(document).ready(function () {
     }
 },
 
-                {
-            data: null,
-            render: function(row) {
-                let actions = `
-                    <div>
-                        <!-- Dropdown Menu -->
-                        <div class="dropdown d-inline">
-                            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton${row.id}" data-bs-toggle="dropdown" aria-expanded="false">
-                                Actions
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton${row.id}">
-                                <li><a class="dropdown-item" href="${@json(route('crime.criminalCase.edit', ':id')).replace(':id', row.id)}">Edit</a></li>
-                                <li><a class="dropdown-item" href="${@json(route('crime.criminalCase.show', ':id')).replace(':id', row.id)}">Show</a></li>`;
+              // Update the actions column rendering in your DataTable initialization
+{
+    data: null,
+    render: function(row) {
+        let actions = `
+            <div>
+                <!-- Dropdown Menu -->
+                <div class="dropdown d-inline">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton${row.id}" data-bs-toggle="dropdown" aria-expanded="false">
+                        Actions
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton${row.id}">
+                        <li><a class="dropdown-item" href="${@json(route('crime.criminalCase.edit', ':id')).replace(':id', row.id)}">Edit</a></li>
+                        <li><a class="dropdown-item" href="${@json(route('crime.criminalCase.show', ':id')).replace(':id', row.id)}">Show</a></li>`;
 
-                                if (userRoles.canCaseReview && row.status === 'accepted') {
-    actions += `<li>
-        <a class="dropdown-item d-flex justify-content-between align-items-center" href="${@json(route('crime.CaseReview.create', ':id')).replace(':id', row.id)}">
-            Case Review
-            ${row.is_reviewed ? '<i class="fas fa-check text-success ms-2"></i>' : ''}
-        </a>
-    </li>`;
+                        if (userRoles.canCaseReview && row.status === 'accepted') {
+                            actions += `<li>
+                                <a class="dropdown-item d-flex justify-content-between align-items-center" href="${@json(route('crime.CaseReview.create', ':id')).replace(':id', row.id)}">
+                                    Case Review
+                                    ${row.reviewed_count > 0 ? '<i class="fas fa-check text-success ms-2"></i>' : ''}
+                                </a>
+                            </li>`;
+                        }
+
+                        if (userRoles.canCourtCase && row.status === 'accepted') {
+                            actions += `<li>
+                                <a class="dropdown-item d-flex justify-content-between align-items-center" href="${@json(route('crime.CourtCase.create', ':id')).replace(':id', row.id)}">
+                                    Court Case
+                                    ${row.court_case_count > 0 ? '<i class="fas fa-check text-success ms-2"></i>' : ''}
+                                </a>
+                            </li>`;
+                        }
+
+                        if (userRoles.canallocate && row.status === 'pending') {
+                            actions += `<li><a class="dropdown-item" href="${@json(route('crime.criminalCase.allocateForm', ':id')).replace(':id', row.id)}">Case Allocation</a></li>`;
+                        }
+
+                        if (userRoles.canReallocate && row.status === 'rejected') {
+                            actions += `<li><a class="dropdown-item" href="${@json(route('crime.criminalCase.showReallocationForm', ':id')).replace(':id', row.id)}">Case Reallocate</a></li>`;
+                        }
+
+                        if (userRoles.canAppeal) {
+                            actions += `<li>
+                                <a class="dropdown-item d-flex justify-content-between align-items-center" href="${@json(route('crime.appeal.create', ':id')).replace(':id', row.id)}">
+                                    Appeal
+                                    ${row.appeal_count > 0 ? '<i class="fas fa-check text-success ms-2"></i>' : ''}
+                                </a>
+                            </li>`;
+                        }
+
+                        actions += `
+                        <li>
+                            <a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); if(confirm('Are you sure?')) document.getElementById('delete-form-${row.id}').submit();">Delete</a>
+                            <form id="delete-form-${row.id}" action="${@json(route('crime.criminalCase.destroy', ':id')).replace(':id', row.id)}" method="POST" class="d-none">
+                                @csrf @method('DELETE')
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Related Records Dropdown Panel -->
+                <div class="mt-2" id="caseRecordsDropdown${row.id}">
+                    <div class="dropdown d-inline">
+                        <button class="btn btn-info dropdown-toggle" 
+                                type="button" 
+                                id="caseRecordsButton${row.id}" 
+                                data-bs-toggle="dropdown" 
+                                aria-expanded="false"
+                                style="background: linear-gradient(to right, #4299e1, #3182ce); border: none; box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11); color: white; font-weight: 500; padding: 0.5rem 1rem; border-radius: 0.5rem;">
+                            <i class="fas fa-folder-open me-2"></i> Related Records
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" 
+                            aria-labelledby="caseRecordsButton${row.id}"
+                            style="min-width: 280px; border-radius: 0.5rem; overflow: hidden;">
+                            
+                            <li class="dropdown-header py-2 px-3" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                                <span class="fw-bold">Case ID: ${row.id}</span>
+                            </li>
+                            
+                            <li>
+                                <a href="${@json(route('crime.casereview.reviewed', ':id')).replace(':id', row.id)}" 
+                                class="dropdown-item py-3 d-flex align-items-center">
+                                    <div class="icon-wrapper me-3 d-flex justify-content-center align-items-center" 
+                                        style="width: 35px; height: 35px; background-color: rgba(66, 153, 225, 0.15); border-radius: 8px; flex-shrink: 0;">
+                                        <i class="fas fa-clipboard-check text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <span class="fw-medium d-block">Reviewed Cases</span>
+                                        <small class="text-muted">View case review history</small>
+                                    </div>
+                                    ${row.reviewed_count > 0 ? '<span class="badge bg-success ms-auto">Reviewed</span>' : ''}
+                                </a>
+                            </li>
+                            
+                            <li><hr class="dropdown-divider" style="margin: 0;"></li>
+                            
+                            <li>
+                                <a href="${@json(route('crime.courtcase', ':id')).replace(':id', row.id)}" 
+                                class="dropdown-item py-3 d-flex align-items-center">
+                                    <div class="icon-wrapper me-3 d-flex justify-content-center align-items-center" 
+                                        style="width: 35px; height: 35px; background-color: rgba(236, 201, 75, 0.15); border-radius: 8px; flex-shrink: 0;">
+                                        <i class="fas fa-gavel text-warning"></i>
+                                    </div>
+                                    <div>
+                                        <span class="fw-medium d-block">Court Cases</span>
+                                        <small class="text-muted">View court proceedings</small>
+                                    </div>
+                                    ${row.court_case_count > 0 ? '<span class="badge bg-warning ms-auto">Court Case</span>' : ''}
+                                </a>
+                            </li>
+                            
+                            <li><hr class="dropdown-divider" style="margin: 0;"></li>
+                            
+                            <li>
+                                <a href="${@json(route('crime.appealcase', ':id')).replace(':id', row.id)}" 
+                                class="dropdown-item py-3 d-flex align-items-center">
+                                    <div class="icon-wrapper me-3 d-flex justify-content-center align-items-center" 
+                                        style="width: 35px; height: 35px; background-color: rgba(237, 100, 100, 0.15); border-radius: 8px; flex-shrink: 0;">
+                                        <i class="fas fa-balance-scale text-danger"></i>
+                                    </div>
+                                    <div>
+                                        <span class="fw-medium d-block">Appeal Cases</span>
+                                        <small class="text-muted">View case appeals</small>
+                                    </div>
+                                    ${row.appeal_count > 0 ? '<span class="badge bg-danger ms-auto">Appealed</span>' : ''}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>`;
+
+        return actions;
+    }
 }
-
-
-                if (userRoles.canCourtCase && row.status === 'accepted') {
-                    actions += `<li><a class="dropdown-item" href="${@json(route('crime.CourtCase.create', ':id')).replace(':id', row.id)}">Court Case</a></li>`;
-                }
-
-                if (userRoles.canallocate && row.status === 'pending') {
-                    actions += `<li><a class="dropdown-item" href="${@json(route('crime.criminalCase.allocateForm', ':id')).replace(':id', row.id)}">Case Allocation</a></li>`;
-                }
-
-                if (userRoles.canReallocate && row.status === 'rejected') {
-    actions += `<li><a class="dropdown-item" href="${@json(route('crime.criminalCase.showReallocationForm', ':id')).replace(':id', row.id)}">Case Reallocate</a></li>`;
-}
-
-
-                if (userRoles.canAppeal) {
-                    actions += `<li><a class="dropdown-item" href="${@json(route('crime.appeal.create', ':id')).replace(':id', row.id)}">Appeal</a></li>`;
-                }
-
-                actions += `
-                                <li>
-                                    <a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); if(confirm('Are you sure?')) document.getElementById('delete-form-${row.id}').submit();">Delete</a>
-                                    <form id="delete-form-${row.id}" action="${@json(route('crime.criminalCase.destroy', ':id')).replace(':id', row.id)}" method="POST" class="d-none">
-                                        @csrf @method('DELETE')
-                                    </form>
-                                </li>
-                            </ul>
-                        </div>
-
-                      <!-- Replace the Collapsible Panel with this Dropdown Panel -->
-<div class="mt-2" id="caseRecordsDropdown${row.id}">
-    <div class="dropdown d-inline">
-        <button class="btn btn-info dropdown-toggle" 
-                type="button" 
-                id="caseRecordsButton${row.id}" 
-                data-bs-toggle="dropdown" 
-                aria-expanded="false"
-                style="background: linear-gradient(to right, #4299e1, #3182ce); border: none; box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11); color: white; font-weight: 500; padding: 0.5rem 1rem; border-radius: 0.5rem;">
-            <i class="fas fa-folder-open me-2"></i> Related Records
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" 
-            aria-labelledby="caseRecordsButton${row.id}"
-            style="min-width: 280px; border-radius: 0.5rem; overflow: hidden;">
-            
-            <li class="dropdown-header py-2 px-3" style="background-color: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-                <span class="fw-bold">Case ID: ${row.id}</span>
-            </li>
-            
-            <li>
-                <a href="${@json(route('crime.casereview.reviewed', ':id')).replace(':id', row.id)}" 
-                   class="dropdown-item py-3 d-flex align-items-center">
-                    <div class="icon-wrapper me-3 d-flex justify-content-center align-items-center" 
-                         style="width: 35px; height: 35px; background-color: rgba(66, 153, 225, 0.15); border-radius: 8px; flex-shrink: 0;">
-                        <i class="fas fa-clipboard-check text-primary"></i>
-                    </div>
-                    <div>
-                        <span class="fw-medium d-block">Reviewed Cases</span>
-                        <small class="text-muted">View case review history</small>
-                    </div>
-                </a>
-            </li>
-            
-            <li><hr class="dropdown-divider" style="margin: 0;"></li>
-            
-            <li>
-                <a href="${@json(route('crime.courtcase', ':id')).replace(':id', row.id)}" 
-                   class="dropdown-item py-3 d-flex align-items-center">
-                    <div class="icon-wrapper me-3 d-flex justify-content-center align-items-center" 
-                         style="width: 35px; height: 35px; background-color: rgba(236, 201, 75, 0.15); border-radius: 8px; flex-shrink: 0;">
-                        <i class="fas fa-gavel text-warning"></i>
-                    </div>
-                    <div>
-                        <span class="fw-medium d-block">Court Cases</span>
-                        <small class="text-muted">View court proceedings</small>
-                    </div>
-                </a>
-            </li>
-            
-            <li><hr class="dropdown-divider" style="margin: 0;"></li>
-            
-            <li>
-                <a href="${@json(route('crime.appealcase', ':id')).replace(':id', row.id)}" 
-                   class="dropdown-item py-3 d-flex align-items-center">
-                    <div class="icon-wrapper me-3 d-flex justify-content-center align-items-center" 
-                         style="width: 35px; height: 35px; background-color: rgba(237, 100, 100, 0.15); border-radius: 8px; flex-shrink: 0;">
-                        <i class="fas fa-balance-scale text-danger"></i>
-                    </div>
-                    <div>
-                        <span class="fw-medium d-block">Appeal Cases</span>
-                        <small class="text-muted">View case appeals</small>
-                    </div>
-                </a>
-            </li>
-        </ul>
-    </div>
-</div>
-
-<!-- Add these styles to your existing style section -->
-<style>
-    /* Enhanced dropdown styling */
-    .dropdown-item {
-        transition: all 0.2s ease;
-        border-left: 3px solid transparent;
-    }
-    
-    .dropdown-item:hover {
-        background-color: #f8fafc;
-        border-left: 3px solid #3182ce;
-        transform: translateX(5px);
-    }
-    
-    .dropdown-menu {
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    }
-    
-    .dropdown-header {
-        font-size: 0.85rem;
-        color: #4a5568;
-    }
-</style>
-
-                    </div>`;
-
-                return actions;
-            }
-        }
 
 
 

@@ -64,14 +64,14 @@ foreach ([
         }
 
    
-       // Seed cases table (ensuring date_of_allocation is not null)
+       // Seed cases table (ensuring date_of_incident is not null)
 $caseIds = [];
 for ($i = 1; $i <= 2; $i++) {
     $caseIds[] = DB::table('cases')->insertGetId([
         'case_file_number' => 'CASE' . str_pad($i, 3, '0', STR_PAD_LEFT),
         'date_file_received' => now()->subDays($i),
         'case_name' => 'Republic vs ' . $faker->firstName . ' ' . $faker->lastName,
-        'date_of_allocation' => $faker->dateTimeBetween('-5 days', 'now')->format('Y-m-d'), // ✅ always set
+        'date_of_incident' => $faker->dateTimeBetween('-5 days', 'now')->format('Y-m-d'), // ✅ always set
         'lawyer_id' => $faker->randomElement(array_values($lawyerIds)),
         'island_id' => $faker->randomElement(array_values($islandIds)),
         'created_by' => $adminUserId,
@@ -180,11 +180,10 @@ for ($i = 1; $i <= 2; $i++) {
                 'case_id' => $faker->randomElement($caseIds),
                 'charge_file_dated' => $faker->date(),
                 'high_court_case_number' => $faker->optional()->word,
-                'court_outcome' => $faker->randomElement(['guilty', 'not_guilty', 'dismissed', 'withdrawn', 'other']),
-                'court_outcome_details' => $faker->optional()->text,
-                'court_outcome_date' => $faker->optional()->date(),
+                'verdict' => $faker->randomElement(['guilty', 'not_guilty', 'dismissed', 'withdrawn', 'other']),
+                             
                 'judgment_delivered_date' => $faker->optional()->date(),
-                'verdict' => $faker->randomElement(['win', 'lose']),
+                'court_outcome' => $faker->randomElement(['win', 'lose']),
                 'decision_principle_established' => $faker->optional()->text,
                 'created_by' => $faker->randomElement($userIds),
                 'updated_by' => $faker->randomElement($userIds),

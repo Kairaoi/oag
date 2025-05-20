@@ -24,8 +24,6 @@ protected $fillable = [
     'appeal_case_number',
     'appeal_filing_date',
     'court_outcome',
-    'court_outcome_details',
-    'court_outcome_date',
     'judgment_delivered_date',
     'verdict',
     'decision_principle_established',

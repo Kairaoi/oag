@@ -56,8 +56,6 @@ class CourtCase extends Model
         'charge_file_dated',
         'high_court_case_number',
         'court_outcome',
-        'court_outcome_details',
-        'court_outcome_date',
         'judgment_delivered_date',
         'verdict',
         'decision_principle_established',
@@ -72,7 +70,7 @@ class CourtCase extends Model
      */
     protected $casts = [
         'charge_file_dated' => 'date',
-        'court_outcome_date' => 'date',
+       
         'judgment_delivered_date' => 'date',
     ];
 

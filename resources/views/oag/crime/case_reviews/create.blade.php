@@ -108,17 +108,7 @@
             @enderror
         </div>
 
-        <!-- Review Notes -->
-        <div class="form-group">
-            <label for="review_notes" class="text-white">Review Notes</label>
-            <textarea class="form-control @error('review_notes') is-invalid @enderror" id="review_notes" name="review_notes" rows="3" required>{{ old('review_notes') }}</textarea>
-            @error('review_notes')
-                <span class="invalid-feedback" role="alert">
-                    <strong>{{ $message }}</strong>
-                </span>
-            @enderror
-        </div>
-
+        
         <!-- Review Date -->
         <div class="form-group">
             <label for="review_date" class="text-white">Review Date</label>

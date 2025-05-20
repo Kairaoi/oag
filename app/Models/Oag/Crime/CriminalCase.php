@@ -54,7 +54,7 @@ class CriminalCase extends Model
     // app/Models/CriminalCase.php
 
     protected $fillable = [
-        'case_file_number', 'date_file_received', 'case_name', 'date_of_allocation',
+        'case_file_number', 'date_file_received', 'case_name', 'date_of_incident',
         'lawyer_id', 'island_id', 'created_by', 'updated_by', 'status', 'reviewer_id', 'reviewed_at', 'rejection_reason'
     ];
     
@@ -81,7 +81,7 @@ class CriminalCase extends Model
         'case_file_number'      => 'required|string|max:255|unique:cases,case_file_number',
         'date_file_received'    => 'required|date',
         'case_name'             => 'required|string|max:255',
-        'date_of_allocation'    => 'nullable|date',
+        'date_of_incident'    => 'nullable|date',
         'date_file_closed'      => 'nullable|date',
         'reason_for_closure_id' => 'nullable|exists:reasons_for_closure,id',
         'lawyer_id'             => 'required|exists:users,id',

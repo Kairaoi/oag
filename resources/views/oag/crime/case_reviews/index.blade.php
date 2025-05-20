@@ -152,7 +152,7 @@
                     <th>Case Name</th>
                     <th>Current Lawyer</th>
                     <th>Evidence Status</th>
-                    <th>Review Notes</th>
+                 
                     <th>Particulars</th>
                     <!-- <th>Review Date</th> -->
                     <th>Reallocation Details</th>
@@ -225,12 +225,7 @@ $(document).ready(function() {
                     return `<span class="status-badge ${statuses[data] || ''}">${label[data] || data}</span>`;
                 }
             },
-            {
-                data: 'review_notes', name: 'review_notes',
-                render: function(data) {
-                    return data && data.length > 50 ? data.substring(0, 50) + '...' : (data || 'No notes');
-                }
-            },
+           
             {
                 data: 'offence_particulars', name: 'offence_particulars',
                 render: function(data) {

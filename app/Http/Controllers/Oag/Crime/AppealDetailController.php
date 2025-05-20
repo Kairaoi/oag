@@ -33,7 +33,7 @@ class AppealDetailController extends Controller
     public function index()
     {
         $appeals = $this->appealDetailRepository->all();
-        return view('oag.crime.appeal_details.index', compact('appeals'));
+        return view('oag.crime.appeal_details.index');
     }
 
     public function getDataTables(Request $request)
@@ -88,8 +88,6 @@ class AppealDetailController extends Controller
             'appeal_case_number' => 'required|string',
             'appeal_filing_date' => 'required|date',
             'court_outcome' => 'required|string',
-            'court_outcome_details' => 'nullable|string',
-            'court_outcome_date' => 'nullable|date',
             'judgment_delivered_date' => 'nullable|date',
             'verdict' => 'required|string',
             'decision_principle_established' => 'nullable|string',

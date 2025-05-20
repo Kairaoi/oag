@@ -55,9 +55,9 @@
 
         <!-- Date of Allocation -->
         <div class="form-group">
-            <label for="date_of_allocation" class="text-white">Date of Allocation</label>
-            <input type="date" class="form-control @error('date_of_allocation') is-invalid @enderror" id="date_of_allocation" name="date_of_allocation" value="{{ old('date_of_allocation') }}">
-            @error('date_of_allocation')
+            <label for="date_of_incident" class="text-white">Date of Incident</label>
+            <input type="date" class="form-control @error('date_of_incident') is-invalid @enderror" id="date_of_incident" name="date_of_incident" value="{{ old('date_of_incident') }}">
+            @error('date_of_incident')
                 <span class="invalid-feedback" role="alert">
                     <strong>{{ $message }}</strong>
                 </span>
@@ -66,7 +66,7 @@
         
         <!-- Island Field -->
         <div class="form-group">
-            <label for="island_id" class="text-white">Island</label>
+            <label for="island_id" class="text-white">Place of Incident</label>
             <select class="form-control @error('island_id') is-invalid @enderror" id="island_id" name="island_id" required>
                 <option value="">Select an island</option>
                 @foreach($islands as $id => $name)

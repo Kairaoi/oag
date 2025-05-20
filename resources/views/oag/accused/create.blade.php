@@ -94,7 +94,7 @@
 
         <!-- Island -->
         <div class="form-group">
-            <label for="island_id" class="text-white">Island</label>
+            <label for="island_id" class="text-white">Home Island</label>
             <select class="form-control @error('island_id') is-invalid @enderror" id="island_id" name="island_id" required>
                 <option value="">Select island</option>
                 @foreach($islands as $id => $name)

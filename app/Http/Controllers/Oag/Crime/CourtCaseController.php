@@ -51,11 +51,10 @@ class CourtCaseController extends Controller
             'case_id' => 'required|exists:cases,id',
             'charge_file_dated' => 'required|date',
             'high_court_case_number' => 'nullable|string|max:255',
-            'court_outcome' => 'nullable|in:guilty,not_guilty,dismissed,withdrawn,other',
-            'court_outcome_details' => 'nullable|string',
-            'court_outcome_date' => 'nullable|date',
+            'verdict' => 'nullable|in:guilty,not_guilty,dismissed,withdrawn,other',
+           
             'judgment_delivered_date' => 'nullable|date',
-            'verdict' => 'nullable|in:win,lose',
+            'court_outcome' => 'nullable|in:win,lose',
             'decision_principle_established' => 'nullable|string',
         ]);
 
@@ -64,7 +63,7 @@ class CourtCaseController extends Controller
 
         $this->courtCaseRepository->create($data);
 
-        return redirect()->route('crime.court-cases.index')
+        return redirect()->route('crime.criminalCase.index')
             ->with('success', 'Court case created successfully.');
     }
 
@@ -106,11 +105,10 @@ class CourtCaseController extends Controller
             'case_id' => 'required|exists:cases,id',
             'charge_file_dated' => 'required|date',
             'high_court_case_number' => 'nullable|string|max:255',
-            'court_outcome' => 'nullable|in:guilty,not_guilty,dismissed,withdrawn,other',
-            'court_outcome_details' => 'nullable|string',
-            'court_outcome_date' => 'nullable|date',
+            'verdict' => 'nullable|in:guilty,not_guilty,dismissed,withdrawn,other',
+           
             'judgment_delivered_date' => 'nullable|date',
-            'verdict' => 'nullable|in:win,lose',
+            'court_outcome' => 'nullable|in:win,lose',
             'decision_principle_established' => 'nullable|string',
         ]);
 

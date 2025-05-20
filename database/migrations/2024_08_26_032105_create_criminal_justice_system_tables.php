@@ -55,7 +55,7 @@ class CreateCriminalJusticeSystemTables extends Migration
             $table->string('case_file_number')->unique();
             $table->date('date_file_received');
             $table->string('case_name');
-            $table->date('date_of_allocation')->nullable();
+            $table->date('date_of_incident')->nullable();
             $table->foreignId('lawyer_id')->nullable()->constrained('users');
             $table->foreignId('island_id')->constrained('islands');
             $table->foreignId('created_by')->constrained('users');
@@ -110,13 +110,11 @@ class CreateCriminalJusticeSystemTables extends Migration
             $table->string('high_court_case_number')->nullable();
 
             // Court outcome summary
-            $table->enum('court_outcome', ['guilty', 'not_guilty', 'dismissed', 'withdrawn', 'other'])->nullable();
-            $table->text('court_outcome_details')->nullable();
-            $table->date('court_outcome_date')->nullable();
-
+            $table->enum('verdict', ['guilty', 'not_guilty', 'dismissed', 'withdrawn', 'other'])->nullable();
+            
             // Judgment details
             $table->date('judgment_delivered_date')->nullable();
-            $table->enum('verdict', ['win', 'lose'])->nullable();
+            $table->enum('court_outcome', ['win', 'lose'])->nullable();
             $table->text('decision_principle_established')->nullable();
 
             // Record tracking
@@ -138,13 +136,11 @@ class CreateCriminalJusticeSystemTables extends Migration
             $table->string('appeal_case_number')->nullable();
             $table->date('appeal_filing_date')->nullable();
              // Court outcome summary
-             $table->enum('court_outcome', ['guilty', 'not_guilty', 'dismissed', 'withdrawn', 'other'])->nullable();
-             $table->text('court_outcome_details')->nullable();
-             $table->date('court_outcome_date')->nullable();
- 
+             $table->enum('verdict', ['guilty', 'not_guilty', 'dismissed', 'withdrawn', 'other'])->nullable();
+             
                     // Judgment details
             $table->date('judgment_delivered_date')->nullable();
-            $table->enum('verdict', ['win', 'lose'])->nullable();
+            $table->enum('court_outcome', ['win', 'lose'])->nullable();
             $table->text('decision_principle_established')->nullable();
             $table->foreignId('created_by')->constrained('users');
             $table->foreignId('updated_by')->nullable()->constrained('users');
@@ -167,7 +163,6 @@ class CreateCriminalJusticeSystemTables extends Migration
                 'returned_to_police'
             ])->default('pending_review');
             $table->text('offence_particulars')->nullable(); // <-- Added this line
-            $table->text('review_notes')->nullable();
             $table->datetime('review_date');
             $table->date('date_file_closed')->nullable();
             $table->foreignId('reason_for_closure_id')->nullable()->constrained('reasons_for_closure');
