@@ -155,78 +155,83 @@ class AppealDetailRepository extends CustomBaseRepository
         return $this->getModelInstance()->pluck('appeal_case_number', 'id');
     }
 
-   public function getAppealDetailsByCaseId(int $caseId, bool $onlyTrashed = false): \Illuminate\Support\Collection
-{
-    // Disable ONLY_FULL_GROUP_BY for this session
-    DB::statement("SET SQL_MODE=''");
-
-    $query = $this->getModelInstance();
-
-    if ($onlyTrashed) {
-        $query = $query->onlyTrashed();
+    public function getAppealDetailsByCaseId(int $caseId, bool $onlyTrashed = false): \Illuminate\Support\Collection
+    {
+        $query = $this->getModelInstance()->newQuery();
+    
+        if ($onlyTrashed) {
+            $query->onlyTrashed();
+        } else {
+            $query->whereNull('appeal_details.deleted_at');
+        }
+    
+        return $query
+            ->leftJoin('cases', 'appeal_details.case_id', '=', 'cases.id')
+            ->leftJoin('users as creator', 'appeal_details.created_by', '=', 'creator.id')
+            ->leftJoin('users as updater', 'appeal_details.updated_by', '=', 'updater.id')
+            ->leftJoin('case_offence', 'appeal_details.case_id', '=', 'case_offence.case_id')
+            ->leftJoin('offences', 'case_offence.offence_id', '=', 'offences.id')
+            ->leftJoin('offence_categories', 'offences.offence_category_id', '=', 'offence_categories.id')
+            ->leftJoin('accused', 'appeal_details.case_id', '=', 'accused.case_id')
+            ->leftJoin('victims', 'appeal_details.case_id', '=', 'victims.case_id')
+            ->where('appeal_details.case_id', $caseId)
+            ->selectRaw('
+                appeal_details.id,
+                appeal_details.case_id,
+                appeal_details.created_by,
+                appeal_details.updated_by,
+                appeal_details.created_at,
+                appeal_details.updated_at,
+                appeal_details.deleted_at,
+                appeal_details.filing_date_source,
+                appeal_details.appeal_filing_date,
+                cases.case_name, 
+                cases.status as case_status, 
+                creator.name as created_by_name, 
+                updater.name as updated_by_name, 
+                appeal_details.appeal_filing_date as appeal_filing_effective_date, 
+                CASE 
+                    WHEN appeal_details.filing_date_source = "court" THEN "court"
+                    WHEN appeal_details.filing_date_source = "defendant" THEN "defendant"
+                    ELSE NULL
+                END as filing_date_origin,
+                GROUP_CONCAT(DISTINCT offences.offence_name SEPARATOR ", ") as offence_names, 
+                GROUP_CONCAT(DISTINCT offence_categories.category_name SEPARATOR ", ") as category_names, 
+                GROUP_CONCAT(DISTINCT CONCAT(accused.first_name, " ", accused.last_name) SEPARATOR ", ") as accused_names, 
+                GROUP_CONCAT(DISTINCT accused.address SEPARATOR ", ") as accused_addresses, 
+                GROUP_CONCAT(DISTINCT accused.contact SEPARATOR ", ") as accused_contacts, 
+                GROUP_CONCAT(DISTINCT accused.phone SEPARATOR ", ") as accused_phones, 
+                GROUP_CONCAT(DISTINCT accused.gender SEPARATOR ", ") as accused_genders, 
+                GROUP_CONCAT(DISTINCT accused.age SEPARATOR ", ") as accused_ages, 
+                GROUP_CONCAT(DISTINCT accused.date_of_birth SEPARATOR ", ") as accused_dob, 
+                GROUP_CONCAT(DISTINCT accused.island_id SEPARATOR ", ") as accused_islands, 
+                GROUP_CONCAT(DISTINCT CONCAT(victims.first_name, " ", victims.last_name) SEPARATOR ", ") as victim_names, 
+                GROUP_CONCAT(DISTINCT victims.address SEPARATOR ", ") as victim_addresses, 
+                GROUP_CONCAT(DISTINCT victims.contact SEPARATOR ", ") as victim_contacts, 
+                GROUP_CONCAT(DISTINCT victims.phone SEPARATOR ", ") as victim_phones, 
+                GROUP_CONCAT(DISTINCT victims.gender SEPARATOR ", ") as victim_genders, 
+                GROUP_CONCAT(DISTINCT victims.age SEPARATOR ", ") as victim_ages, 
+                GROUP_CONCAT(DISTINCT victims.date_of_birth SEPARATOR ", ") as victim_dob, 
+                GROUP_CONCAT(DISTINCT victims.island_id SEPARATOR ", ") as victim_islands, 
+                GROUP_CONCAT(DISTINCT victims.age_group SEPARATOR ", ") as victim_age_groups
+            ')
+            ->groupBy(
+                'appeal_details.id',
+                'appeal_details.case_id',
+                'appeal_details.created_by',
+                'appeal_details.updated_by',
+                'appeal_details.created_at',
+                'appeal_details.updated_at',
+                'appeal_details.deleted_at',
+                'appeal_details.filing_date_source',
+                'appeal_details.appeal_filing_date',
+                'cases.case_name',
+                'cases.status',
+                'creator.name',
+                'updater.name'
+            )
+            ->get();
     }
-
-    $result = $query
-        ->leftJoin('cases', 'appeal_details.case_id', '=', 'cases.id')
-        // ->leftJoin('court_cases', 'appeal_details.court_case_id', '=', 'court_cases.id')
-        ->leftJoin('users as creator', 'appeal_details.created_by', '=', 'creator.id')
-        ->leftJoin('users as updater', 'appeal_details.updated_by', '=', 'updater.id')
-        ->leftJoin('case_offence', 'appeal_details.case_id', '=', 'case_offence.case_id')
-        ->leftJoin('offences', 'case_offence.offence_id', '=', 'offences.id')
-        ->leftJoin('offence_categories', 'offences.offence_category_id', '=', 'offence_categories.id')
-        ->leftJoin('accused', 'appeal_details.case_id', '=', 'accused.case_id')
-        ->leftJoin('victims', 'appeal_details.case_id', '=', 'victims.case_id')
-        ->select([
-            'appeal_details.*',
-            'cases.case_name',
-            'cases.status as case_status',
-            'creator.name as created_by_name',
-            'updater.name as updated_by_name',
-
-            // // Court case fields
-            // 'court_cases.charge_file_dated',
-            // 'court_cases.high_court_case_number',
-            // 'court_cases.court_outcome',
-            // 'court_cases.court_outcome_details',
-            // 'court_cases.court_outcome_date',
-            // 'court_cases.judgment_delivered_date',
-            // 'court_cases.verdict',
-            // 'court_cases.decision_principle_established',
-
-            // Grouped offence and person data
-            DB::raw('GROUP_CONCAT(DISTINCT offences.offence_name SEPARATOR ", ") as offence_names'),
-            DB::raw('GROUP_CONCAT(DISTINCT offence_categories.category_name SEPARATOR ", ") as category_names'),
-
-            DB::raw('GROUP_CONCAT(DISTINCT CONCAT(accused.first_name, " ", accused.last_name) SEPARATOR ", ") as accused_names'),
-            DB::raw('GROUP_CONCAT(DISTINCT accused.address SEPARATOR ", ") as accused_addresses'),
-            DB::raw('GROUP_CONCAT(DISTINCT accused.contact SEPARATOR ", ") as accused_contacts'),
-            DB::raw('GROUP_CONCAT(DISTINCT accused.phone SEPARATOR ", ") as accused_phones'),
-            DB::raw('GROUP_CONCAT(DISTINCT accused.gender SEPARATOR ", ") as accused_genders'),
-            DB::raw('GROUP_CONCAT(DISTINCT accused.age SEPARATOR ", ") as accused_ages'),
-            DB::raw('GROUP_CONCAT(DISTINCT accused.date_of_birth SEPARATOR ", ") as accused_dob'),
-            DB::raw('GROUP_CONCAT(DISTINCT accused.island_id SEPARATOR ", ") as accused_islands'),
-
-            DB::raw('GROUP_CONCAT(DISTINCT CONCAT(victims.first_name, " ", victims.last_name) SEPARATOR ", ") as victim_names'),
-            DB::raw('GROUP_CONCAT(DISTINCT victims.address SEPARATOR ", ") as victim_addresses'),
-            DB::raw('GROUP_CONCAT(DISTINCT victims.contact SEPARATOR ", ") as victim_contacts'),
-            DB::raw('GROUP_CONCAT(DISTINCT victims.phone SEPARATOR ", ") as victim_phones'),
-            DB::raw('GROUP_CONCAT(DISTINCT victims.gender SEPARATOR ", ") as victim_genders'),
-            DB::raw('GROUP_CONCAT(DISTINCT victims.age SEPARATOR ", ") as victim_ages'),
-            DB::raw('GROUP_CONCAT(DISTINCT victims.date_of_birth SEPARATOR ", ") as victim_dob'),
-            DB::raw('GROUP_CONCAT(DISTINCT victims.island_id SEPARATOR ", ") as victim_islands'),
-            DB::raw('GROUP_CONCAT(DISTINCT victims.age_group SEPARATOR ", ") as victim_age_groups'),
-        ])
-        ->where('appeal_details.case_id', $caseId)
-        ->when(!$onlyTrashed, fn($query) => $query->whereNull('appeal_details.deleted_at'))
-        ->groupBy('appeal_details.id')
-        ->get();
-
-    // Reset SQL_MODE
-    DB::statement("SET SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'");
-
-    return $result;
-}
-
 
     
 }

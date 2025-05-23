@@ -2,6 +2,11 @@
 
 @section('content')
 <div class="container">
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb">
+    {{ Breadcrumbs::render() }}
+    </nav>
+
     <h4>Reallocate Case #{{ $case->id }}</h4>
 
     @if(session('success'))

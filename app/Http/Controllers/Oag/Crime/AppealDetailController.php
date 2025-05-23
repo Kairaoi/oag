@@ -33,6 +33,7 @@ class AppealDetailController extends Controller
     public function index()
     {
         $appeals = $this->appealDetailRepository->all();
+
         return view('oag.crime.appeal_details.index');
     }
 
@@ -86,29 +87,44 @@ class AppealDetailController extends Controller
     $validatedData = $request->validate([
         'case_id' => 'required|exists:cases,id',
         'appeal_case_number' => 'required|string',
-        'appeal_filing_date' => 'required|date',
+        'filing_date_type' => 'required|in:court,defendant',
+        'filing_date_value' => 'required|date',
         'court_outcome' => 'required|string',
         'judgment_delivered_date' => 'nullable|date',
         'verdict' => 'required|string',
         'decision_principle_established' => 'nullable|string',
     ]);
 
-    $data = $validatedData;
-    $data['created_by'] = auth()->user()->id;
-    $data['updated_by'] = auth()->user()->id;
+    // Map validated fields to actual columns
+    // Map validated fields to actual columns
+$data = [
+    'case_id' => $validatedData['case_id'],
+    'appeal_case_number' => $validatedData['appeal_case_number'],
+    'court_outcome' => $validatedData['court_outcome'],
+    'judgment_delivered_date' => $validatedData['judgment_delivered_date'] ?? null,
+    'verdict' => $validatedData['verdict'],
+    'decision_principle_established' => $validatedData['decision_principle_established'] ?? null,
+    'appeal_filing_date' => $validatedData['filing_date_value'],
+    'filing_date_source' => $validatedData['filing_date_type'], // 🔧 added
+    'created_by' => auth()->id(),
+    'updated_by' => auth()->id(),
+];
+
+
+    // Store date in correct column
+    if ($validatedData['filing_date_type'] === 'court') {
+        $data['appeal_filing_date'] = $validatedData['filing_date_value'];
+    } else {
+        $data['appeal_filing_received_date'] = $validatedData['filing_date_value'];
+    }
 
     try {
         $originalCase = $this->criminalCaseRepository->getById($validatedData['case_id']);
 
+        // Optional: Update status or log
         // if ($originalCase) {
-        //     // Just mark status without touching any review logic
         //     $originalCase->status = 'appealed';
         //     $originalCase->save();
-
-        //     // Optional: Log current review status if needed
-        //     if (property_exists($originalCase, 'review') && $originalCase->review) {
-        //         \Log::info("Existing review status for case {$originalCase->id}: " . $originalCase->review->status);
-        //     }
         // }
 
         $appeal = $appealRepo->create($data);
@@ -117,7 +133,7 @@ class AppealDetailController extends Controller
         return redirect()->route('crime.criminalCase.index')->with('success', 'Appeal created successfully.');
     } catch (\Exception $e) {
         \Log::error('Error storing appeal: ' . $e->getMessage());
-        return redirect()->back()->with('error', 'Failed to store appeal.');
+        return redirect()->back()->withInput()->with('error', 'Failed to store appeal.');
     }
 }
 

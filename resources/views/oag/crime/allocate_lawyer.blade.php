@@ -5,12 +5,7 @@
 <div class="container mt-5">
     <!-- Breadcrumbs -->
     <nav aria-label="breadcrumb">
-        <ol class="breadcrumb" style="background: none; box-shadow: none;">
-            <li class="breadcrumb-item"><a href="{{ route('home') }}" style="color: #ff4b2b; font-weight: bold;">Home</a></li>
-            <li class="breadcrumb-item"><a href="{{ route('crime.criminalCase.index') }}" style="color: #ff4b2b; font-weight: bold;">Criminal Cases</a></li>
-            <li class="breadcrumb-item"><a href="{{ route('crime.criminalCase.show', $criminalCase->id) }}" style="color: #ff4b2b; font-weight: bold;">Case Details</a></li>
-            <li class="breadcrumb-item active" aria-current="page" style="color: #333; font-weight: bold;">Allocate Lawyer</li>
-        </ol>
+    {{ Breadcrumbs::render() }}
     </nav>
 
     <!-- Main Title -->

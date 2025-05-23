@@ -3,13 +3,11 @@
 @section('content')
 <div class="container mt-5">
     <!-- Breadcrumbs -->
+    <!-- Breadcrumbs -->
     <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
-            <li class="breadcrumb-item"><a href="{{ route('crime.category.index') }}">Offence Categories</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Offence Category Details</li>
-        </ol>
+    {{ Breadcrumbs::render() }}
     </nav>
+
     <h1 class="text-center mb-4" style="font-family: 'Courier New', Courier, monospace; color: #333; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);">Offence Category Details</h1>
 
     <div class="p-4 shadow-lg rounded-3" style="background: linear-gradient(90deg, #ff416c, #ff4b2b); border-radius: 20px;">

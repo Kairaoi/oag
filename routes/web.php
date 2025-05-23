@@ -147,7 +147,14 @@ Route::get('CourtCase/{id}/create', [CourtCaseController::class, 'create'])->nam
 Route::resource('court-cases',CourtCaseController::class);
 
 
+// Court of Appeal Routes
+Route::get('courtOfAppeal/create/{caseId?}', [\App\Http\Controllers\Oag\Crime\CourtOfAppealController::class, 'create'])
+    ->name('courtOfAppeal.create');
 
+Route::match(['get', 'post'], 'courtOfAppeal/datatables', [\App\Http\Controllers\Oag\Crime\CourtOfAppealController::class, 'getDataTables'])
+    ->name('courtOfAppeal.datatables');
+
+Route::resource('courtOfAppeal', \App\Http\Controllers\Oag\Crime\CourtOfAppealController::class)->except(['create']);
 
  
 });

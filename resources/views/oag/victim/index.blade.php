@@ -3,12 +3,10 @@
 @section('content')
 <div class="container mt-5">
     <!-- Breadcrumbs -->
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb" style="background: #f8f9fa; border-radius: 25px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
-            <li class="breadcrumb-item"><a href="{{ route('home') }}" style="color: #007bff; text-decoration: none;">Home</a></li>
-            <li class="breadcrumb-item active" aria-current="page" style="color: #6c757d;">Victim DataTable</li>
-        </ol>
+    <nav aria-label="breadcrumb">
+    {{ Breadcrumbs::render() }}
     </nav>
+
 
     <!-- Heading -->
     <h2 class="text-center mb-4" style="font-family: 'Courier New', Courier, monospace; color: #f8f9fa; text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4); border-bottom: 4px double #ff6f61; padding-bottom: 20px;">

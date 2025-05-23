@@ -137,7 +137,7 @@ class CreateCriminalJusticeSystemTables extends Migration
             $table->date('appeal_filing_date')->nullable();
              // Court outcome summary
              $table->enum('verdict', ['guilty', 'not_guilty', 'dismissed', 'withdrawn', 'other'])->nullable();
-             
+             $table->string('filing_date_source'); 
                     // Judgment details
             $table->date('judgment_delivered_date')->nullable();
             $table->enum('court_outcome', ['win', 'lose'])->nullable();
@@ -152,6 +152,42 @@ class CreateCriminalJusticeSystemTables extends Migration
               $table->index('court_outcome');
               $table->index('verdict');
         });
+
+
+        Schema::create('court_of_appeals', function (Blueprint $table) {
+            $table->id();
+        
+            // Foreign key linking to the cases table
+            $table->foreignId('case_id')->constrained('cases')->onDelete('cascade');
+        
+            // Appeal-specific fields
+            $table->string('appeal_case_number')->nullable();
+            $table->date('appeal_filing_date')->nullable();
+        
+            // Source of filing date information (e.g., registry, lawyer)
+            $table->string('filing_date_source');
+        
+            // Judgment details
+            $table->date('judgment_delivered_date')->nullable();
+            $table->enum('court_outcome', ['win', 'lose','remand'])->nullable();
+        
+            // Legal principle established by the decision
+            $table->text('decision_principle_established')->nullable();
+        
+            // User tracking who created and updated the record
+            $table->foreignId('created_by')->constrained('users');
+            $table->foreignId('updated_by')->nullable()->constrained('users');
+        
+            // Soft deletes and timestamps
+            $table->softDeletes();
+            $table->timestamps();
+        
+            // Indexes for performance optimization
+            $table->index(['case_id', 'appeal_filing_date']);
+            $table->index('court_outcome');
+           
+        });
+        
 
         Schema::create('case_reviews', function (Blueprint $table) {
             $table->id();

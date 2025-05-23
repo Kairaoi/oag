@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
+<nav aria-label="breadcrumb">
+        
+        {{ Breadcrumbs::render() }}
+        
+    </nav>
 <div class="container mt-5">
     <h1 class="text-center mb-4" style="font-family: 'Courier New', Courier, monospace; color: #333; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);">Criminal Case Details</h1>
 

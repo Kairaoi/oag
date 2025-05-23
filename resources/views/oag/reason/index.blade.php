@@ -4,10 +4,9 @@
 <div class="container mt-5">
     <!-- Breadcrumbs -->
     <nav aria-label="breadcrumb">
-        <ol class="breadcrumb mb-4">
-            <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Reasons For Closure</li>
-        </ol>
+        
+        {{ Breadcrumbs::render() }}
+        
     </nav>
 
     <!-- Heading -->

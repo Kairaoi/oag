@@ -4,11 +4,7 @@
 <div class="container mt-5">
     <!-- Breadcrumbs -->
     <nav aria-label="breadcrumb">
-        <ol class="breadcrumb" style="background: none; box-shadow: none;">
-            <li class="breadcrumb-item"><a href="{{ route('home') }}" style="color: #ff4b2b; font-weight: bold;">Home</a></li>
-            <li class="breadcrumb-item"><a href="{{ route('crime.criminalCase.index') }}" style="color: #ff4b2b; font-weight: bold;">Criminal Cases</a></li>
-            <li class="breadcrumb-item active" aria-current="page" style="color: #333; font-weight: bold;">Create New Case</li>
-        </ol>
+    {{ Breadcrumbs::render() }}
     </nav>
 
     <!-- Main Title -->
@@ -42,16 +38,22 @@
             @enderror
         </div>
 
-        <!-- Case Name -->
-        <div class="form-group">
-            <label for="case_name" class="text-white">Case Name</label>
-            <input type="text" class="form-control @error('case_name') is-invalid @enderror" id="case_name" name="case_name" value="{{ old('case_name') }}" required>
-            @error('case_name')
-                <span class="invalid-feedback" role="alert">
-                    <strong>{{ $message }}</strong>
-                </span>
-            @enderror
-        </div>
+      <!-- Case Name -->
+<div class="form-group">
+    <label for="case_name" class="text-white">Case Name</label>
+    <input type="text" 
+           class="form-control @error('case_name') is-invalid @enderror" 
+           id="case_name" 
+           name="case_name" 
+           value="{{ old('case_name', 'Republic vs ') }}" 
+           required>
+    @error('case_name')
+        <span class="invalid-feedback" role="alert">
+            <strong>{{ $message }}</strong>
+        </span>
+    @enderror
+</div>
+
 
         <!-- Date of Allocation -->
         <div class="form-group">

@@ -19,17 +19,19 @@ class AppealDetail extends Model
     protected $primaryKey = 'id';
 
    // In AppealDetail model
-protected $fillable = [
-    'case_id', // Make sure 'case_id' is in the fillable array
+   protected $fillable = [
+    'case_id',
     'appeal_case_number',
     'appeal_filing_date',
     'court_outcome',
     'judgment_delivered_date',
     'verdict',
     'decision_principle_established',
+    'filing_date_source', // ✅ add this line
     'created_by',
     'updated_by',
 ];
+
 
 
     /**
