@@ -412,6 +412,15 @@ $(document).ready(function () {
                         </li>`;
                     }
 
+                    if (userRoles.canAppeal) {
+                        actions += `<li>
+                            <a class="dropdown-item d-flex justify-content-between align-items-center" href="${@json(route('crime.courtOfAppeal.create', ':id')).replace(':id', row.id)}">
+                                <span><i class="fas fa-balance-scale text-danger"></i> Court of Appeal</span>
+                                ${row.appeal_count > 0 ? '<span class="badge bg-danger">✓</span>' : ''}
+                            </a>
+                        </li>`;
+                    }
+
                     actions += `
                                 <li><hr class="dropdown-divider"></li>
                                 <li>

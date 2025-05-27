@@ -3,13 +3,7 @@
 @section('content')
 <div class="container mt-5">
     <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb">
-        <!-- Breadcrumbs -->
-    <nav aria-label="breadcrumb">
-    {{ Breadcrumbs::render() }}
-    </nav>
-
-    </nav>
+    <nav aria-label="breadcrumb"></nav>
 
     <!-- Title -->
     <h1 class="text-center mb-4 text-dark" style="font-family: 'Courier New', monospace; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
@@ -25,7 +19,7 @@
     </div>
 
     <!-- Form -->
-    <form action="{{ route('crime.appeal.store') }}" method="POST" class="p-4 shadow rounded" style="background: linear-gradient(90deg, #ff416c, #ff4b2b); border-radius: 20px;">
+    <form action="{{ route('crime.courtOfAppeal.store') }}" method="POST" class="p-4 shadow rounded" style="background: linear-gradient(90deg, #ff416c, #ff4b2b); border-radius: 20px;">
         @csrf
 
         <!-- Case Selection -->
@@ -45,46 +39,32 @@
         <!-- Appeal Case Number -->
         <div class="form-group">
             <label for="appeal_case_number" class="text-white">Appeal Case Number</label>
-            <input type="text" name="appeal_case_number" id="appeal_case_number" class="form-control @error('appeal_case_number') is-invalid @enderror" value="{{ old('appeal_case_number') }}" required>
+            <input type="text" name="appeal_case_number" id="appeal_case_number" class="form-control @error('appeal_case_number') is-invalid @enderror" value="{{ old('appeal_case_number') }}">
             @error('appeal_case_number')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
 
-       <!-- Date Source Dropdown -->
-<div class="form-group">
-    <label for="filing_date_type" class="text-white">Select Date Source</label>
-    <select id="filing_date_type" name="filing_date_type" class="form-control" onchange="toggleFilingDateInput()" required>
-        <option value="">-- Select Source --</option>
-        <option value="court" {{ old('filing_date_type') == 'court' ? 'selected' : '' }}>Date from Court</option>
-        <option value="defendant" {{ old('filing_date_type') == 'defendant' ? 'selected' : '' }}>Date from Defendant</option>
-    </select>
-</div>
-
-<!-- Dynamic Date Input -->
-<div class="form-group" id="date_input_group" style="display: none;">
-    <label for="filing_date_value" class="text-white" id="filing_date_label">Filing Date</label>
-    <input type="date" name="filing_date_value" id="filing_date_value"
-           class="form-control @error('filing_date_value') is-invalid @enderror"
-           value="{{ old('filing_date_value') }}">
-    @error('filing_date_value')
-        <div class="invalid-feedback">{{ $message }}</div>
-    @enderror
-</div>
-
-
-        <!-- Verdict (Matches Schema Enum) -->
+        <!-- Filing Date Source Dropdown -->
         <div class="form-group">
-            <label for="verdict" class="text-white">Verdict</label>
-            <select name="verdict" id="verdict" class="form-control @error('verdict') is-invalid @enderror">
-                <option value="">-- Select Verdict --</option>
-                @foreach(['guilty', 'not_guilty', 'dismissed', 'withdrawn', 'other'] as $verdict)
-                    <option value="{{ $verdict }}" {{ old('verdict') == $verdict ? 'selected' : '' }}>
-                        {{ ucfirst(str_replace('_', ' ', $verdict)) }}
-                    </option>
-                @endforeach
+            <label for="filing_date_source" class="text-white">Filing Date Source</label>
+            <select id="filing_date_source" name="filing_date_source" class="form-control @error('filing_date_source') is-invalid @enderror" onchange="toggleFilingDateInput()" required>
+                <option value="">-- Select Source --</option>
+                <option value="court" {{ old('filing_date_source') == 'court' ? 'selected' : '' }}>Date from Court</option>
+                <option value="defendant" {{ old('filing_date_source') == 'defendant' ? 'selected' : '' }}>Date from Defendant</option>
             </select>
-            @error('verdict')
+            @error('filing_date_source')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
+
+        <!-- Dynamic Filing Date -->
+        <div class="form-group" id="date_input_group" style="display: none;">
+            <label for="appeal_filing_date" class="text-white" id="filing_date_label">Filing Date</label>
+            <input type="date" name="appeal_filing_date" id="appeal_filing_date"
+                   class="form-control @error('appeal_filing_date') is-invalid @enderror"
+                   value="{{ old('appeal_filing_date') }}">
+            @error('appeal_filing_date')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
@@ -98,12 +78,12 @@
             @enderror
         </div>
 
-        <!-- Court Outcome (Matches Schema Enum) -->
+        <!-- Court Outcome -->
         <div class="form-group">
             <label for="court_outcome" class="text-white">Court Outcome</label>
             <select name="court_outcome" id="court_outcome" class="form-control @error('court_outcome') is-invalid @enderror">
                 <option value="">-- Select Outcome --</option>
-                @foreach(['win', 'lose'] as $outcome)
+                @foreach(['win', 'lose', 'remand'] as $outcome)
                     <option value="{{ $outcome }}" {{ old('court_outcome') == $outcome ? 'selected' : '' }}>
                         {{ ucfirst($outcome) }}
                     </option>
@@ -123,10 +103,12 @@
             @enderror
         </div>
 
+        
+      
         <!-- Submit -->
         <div class="row mt-4">
             <div class="col-md-6 mb-2">
-                <a href="{{ route('crime.criminalCase.index') }}" class="btn btn-light btn-lg btn-block rounded-pill font-weight-bold">Cancel</a>
+                <a href="{{ route('crime.courtOfAppeal.index') }}" class="btn btn-light btn-lg btn-block rounded-pill font-weight-bold">Cancel</a>
             </div>
             <div class="col-md-6">
                 <button type="submit" class="btn btn-light btn-lg btn-block rounded-pill font-weight-bold">Submit Appeal</button>
@@ -135,26 +117,25 @@
     </form>
 </div>
 @endsection
+
 @push('scripts')
 <script>
     function toggleFilingDateInput() {
-        const typeSelect = document.getElementById('filing_date_type');
-        const selectedType = typeSelect.value;
-        const dateGroup = document.getElementById('date_input_group');
-        const dateLabel = document.getElementById('filing_date_label');
+        const selectedType = document.getElementById('filing_date_source').value;
+        const group = document.getElementById('date_input_group');
+        const label = document.getElementById('filing_date_label');
 
         if (selectedType === 'court') {
-            dateLabel.innerText = 'Date from Court';
-            dateGroup.style.display = 'block';
+            label.innerText = 'Date from Court';
+            group.style.display = 'block';
         } else if (selectedType === 'defendant') {
-            dateLabel.innerText = 'Date from Defendant';
-            dateGroup.style.display = 'block';
+            label.innerText = 'Date from Defendant';
+            group.style.display = 'block';
         } else {
-            dateGroup.style.display = 'none';
+            group.style.display = 'none';
         }
     }
 
-    // On load, restore visibility if old input exists
     document.addEventListener('DOMContentLoaded', toggleFilingDateInput);
 </script>
 @endpush

@@ -29,12 +29,13 @@ class CourtOfAppealController extends Controller
     public function index()
     {
         $appeals = $this->courtOfAppealRepository->all();
+        // dd($appeals);
         return view('oag.crime.court_of_appeals.index', compact('appeals'));
     }
 
     public function create($caseId = null)
     {
-        $cases = $this->criminalCaseRepository->getAllForDropdown();
+        $cases = $this->criminalCaseRepository->pluck();
         return view('oag.crime.court_of_appeals.create', compact('cases', 'caseId'));
     }
 
@@ -59,7 +60,7 @@ class CourtOfAppealController extends Controller
             $appeal = $this->courtOfAppealRepository->create($validated);
             Log::info('Court of Appeal created:', $appeal->toArray());
 
-            return redirect()->route('crime.courtOfAppeals.index')->with('success', 'Court of Appeal record created successfully.');
+            return redirect()->route('crime.courtOfAppeal.index')->with('success', 'Court of Appeal record created successfully.');
         } catch (\Exception $e) {
             Log::error('Error creating court of appeal: ' . $e->getMessage());
             return back()->withInput()->with('error', 'Failed to create court of appeal record.');

@@ -156,37 +156,19 @@ class CreateCriminalJusticeSystemTables extends Migration
 
         Schema::create('court_of_appeals', function (Blueprint $table) {
             $table->id();
-        
-            // Foreign key linking to the cases table
             $table->foreignId('case_id')->constrained('cases')->onDelete('cascade');
-        
-            // Appeal-specific fields
             $table->string('appeal_case_number')->nullable();
-            $table->date('appeal_filing_date')->nullable();
-        
-            // Source of filing date information (e.g., registry, lawyer)
+            $table->date('appeal_filing_date');
             $table->string('filing_date_source');
-        
-            // Judgment details
             $table->date('judgment_delivered_date')->nullable();
-            $table->enum('court_outcome', ['win', 'lose','remand'])->nullable();
-        
-            // Legal principle established by the decision
+            $table->enum('court_outcome', ['win', 'lose', 'remand'])->nullable();
             $table->text('decision_principle_established')->nullable();
-        
-            // User tracking who created and updated the record
-            $table->foreignId('created_by')->constrained('users');
-            $table->foreignId('updated_by')->nullable()->constrained('users');
-        
-            // Soft deletes and timestamps
-            $table->softDeletes();
+            $table->unsignedBigInteger('created_by');
+            $table->unsignedBigInteger('updated_by');
             $table->timestamps();
-        
-            // Indexes for performance optimization
-            $table->index(['case_id', 'appeal_filing_date']);
-            $table->index('court_outcome');
-           
+            $table->softDeletes();
         });
+        
         
 
         Schema::create('case_reviews', function (Blueprint $table) {
