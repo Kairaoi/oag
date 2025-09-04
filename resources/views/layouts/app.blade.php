@@ -79,6 +79,7 @@
                                 <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                                     <a class="dropdown-item" href="{{ route('crime.boards.index') }}">Criminal Case</a>
                                     <a class="dropdown-item" href="{{ route('civil.boards.index') }}">Civil Case</a>
+                                    <a class="dropdown-item" href="{{ route('civil2.cases.index') }}">Civil Case II</a>
                                     <a class="dropdown-item" href="{{ route('legal.boards.index') }}">Legal Advice</a>
                                     <a class="dropdown-item" href="{{ route('draft.boards.index') }}">Drafting</a>
                                     @role('cm.sysadmin')

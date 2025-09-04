@@ -9,7 +9,17 @@ class CaseStatus extends Model
 {
     protected $table = 'case_statuses';
 
-    protected $fillable = [
-        'name', 'description'
-    ];
+   protected $fillable = [
+    'case_id',
+    'status_date',
+    'current_status',
+    'action_required',
+    'monitoring_status',
+    'created_by',
+    'updated_by',
+];
+public function case()
+{
+    return $this->belongsTo(Civil2Case::class, 'case_id');
+}
 }

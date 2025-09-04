@@ -49,7 +49,7 @@ class CourtOfAppealRepository extends CustomBaseRepository
      * @param bool $onlyTrashed
      * @return Collection
      */
-    public function getByCaseId(int $caseId, bool $onlyTrashed = false): Collection
+    public function getCourtOfAppealByCaseId(int $caseId, bool $onlyTrashed = false): Collection
     {
         $query = $this->getModelInstance()
             ->leftJoin('cases', 'court_of_appeals.case_id', '=', 'cases.id')

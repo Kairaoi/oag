@@ -30,8 +30,10 @@
                     <th>Court Type</th>
                     <th>Cause of Action</th>
                     <th>Case Status</th>
-                    <th>Pending Status</th>
+                    <th>Action Required</th>
                     <th>Origin Type</th>
+                    <th>Plaintiff</th>
+                    <th>Defendant</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -60,6 +62,14 @@ $(document).ready(function () {
         $('#civil2-case-table').DataTable().clear().destroy();
     }
 
+    // Define route templates outside the render function to ensure Blade processing
+    const editRouteTemplate = '{{ route("civil2.cases.edit", ":id") }}';
+    const showRouteTemplate = '{{ route("civil2.cases.show", ":id") }}';
+    const destroyRouteTemplate = '{{ route("civil2.cases.destroy", ":id") }}';
+    const reviewRouteTemplate = '{{ route("civil2.cases.review", ":id") }}';
+    const closeRouteTemplate = '{{ route("civil2.close.force", ":id") }}';
+    const reopenRouteTemplate = '{{ route("civil2.close.reopen", ":id") }}';
+
     $('#civil2-case-table').DataTable({
         processing: true,
         serverSide: true,
@@ -71,58 +81,59 @@ $(document).ready(function () {
             { data: 'counsel_name', name: 'counsel_name' },
             { data: 'court_type', name: 'court_type' },
             { data: 'cause_of_action', name: 'cause_of_action' },
-            { data: 'case_status', name: 'case_status' },
-            { data: 'pending_status', name: 'pending_status' },
+            { data: 'status_and_case', name: 'status_and_case' },
+            { data: 'action_with_date', name: 'action_with_date' },
             { data: 'origin_type', name: 'origin_type' },
-            // single render function:
+            { data: 'plaintiff_name', name: 'plaintiff_name' },
+            { data: 'defendant_name', name: 'defendant_name' },
             {
                 data: 'id',
                 orderable: false,
                 searchable: false,
                 render: function(id) {
-    return `
-        <div class="dropdown">
-            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdown-${id}" data-bs-toggle="dropdown" aria-expanded="false">
-                Actions
-            </button>
-            <ul class="dropdown-menu p-3" aria-labelledby="dropdown-${id}" style="min-width: 250px;">
-                <li>
-                    <a class="dropdown-item" href="${'{{ route('civil2.cases.show', '') }}'}/${id}">
-                        Show
-                    </a>
-                </li>
-                <li>
-                    <a class="dropdown-item" href="${'{{ route('civil2.cases.edit', '') }}'}/${id}">
-                        Edit
-                    </a>
-                </li>
-                <li>
-                    <a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); if(confirm('Are you sure?')) document.getElementById('delete-form-${id}').submit();">
-                        Delete
-                    </a>
-                    <form id="delete-form-${id}" action="${'{{ route('civil2.cases.destroy', '') }}'}/${id}" method="POST" class="d-none">
-                        @csrf
-                        @method('DELETE')
-                    </form>
-                </li>
-                <li><hr class="dropdown-divider"></li>
-                <li class="mb-2 fw-bold text-muted px-2">Lawyer Tasks</li>
-                <li class="form-check px-3">
-                    <input class="form-check-input" type="radio" name="task-${id}" id="review-${id}" onclick="location.href='${'{{ route('civil2.cases.review', '') }}'}/${id}'">
-                    <label class="form-check-label" for="review-${id}">Review Case</label>
-                </li>
-                <li class="form-check px-3">
-                    <input class="form-check-input" type="radio" name="task-${id}" id="close-${id}" onclick="location.href='${'{{ route('civil2.close.force', '') }}'}/${id}'">
-                    <label class="form-check-label" for="close-${id}">Close Case</label>
-                </li>
-                <li class="form-check px-3">
-                    <input class="form-check-input" type="radio" name="task-${id}" id="reopen-${id}" onclick="location.href='${'{{ route('civil2.close.reopen', '') }}'}/${id}'">
-                    <label class="form-check-label" for="reopen-${id}">Reopen Case</label>
-                </li>
-            </ul>
-        </div>
-    `;
-}
+                    return `
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdown-${id}" data-bs-toggle="dropdown" aria-expanded="false">
+                                Actions
+                            </button>
+                            <ul class="dropdown-menu p-3" aria-labelledby="dropdown-${id}" style="min-width: 250px;">
+                                <li>
+                                    <a class="dropdown-item" href="${showRouteTemplate.replace(':id', id)}">
+                                        Show
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="${editRouteTemplate.replace(':id', id)}">
+                                        Edit
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); if(confirm('Are you sure?')) document.getElementById('delete-form-${id}').submit();">
+                                        Delete
+                                    </a>
+                                    <form id="delete-form-${id}" action="${destroyRouteTemplate.replace(':id', id)}" method="POST" class="d-none">
+                                        @csrf
+                                        @method('DELETE')
+                                    </form>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li class="mb-2 fw-bold text-muted px-2">Lawyer Tasks</li>
+                                <li class="form-check px-3">
+                                    <input class="form-check-input" type="radio" name="task-${id}" id="review-${id}" onclick="location.href='${reviewRouteTemplate.replace(':id', id)}'">
+                                    <label class="form-check-label" for="review-${id}">Review Case</label>
+                                </li>
+                                <li class="form-check px-3">
+                                    <input class="form-check-input" type="radio" name="task-${id}" id="close-${id}" onclick="location.href='${closeRouteTemplate.replace(':id', id)}'">
+                                    <label class="form-check-label" for="close-${id}">Close Case</label>
+                                </li>
+                                <li class="form-check px-3">
+                                    <input class="form-check-input" type="radio" name="task-${id}" id="reopen-${id}" onclick="location.href='${reopenRouteTemplate.replace(':id', id)}'">
+                                    <label class="form-check-label" for="reopen-${id}">Reopen Case</label>
+                                </li>
+                            </ul>
+                        </div>
+                    `;
+                }
             }
         ],
         dom: 'lBfrtip',

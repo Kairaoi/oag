@@ -15,6 +15,7 @@ use App\Repositories\Oag\Crime\CaseReviewRepository;
 use App\Repositories\Oag\Crime\CourtCaseRepository;
 use App\Repositories\Oag\Crime\AppealDetailRepository;
 use App\Repositories\Oag\Crime\CaseReallocationRepository;
+use App\Repositories\Oag\Crime\CourtOfAppealRepository;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -43,6 +44,7 @@ class CriminalCaseController extends Controller
     protected $courtCaseRepository;
     protected $appealDetailRepository;
     protected $caseReallocationRepository;
+    protected $courtOfAppealRepository;
 
     /**
      * CriminalCaseController constructor.
@@ -55,7 +57,7 @@ class CriminalCaseController extends Controller
      * @param OffenceRepository $offenceRepository
      * @param OffenceCategoryRepository $offenceCategoryRepository
      */
-    public function __construct(CaseReallocationRepository $caseReallocationRepository,AppealDetailRepository $appealDetailRepository,CourtCaseRepository $courtCaseRepository, CaseReviewRepository $caseReviewRepository,
+    public function __construct(CourtOfAppealRepository $courtOfAppealRepository,CaseReallocationRepository $caseReallocationRepository,AppealDetailRepository $appealDetailRepository,CourtCaseRepository $courtCaseRepository, CaseReviewRepository $caseReviewRepository,
         CriminalCaseRepository $criminalCaseRepository,
         AccusedRepository $accusedRepository,
         IslandRepository $islandRepository,
@@ -77,6 +79,7 @@ class CriminalCaseController extends Controller
         $this->courtCaseRepository = $courtCaseRepository;
         $this->appealDetailRepository = $appealDetailRepository;
         $this->caseReallocationRepository = $caseReallocationRepository;
+        $this->courtOfAppealRepository = $courtOfAppealRepository;
     }
 
     /**
@@ -501,6 +504,16 @@ public function showAppealCases($id)
     // dd($appealDetails);
 
     return view('oag.crime.appeal_details.appeal', compact('appealDetails'));
+}
+
+
+public function showcourtofappealcase($id)
+{
+    $appealDetails = $this->courtOfAppealRepository->getCourtOfAppealByCaseId($id);
+
+    // dd($appealDetails);
+
+    return view('oag.crime.court_of_appeals.appeal', compact('appealDetails'));
 }
 
 /**

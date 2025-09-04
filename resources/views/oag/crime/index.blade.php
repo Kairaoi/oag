@@ -199,6 +199,11 @@
         border-radius: 10px;
     }
     
+    /* Custom badge colors */
+    .bg-purple {
+        background-color: #6f42c1 !important;
+    }
+    
     /* Responsive handling */
     @media (max-width: 992px) {
         .dropdown-menu {
@@ -254,6 +259,23 @@
         canReallocate: {{ auth()->user()->hasRole('cm.admin') ? 'true' : 'false' }},
         canAppeal: {{ auth()->user()->hasRole('cm.user') ? 'true' : 'false' }},
         canallocate: {{ auth()->user()->hasRole('cm.admin') ? 'true' : 'false' }},
+    };
+    
+    // Define route URLs for cleaner code
+    const routeUrls = {
+        edit: @json(route('crime.criminalCase.edit', ':id')),
+        show: @json(route('crime.criminalCase.show', ':id')),
+        caseReview: @json(route('crime.CaseReview.create', ':id')),
+        courtCase: @json(route('crime.CourtCase.create', ':id')),
+        allocate: @json(route('crime.criminalCase.allocateForm', ':id')),
+        reallocate: @json(route('crime.criminalCase.showReallocationForm', ':id')),
+        appeal: @json(route('crime.appeal.create', ':id')),
+        courtOfAppeal: @json(route('crime.courtOfAppeal.create', ':id')),
+        destroy: @json(route('crime.criminalCase.destroy', ':id')),
+        reviewedCases: @json(route('crime.casereview.reviewed', ':id')),
+        courtCases: @json(route('crime.courtcase', ':id')),
+        appealCases: @json(route('crime.appealcase', ':id')),
+        courtOfAppealCases: @json(route('crime.courtofappealcase', ':id'))
     };
 </script>
 
@@ -356,6 +378,8 @@ $(document).ready(function () {
             {
                 data: null,
                 className: 'position-relative',
+                orderable: false,
+                searchable: false,
                 render: function(row) {
                     // Actions dropdown
                     let actions = `
@@ -366,16 +390,16 @@ $(document).ready(function () {
                                 <i class="fas fa-cog me-1"></i> Actions
                             </button>
                             <ul class="dropdown-menu shadow" aria-labelledby="actionsDropdown${row.id}">
-                                <li><a class="dropdown-item" href="${@json(route('crime.criminalCase.edit', ':id')).replace(':id', row.id)}">
+                                <li><a class="dropdown-item" href="${routeUrls.edit.replace(':id', row.id)}">
                                     <i class="fas fa-edit text-primary"></i> Edit
                                 </a></li>
-                                <li><a class="dropdown-item" href="${@json(route('crime.criminalCase.show', ':id')).replace(':id', row.id)}">
+                                <li><a class="dropdown-item" href="${routeUrls.show.replace(':id', row.id)}">
                                     <i class="fas fa-eye text-info"></i> Show
                                 </a></li>`;
 
                     if (userRoles.canCaseReview && row.status === 'accepted') {
                         actions += `<li>
-                            <a class="dropdown-item d-flex justify-content-between align-items-center" href="${@json(route('crime.CaseReview.create', ':id')).replace(':id', row.id)}">
+                            <a class="dropdown-item d-flex justify-content-between align-items-center" href="${routeUrls.caseReview.replace(':id', row.id)}">
                                 <span><i class="fas fa-clipboard-check text-success"></i> Case Review</span>
                                 ${row.reviewed_count > 0 ? '<span class="badge bg-success">✓</span>' : ''}
                             </a>
@@ -384,7 +408,7 @@ $(document).ready(function () {
 
                     if (userRoles.canCourtCase && row.status === 'accepted') {
                         actions += `<li>
-                            <a class="dropdown-item d-flex justify-content-between align-items-center" href="${@json(route('crime.CourtCase.create', ':id')).replace(':id', row.id)}">
+                            <a class="dropdown-item d-flex justify-content-between align-items-center" href="${routeUrls.courtCase.replace(':id', row.id)}">
                                 <span><i class="fas fa-gavel text-warning"></i> Court Case</span>
                                 ${row.court_case_count > 0 ? '<span class="badge bg-warning">✓</span>' : ''}
                             </a>
@@ -392,20 +416,20 @@ $(document).ready(function () {
                     }
 
                     if (userRoles.canallocate && row.status === 'pending') {
-                        actions += `<li><a class="dropdown-item" href="${@json(route('crime.criminalCase.allocateForm', ':id')).replace(':id', row.id)}">
+                        actions += `<li><a class="dropdown-item" href="${routeUrls.allocate.replace(':id', row.id)}">
                             <i class="fas fa-user-check text-primary"></i> Case Allocation
                         </a></li>`;
                     }
 
                     if (userRoles.canReallocate && row.status === 'rejected') {
-                        actions += `<li><a class="dropdown-item" href="${@json(route('crime.criminalCase.showReallocationForm', ':id')).replace(':id', row.id)}">
+                        actions += `<li><a class="dropdown-item" href="${routeUrls.reallocate.replace(':id', row.id)}">
                             <i class="fas fa-exchange-alt text-info"></i> Case Reallocate
                         </a></li>`;
                     }
 
                     if (userRoles.canAppeal) {
                         actions += `<li>
-                            <a class="dropdown-item d-flex justify-content-between align-items-center" href="${@json(route('crime.appeal.create', ':id')).replace(':id', row.id)}">
+                            <a class="dropdown-item d-flex justify-content-between align-items-center" href="${routeUrls.appeal.replace(':id', row.id)}">
                                 <span><i class="fas fa-balance-scale text-danger"></i> Appeal</span>
                                 ${row.appeal_count > 0 ? '<span class="badge bg-danger">✓</span>' : ''}
                             </a>
@@ -414,7 +438,7 @@ $(document).ready(function () {
 
                     if (userRoles.canAppeal) {
                         actions += `<li>
-                            <a class="dropdown-item d-flex justify-content-between align-items-center" href="${@json(route('crime.courtOfAppeal.create', ':id')).replace(':id', row.id)}">
+                            <a class="dropdown-item d-flex justify-content-between align-items-center" href="${routeUrls.courtOfAppeal.replace(':id', row.id)}">
                                 <span><i class="fas fa-balance-scale text-danger"></i> Court of Appeal</span>
                                 ${row.appeal_count > 0 ? '<span class="badge bg-danger">✓</span>' : ''}
                             </a>
@@ -427,7 +451,7 @@ $(document).ready(function () {
                                     <a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); if(confirm('Are you sure?')) document.getElementById('delete-form-${row.id}').submit();">
                                         <i class="fas fa-trash-alt text-danger"></i> Delete
                                     </a>
-                                    <form id="delete-form-${row.id}" action="${@json(route('crime.criminalCase.destroy', ':id')).replace(':id', row.id)}" method="POST" class="d-none">
+                                    <form id="delete-form-${row.id}" action="${routeUrls.destroy.replace(':id', row.id)}" method="POST" class="d-none">
                                         @csrf @method('DELETE')
                                     </form>
                                 </li>
@@ -445,7 +469,7 @@ $(document).ready(function () {
                                 </li>
                                 
                                 <li>
-                                    <a href="${@json(route('crime.casereview.reviewed', ':id')).replace(':id', row.id)}" 
+                                    <a href="${routeUrls.reviewedCases.replace(':id', row.id)}" 
                                     class="dropdown-item record-item py-2 d-flex align-items-center">
                                         <div class="icon-wrapper me-2" style="background-color: rgba(66, 153, 225, 0.15);">
                                             <i class="fas fa-clipboard-check text-primary"></i>
@@ -461,7 +485,7 @@ $(document).ready(function () {
                                 <li><hr class="dropdown-divider"></li>
                                 
                                 <li>
-                                    <a href="${@json(route('crime.courtcase', ':id')).replace(':id', row.id)}" 
+                                    <a href="${routeUrls.courtCases.replace(':id', row.id)}" 
                                     class="dropdown-item record-item py-2 d-flex align-items-center">
                                         <div class="icon-wrapper me-2" style="background-color: rgba(236, 201, 75, 0.15);">
                                             <i class="fas fa-gavel text-warning"></i>
@@ -474,10 +498,10 @@ $(document).ready(function () {
                                     </a>
                                 </li>
                                 
-                                <li><hr class="dropdown-divider"></li>
+                               <li><hr class="dropdown-divider"></li>
                                 
                                 <li>
-                                    <a href="${@json(route('crime.appealcase', ':id')).replace(':id', row.id)}" 
+                                    <a href="${routeUrls.appealCases.replace(':id', row.id)}" 
                                     class="dropdown-item record-item py-2 d-flex align-items-center">
                                         <div class="icon-wrapper me-2" style="background-color: rgba(237, 100, 100, 0.15);">
                                             <i class="fas fa-balance-scale text-danger"></i>
@@ -487,6 +511,22 @@ $(document).ready(function () {
                                             <small class="text-muted">View case appeals</small>
                                         </div>
                                         ${row.appeal_count > 0 ? '<span class="badge bg-danger ms-auto">✓</span>' : ''}
+                                    </a>
+                                </li>
+
+                                <li><hr class="dropdown-divider"></li>
+                                
+                                <li>
+                                    <a href="${routeUrls.courtOfAppealCases.replace(':id', row.id)}" 
+                                    class="dropdown-item record-item py-2 d-flex align-items-center">
+                                        <div class="icon-wrapper me-2" style="background-color: rgba(40, 167, 69, 0.15);">
+                                            <i class="fas fa-gavel text-success"></i>
+                                        </div>
+                                        <div>
+                                            <span class="fw-medium d-block">Court of Appeal Cases</span>
+                                            <small class="text-muted">View court of appeal cases</small>
+                                        </div>
+                                        ${row.appeal_count > 0 ? '<span class="badge bg-purple ms-auto">✓</span>' : ''}
                                     </a>
                                 </li>
                             </ul>

@@ -96,6 +96,7 @@ Route::resource('CaseReview', CaseReviewController::class)->except(['create', 's
     Route::resource('victim', VictimController::class);
     Route::get('crime/appealcase/{id}', [CriminalCaseController::class, 'showAppealCases'])->name('appealcase');
     Route::get('crime/courtcase/{id}', [CriminalCaseController::class, 'showCourtCases'])->name('courtcase');
+    Route::get('crime/courtofappealcase/{id}', [CriminalCaseController::class, 'showcourtofappealcase'])->name('courtofappealcase');
     Route::get('crime/casereview/{id}', [CriminalCaseController::class, 'showReviewedCases'])->name('casereview.reviewed');
     Route::get('crime/criminalCase/{id}/create-incident', [CriminalCaseController::class, 'createIncident'])
         ->name('criminalCase.createIncident');
@@ -275,7 +276,7 @@ Route::group([
     Route::get('cases/{case}/review', [CaseController::class, 'review'])->name('cases.review');
     
     // Case management
-    Route::match(['get', 'post'], 'case/datatables', [CaseController::class, 'getDataTables'])->name('case.datatables');
+    Route::match(['get', 'post'], 'cases/datatables', [CaseController::class, 'getDataTables'])->name('case.datatables');
     Route::resource('cases', CaseController::class);
     Route::get('cases/{case}/timeline', [CaseController::class, 'timeline'])->name('cases.timeline');
     

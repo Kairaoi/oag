@@ -23,5 +23,10 @@ class DatabaseSeeder extends Seeder
     $this->call([
         CivilLitigationSeeder::class,
     ]);
+
+    $this->call([
+    ExternalCounselSeeder::class,
+]);
+
 }
 }

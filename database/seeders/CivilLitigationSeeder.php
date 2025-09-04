@@ -17,19 +17,27 @@ class CivilLitigationSeeder extends Seeder
             ['name' => 'Other', 'description' => 'Failure to exercise reasonable care'],
         ]);
 
-        DB::table('case_statuses')->insert([
-            ['name' => 'OPEN - Pending with Court', 'description' => 'Case is active and awaiting court action'],
-            ['name' => 'Pending with Other Party', 'description' => 'Case is active and awaiting response from the other party'],
-            ['name' => 'Pending with Client', 'description' => 'Case is active and awaiting response from the client'],
-            ['name' => 'Pending with CLAD', 'description' => 'Case is active and awaiting action from CLAD'],
-            ['name' => 'DISPOSED', 'description' => 'Case is concluded and closed'],
-        ]);
+//         DB::table('case_statuses')->insert([
+//     [
+//         'case_id' => 1, // Make sure the case with ID 1 exists
+//         'status_date' => now(),
+//         'current_status' => 'OPEN - Pending with Court',
+//         'action_required' => 'Case is active and awaiting court action',
+//         'monitoring_status' => null,
+//         'created_by' => 1,
+//         'updated_by' => 1,
+//         'created_at' => now(),
+//         'updated_at' => now(),
+//     ],
+//     // More statuses for different cases
+// ]);
+
         
 
-        DB::table('case_pending_statuses')->insert([
-            ['name' => 'Awaiting Filing', 'description' => 'Filing not yet done'],
-            ['name' => 'Pending Review', 'description' => 'Under legal review'],
-        ]);
+        // DB::table('case_pending_statuses')->insert([
+        //     ['name' => 'Awaiting Filing', 'description' => 'Filing not yet done'],
+        //     ['name' => 'Pending Review', 'description' => 'Under legal review'],
+        // ]);
 
         DB::table('party_types')->insert([
             ['name' => 'Plaintiff', 'description' => 'Initiating party'],
@@ -43,26 +51,26 @@ class CivilLitigationSeeder extends Seeder
         
 
         // 2. Main table: civil_cases
-        DB::table('civil2_cases')->insert([
-            [
-                'case_file_no' => 'CIV2025/001',
-                'court_case_no' => 'HC/2025/22',
-                'case_name' => 'Attorney General vs XYZ Ltd',
-                'date_received' => now(),
-                'date_opened' => now(),
-                'cause_of_action_id' => 1,
-                'responsible_counsel_id' => 1, // assuming user ID 1 exists
-                'case_status_id' => 1,
-                'court_type_id' => 1,
-                'case_pending_status_id' => 1,
-                'case_origin_type_id' => 2,
-                'case_description' => 'Alleged violation of procurement laws',
-                'created_by' => 1,
-                'updated_by' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ]);
+        // DB::table('civil2_cases')->insert([
+        //     [
+        //         'case_file_no' => 'CIV2025/001',
+        //         'court_case_no' => 'HC/2025/22',
+        //         'case_name' => 'Attorney General vs XYZ Ltd',
+        //         'date_received' => now(),
+        //         'date_opened' => now(),
+        //         'cause_of_action_id' => 1,
+        //         'responsible_counsel_id' => 1, // assuming user ID 1 exists
+        //         // 'case_status_id' => 1,
+        //         'court_type_id' => 1,
+        //         'case_pending_status_id' => 1,
+        //         'case_origin_type_id' => 2,
+        //         'case_description' => 'Alleged violation of procurement laws',
+        //         'created_by' => 1,
+        //         'updated_by' => 1,
+        //         'created_at' => now(),
+        //         'updated_at' => now(),
+        //     ],
+        // ]);
 
         // 3. Dependent tables
         DB::table('case_parties')->insert([
@@ -110,19 +118,19 @@ class CivilLitigationSeeder extends Seeder
         ]);
         
 
-        DB::table('case_status_history')->insert([
-            [
-                'case_id' => 1,
-                'case_status_id' => 1,
-                'case_pending_status_id' => 1,
-                'updated_by' => 1,
-                'notes' => 'Initial status set at case intake',
-                'created_by' => 1,
-                'updated_by' => 1,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ]);
+        // DB::table('case_status_history')->insert([
+        //     [
+        //         'case_id' => 1,
+        //         'case_status_id' => 1,
+        //         'case_pending_status_id' => 1,
+        //         'updated_by' => 1,
+        //         'notes' => 'Initial status set at case intake',
+        //         'created_by' => 1,
+        //         'updated_by' => 1,
+        //         'created_at' => now(),
+        //         'updated_at' => now(),
+        //     ],
+        // ]);
 
         DB::table('case_activities')->insert([
             [

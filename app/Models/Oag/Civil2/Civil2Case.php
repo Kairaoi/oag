@@ -14,23 +14,27 @@ class Civil2Case extends Model
 
     protected $table = 'civil2_cases';
 
-    protected $fillable = [
-        'case_name',
-        'case_file_no',
-        'court_case_no',
-        'date_received',
-        'date_opened',
-        'court_type_id',
-        'date_closed',
-        'cause_of_action_id',
-        'responsible_counsel_id',
-        'case_status_id',
-        'case_pending_status_id',
-        'case_origin_type_id',
-        'case_description',
-        'created_by',
-        'updated_by'
-    ];
+   protected $fillable = [
+    'case_name',
+    'case_file_no',
+    'court_case_no',
+    'date_received',
+    'date_opened',
+    'court_type_id',
+    'date_closed',
+    'cause_of_action_id',
+    'responsible_counsel_id',
+   
+    // 'case_pending_status_id',
+    'case_origin_type_id',
+    // 'case_description',
+    'created_by',
+    'updated_by',
+
+    // Optional: If you're passing these through request and want them mass assignable
+    'plaintiff_counsels',
+    'defendant_counsels',
+];
 
     protected $casts = [
         'date_received' => 'date',
@@ -51,10 +55,10 @@ class Civil2Case extends Model
         return $this->belongsTo(CauseOfAction::class, 'cause_of_action_id');
     }
 
-    public function status()
-    {
-        return $this->belongsTo(CaseStatus::class, 'case_status_id');
-    }
+    public function statuses()
+{
+    return $this->hasMany(CaseStatus::class, 'case_id');
+}
 
     public function pendingStatus()
     {
@@ -95,4 +99,21 @@ class Civil2Case extends Model
     {
         return $this->hasMany(QuarterlyReportCase::class, 'case_id');
     }
+
+    public function caseCounsels()
+{
+    return $this->hasMany(CasseCounsel::class, 'civil2_case_id');
+}
+
+
+public function plaintiffCounsels()
+{
+    return $this->caseCounsels()->where('role', 'plaintiff');
+}
+
+public function defendantCounsels()
+{
+    return $this->caseCounsels()->where('role', 'defendant');
+}
+
 }

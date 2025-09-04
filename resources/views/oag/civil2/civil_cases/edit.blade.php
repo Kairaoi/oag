@@ -1,202 +1,344 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mt-5">
-    <!-- Breadcrumbs -->
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb" style="background: none; box-shadow: none;">
-            <li class="breadcrumb-item"><a href="{{ route('home') }}" style="color: #ff4b2b; font-weight: bold;">Home</a></li>
-            <li class="breadcrumb-item"><a href="{{ route('civil.civilcase.index') }}" style="color: #ff4b2b; font-weight: bold;">Civil Cases</a></li>
-            <li class="breadcrumb-item active" aria-current="page" style="color: #333; font-weight: bold;">Edit Civil Case</li>
-        </ol>
-    </nav>
+<style>
+    body {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        min-height: 100vh;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        padding: 20px 0;
+    }
+    .form-container {
+        background: #fff;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        transition: box-shadow 0.3s ease;
+    }
+    .form-container:hover {
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+    }
+    h2 {
+        color: #4b0082;
+        margin-bottom: 1.5rem;
+        font-weight: 700;
+        text-align: center;
+    }
+    label {
+        font-weight: 600;
+        color: #4b0082;
+    }
+    .form-control {
+        border-radius: 8px;
+        border: 2px solid #ddd;
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .form-control:focus {
+        border-color: #764ba2;
+        box-shadow: 0 0 8px rgba(118, 75, 162, 0.5);
+        outline: none;
+    }
+    .btn-primary {
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border: none;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        padding: 0.75rem;
+        box-shadow: 0 6px 12px rgba(102, 126, 234, 0.5);
+        transition: background 0.3s ease, box-shadow 0.3s ease;
+    }
+    .btn-primary:hover {
+        background: linear-gradient(90deg, #5a6cd8, #653d9a);
+        box-shadow: 0 8px 20px rgba(101, 61, 154, 0.7);
+    }
+    .btn-add {
+        margin-top: 5px;
+        font-size: 0.9rem;
+    }
+    .invalid-feedback {
+        font-size: 0.9rem;
+        color: #d6336c;
+        font-weight: 600;
+    }
+    .mb-4 {
+        margin-bottom: 1.5rem !important;
+    }
+</style>
 
-    <!-- Main Title -->
-    <h1 class="text-center mb-4" style="font-family: 'Courier New', Courier, monospace; color: #333; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);">
-        Edit Civil Case
-    </h1>
+<div class="container mt-5 form-container">
+    <h2>Edit Civil Case: {{ $case->case_name }}</h2>
 
-    <!-- Form -->
-    <form action="{{ route('civil.civilcase.update', $civilCase->id) }}" method="POST" class="p-4 shadow-lg rounded" style="background: linear-gradient(90deg, #ff416c, #ff4b2b); border-radius: 20px;">
+    <form method="POST" action="{{ route('civil2.cases.update', $case->id) }}">
         @csrf
         @method('PUT')
 
-        <div class="row">
-            <!-- Left Column -->
-            <div class="col-md-6">
-                <!-- Court Category -->
-                <div class="form-group">
-                    <label for="court_category_id" class="text-white">Court Category *</label>
-                    <select class="form-control @error('court_category_id') is-invalid @enderror" id="court_category_id" name="court_category_id" required>
-                        <option value="">Select Court Category</option>
-                        @foreach($courtCategories as $id => $name)
-                            <option value="{{ $id }}" {{ $civilCase->court_category_id == $id ? 'selected' : '' }}>{{ $name }}</option>
-                        @endforeach
-                    </select>
-                    @error('court_category_id')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <!-- Case Type -->
-                <div class="form-group">
-                    <label for="case_type_id" class="text-white">Case Type *</label>
-                    <select class="form-control @error('case_type_id') is-invalid @enderror" id="case_type_id" name="case_type_id" required>
-                        <option value="">Select Case Type</option>
-                        @foreach($caseTypes as $id => $name)
-                            <option value="{{ $id }}" {{ $civilCase->case_type_id == $id ? 'selected' : '' }}>{{ $name }}</option>
-                        @endforeach
-                    </select>
-                    @error('case_type_id')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <!-- Case Number Details -->
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label for="number" class="text-white">Case Number</label>
-                            <input type="number" class="form-control @error('number') is-invalid @enderror" id="number" name="number" value="{{ old('number', $civilCase->number) }}">
-                            @error('number')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label for="year" class="text-white">Year *</label>
-                            <input type="number" class="form-control @error('year') is-invalid @enderror" id="year" name="year" value="{{ old('year', $civilCase->year) }}" required>
-                            @error('year')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label for="primary_number" class="text-white">Primary Number</label>
-                            <input type="text" class="form-control @error('primary_number') is-invalid @enderror" id="primary_number" name="primary_number" value="{{ old('primary_number', $civilCase->primary_number) }}" readonly>
-                            @error('primary_number')
-                                <span class="invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Case Name -->
-                <div class="form-group">
-                    <label for="case_name" class="text-white">Case Name *</label>
-                    <textarea class="form-control @error('case_name') is-invalid @enderror" id="case_name" name="case_name" required>{{ old('case_name', $civilCase->case_name) }}</textarea>
-                    @error('case_name')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <!-- Case Description -->
-                <div class="form-group">
-                    <label for="case_description" class="text-white">Case Description</label>
-                    <textarea class="form-control @error('case_description') is-invalid @enderror" id="case_description" name="case_description">{{ old('case_description', $civilCase->case_description) }}</textarea>
-                    @error('case_description')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
-            </div>
-
-            <!-- Right Column -->
-            <div class="col-md-6">
-                <!-- Current Status -->
-                <div class="form-group">
-                    <label for="current_status" class="text-white">Current Status *</label>
-                    <textarea class="form-control @error('current_status') is-invalid @enderror" id="current_status" name="current_status" required>{{ old('current_status', $civilCase->current_status) }}</textarea>
-                    @error('current_status')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <!-- Status Date -->
-                <div class="form-group">
-                    <label for="status_date" class="text-white">Status Date *</label>
-                    <input type="date" class="form-control @error('status_date') is-invalid @enderror" id="status_date" name="status_date" value="{{ old('status_date', $civilCase->status_date) }}" required>
-                    @error('status_date')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <!-- Action Required -->
-                <div class="form-group">
-                    <label for="action_required" class="text-white">Action Required *</label>
-                    <textarea class="form-control @error('action_required') is-invalid @enderror" id="action_required" name="action_required" required>{{ old('action_required', $civilCase->action_required) }}</textarea>
-                    @error('action_required')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <!-- Monitoring Status -->
-                <div class="form-group">
-                    <label for="monitoring_status" class="text-white">Monitoring Status *</label>
-                    <select class="form-control @error('monitoring_status') is-invalid @enderror" id="monitoring_status" name="monitoring_status" required>
-                        <option value="">Select Status</option>
-                        <option value="Active" {{ $civilCase->monitoring_status == 'Active' ? 'selected' : '' }}>Active</option>
-                        <option value="Pending" {{ $civilCase->monitoring_status == 'Pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="Closed" {{ $civilCase->monitoring_status == 'Closed' ? 'selected' : '' }}>Closed</option>
-                    </select>
-                    @error('monitoring_status')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <!-- Counsels Section -->
-                <div class="card mt-3">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0">Case Counsels *</h5>
-                    </div>
-                    <div class="card-body">
-                        <!-- Plaintiff Counsel -->
-<div class="form-group">
-    <label for="plaintiff_counsel">Plaintiff Counsel *</label>
-    <select class="form-control @error('counsels.0.user_id') is-invalid @enderror" name="counsels[0][user_id]" required>
-        <option value="">Select Plaintiff Counsel</option>
-        @foreach($lawyers as $id => $name)
-            <option value="{{ $id }}" 
-                {{ isset($civilCase->counsels[0]) && $civilCase->counsels[0]->user_id == $id ? 'selected' : '' }}>
-                {{ $name }}
-            </option>
-        @endforeach
-    </select>
-    <input type="hidden" name="counsels[0][type]" value="Plaintiff">
-    @error('counsels.0.user_id')
-        <span class="invalid-feedback">{{ $message }}</span>
-    @enderror
-</div>
-
-
-                        <!-- Defendant Counsel -->
-<div class="form-group">
-    <label for="defendant_counsel">Defendant Counsel *</label>
-    <select class="form-control @error('counsels.1.user_id') is-invalid @enderror" name="counsels[1][user_id]" required>
-        <option value="">Select Defendant Counsel</option>
-        @foreach($lawyers as $id => $name)
-            <option value="{{ $id }}" 
-                {{ isset($civilCase->counsels[1]) && $civilCase->counsels[1]->user_id == $id ? 'selected' : '' }}>
-                {{ $name }}
-            </option>
-        @endforeach
-    </select>
-    <input type="hidden" name="counsels[1][type]" value="Defendant">
-    @error('counsels.1.user_id')
-        <span class="invalid-feedback">{{ $message }}</span>
-    @enderror
-</div>
-
-                    </div>
-                </div>
-            </div>
+        {{-- Case Origin --}}
+        <div class="mb-4">
+            <label for="case_origin_type_id">Case Origin</label>
+            <select class="form-control @error('case_origin_type_id') is-invalid @enderror" id="case_origin_type_id" name="case_origin_type_id" required>
+                <option value="" disabled>Select Case Origin</option>
+                @foreach($caseOriginTypes as $id => $type)
+                    <option value="{{ $id }}" {{ old('case_origin_type_id', $case->case_origin_type_id) == $id ? 'selected' : '' }}>{{ $type }}</option>
+                @endforeach
+            </select>
+            @error('case_origin_type_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
 
-        <!-- Form Submit Button -->
-        <div class="form-group text-center mt-4">
-            <button type="submit" class="btn btn-light btn-lg" style="background-color: #333; color: #fff;">Update Civil Case</button>
+        {{-- Court Type --}}
+        <div class="mb-4">
+            <label for="court_type_id">Court Type</label>
+            <select class="form-control @error('court_type_id') is-invalid @enderror" id="court_type_id" name="court_type_id" required>
+                <option value="" disabled>Select Court Type</option>
+                @foreach($courtCategories as $id => $courtCategory)
+                    <option value="{{ $id }}" {{ old('court_type_id', $case->court_type_id) == $id ? 'selected' : '' }}>{{ $courtCategory }}</option>
+                @endforeach
+            </select>
+            @error('court_type_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        </div>
+
+        {{-- File Number --}}
+        <div class="mb-4">
+            <label for="case_file_no">File Number</label>
+            <input type="text" class="form-control @error('case_file_no') is-invalid @enderror" id="case_file_no" name="case_file_no" value="{{ old('case_file_no', $case->case_file_no) }}" required>
+            @error('case_file_no') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        </div>
+
+        <div class="mb-4">
+            <label for="case_name">Case Name</label>
+            <input type="text" class="form-control @error('case_name') is-invalid @enderror" id="case_name" name="case_name" value="{{ old('case_name', $case->case_name) }}" required>
+            @error('case_name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        </div>
+
+        <div class="mb-4">
+            <label for="court_case_no">Court Case Number</label>
+            <input type="text" class="form-control @error('court_case_no') is-invalid @enderror" id="court_case_no" name="court_case_no" value="{{ old('court_case_no', $case->court_case_no) }}">
+            @error('court_case_no') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        </div>
+
+        <div class="mb-4">
+            <label for="date_received">Date Received</label>
+            <input type="date" class="form-control @error('date_received') is-invalid @enderror" id="date_received" name="date_received" value="{{ old('date_received', $case->date_received->format('Y-m-d')) }}" required>
+            @error('date_received') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        </div>
+
+        <div class="mb-4">
+            <label for="date_opened">Date Opened</label>
+            <input type="date" class="form-control @error('date_opened') is-invalid @enderror" id="date_opened" name="date_opened" value="{{ old('date_opened', $case->date_opened->format('Y-m-d')) }}" required>
+            @error('date_opened') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        </div>
+
+        <div class="mb-4">
+            <label for="cause_of_action_id">Cause of Action</label>
+            <select class="form-control @error('cause_of_action_id') is-invalid @enderror" id="cause_of_action_id" name="cause_of_action_id" required>
+                <option value="" disabled>Select Cause of Action</option>
+                @foreach($causesOfAction as $id => $cause)
+                    <option value="{{ $id }}" {{ old('cause_of_action_id', $case->cause_of_action_id) == $id ? 'selected' : '' }}>{{ $cause }}</option>
+                @endforeach
+            </select>
+            @error('cause_of_action_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        </div>
+
+        <div class="mb-4">
+            <label for="responsible_counsel_id">Responsible Counsel</label>
+            <select class="form-control @error('responsible_counsel_id') is-invalid @enderror" id="responsible_counsel_id" name="responsible_counsel_id">
+                <option value="{{ Auth::id() }}" {{ old('responsible_counsel_id', $case->responsible_counsel_id) == Auth::id() ? 'selected' : '' }}>Me (Default)</option>
+                @foreach($internalCounsels as $id => $counsel)
+                    <option value="{{ $id }}" {{ old('responsible_counsel_id', $case->responsible_counsel_id) == $id ? 'selected' : '' }}>{{ $counsel }}</option>
+                @endforeach
+            </select>
+            @error('responsible_counsel_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        </div>
+
+        <div class="mb-4">
+            <label for="status_date">Status Date</label>
+            <input type="date" class="form-control @error('status_date') is-invalid @enderror" id="status_date" name="status_date" value="{{ old('status_date', now()->format('Y-m-d')) }}" required>
+            @error('status_date') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        </div>
+
+        <div class="mb-4">
+            <label for="current_status">Current Status of the Case (as of date of reporting)</label>
+            <textarea class="form-control @error('current_status') is-invalid @enderror" id="current_status" name="current_status" rows="3" required>{{ old('current_status', $case->statuses()->latest()->first()->current_status ?? '') }}</textarea>
+            @error('current_status') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        </div>
+
+        <div class="mb-4">
+            <label for="action_required">Action Required</label>
+            <textarea class="form-control @error('action_required') is-invalid @enderror" id="action_required" name="action_required" rows="2">{{ old('action_required', $case->statuses()->latest()->first()->action_required ?? '') }}</textarea>
+            @error('action_required') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        </div>
+
+        <div class="mb-4">
+            <label for="monitoring_status">Monitoring Status</label>
+            <input type="text" class="form-control @error('monitoring_status') is-invalid @enderror" id="monitoring_status" name="monitoring_status" value="{{ old('monitoring_status', $case->statuses()->latest()->first()->monitoring_status ?? '') }}">
+            @error('monitoring_status') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        </div>
+
+        <div class="mb-4">
+            <label for="case_pending_status_id">Pending Status (Optional)</label>
+            <select class="form-control @error('case_pending_status_id') is-invalid @enderror" id="case_pending_status_id" name="case_pending_status_id">
+                <option value="" {{ old('case_pending_status_id') ? '' : 'selected' }}>Select Pending Status</option>
+                @foreach($casePendingStatuses as $id => $status)
+                    <option value="{{ $id }}" {{ old('case_pending_status_id') == $id ? 'selected' : '' }}>{{ $status }}</option>
+                @endforeach
+            </select>
+            @error('case_pending_status_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        </div>
+
+        <div class="mb-4">
+            <label for="status_notes">Status Notes (Optional)</label>
+            <textarea class="form-control @error('status_notes') is-invalid @enderror" id="status_notes" name="status_notes" rows="2">{{ old('status_notes') }}</textarea>
+            @error('status_notes') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        </div>
+
+        <div class="mb-4">
+            <label for="activity_type">Activity Type (Optional)</label>
+            <input type="text" class="form-control @error('activity_type') is-invalid @enderror" id="activity_type" name="activity_type" value="{{ old('activity_type') }}">
+            @error('activity_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        </div>
+
+        <div class="mb-4">
+            <label for="activity_description">Activity Description (Optional)</label>
+            <textarea class="form-control @error('activity_description') is-invalid @enderror" id="activity_description" name="activity_description" rows="2">{{ old('activity_description') }}</textarea>
+            @error('activity_description') <div class="invalid-feedback">{{ $message }}</div> @enderror
+        </div>
+
+        {{-- Counsel Assignment --}}
+        <div class="mb-4">
+            <label class="form-label fw-bold">Assign Counsels (Internal or External)</label>
+            <div id="counsel-rows">
+                @foreach($case->caseCounsels as $index => $counsel)
+                    <div class="row g-2 mb-2 counsel-row">
+                        <div class="col-md-6">
+                            <select class="form-control counsel-id" name="counsels[{{ $index }}][id]" onchange="updateCounselType(this)">
+                                <option value="">Select Counsel</option>
+                                <optgroup label="Internal (Government Counsel)">
+                                    @foreach($internalCounsels as $id => $name)
+                                        <option value="{{ $id }}" data-type="user" {{ $counsel->counsel_id == $id && $counsel->counsel_type == \App\Models\User::class ? 'selected' : '' }}>{{ $name }}</option>
+                                    @endforeach
+                                </optgroup>
+                                <optgroup label="External (Opposing Party)">
+                                    @foreach($externalCounsels as $id => $name)
+                                        <option value="{{ $id }}" data-type="external" {{ $counsel->counsel_id == $id && $counsel->counsel_type == \App\Models\Oag\Civil2\ExternalCounsel::class ? 'selected' : '' }}>{{ $name }}</option>
+                                    @endforeach
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <select class="form-control" name="counsels[{{ $index }}][role]">
+                                <option value="plaintiff" {{ $counsel->role == 'plaintiff' ? 'selected' : '' }}>Plaintiff</option>
+                                <option value="defendant" {{ $counsel->role == 'defendant' ? 'selected' : '' }}>Defendant</option>
+                            </select>
+                            <input type="hidden" class="counsel-type" name="counsels[{{ $index }}][type]" value="{{ $counsel->counsel_type == \App\Models\Oag\Civil2\ExternalCounsel::class ? 'external' : 'user' }}">
+                        </div>
+                    </div>
+                @endforeach
+                @if($case->caseCounsels->isEmpty())
+                    <div class="row g-2 mb-2 counsel-row">
+                        <div class="col-md-6">
+                            <select class="form-control counsel-id" name="counsels[0][id]" onchange="updateCounselType(this)">
+                                <option value="">Select Counsel</option>
+                                <optgroup label="Internal (Government Counsel)">
+                                    @foreach($internalCounsels as $id => $name)
+                                        <option value="{{ $id }}" data-type="user">{{ $name }}</option>
+                                    @endforeach
+                                </optgroup>
+                                <optgroup label="External (Opposing Party)">
+                                    @foreach($externalCounsels as $id => $name)
+                                        <option value="{{ $id }}" data-type="external">{{ $name }}</option>
+                                    @endforeach
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <select class="form-control" name="counsels[0][role]">
+                                <option value="plaintiff">Plaintiff</option>
+                                <option value="defendant">Defendant</option>
+                            </select>
+                            <input type="hidden" class="counsel-type" name="counsels[0][type]" value="">
+                        </div>
+                    </div>
+                @endif
+            </div>
+            <button type="button" class="btn btn-outline-secondary btn-sm btn-add" onclick="addCounselRow()">+ Add More Counsel</button>
+        </div>
+
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary">Update Case</button>
         </div>
     </form>
 </div>
+
+@push('scripts')
+<script>
+function updateCounselType(select) {
+    const selected = select.options[select.selectedIndex];
+    const type = selected.dataset.type;
+    const row = select.closest('.row');
+    const typeInput = row.querySelector('.counsel-type');
+    if (type && typeInput) {
+        typeInput.value = type;
+    }
+}
+
+function addCounselRow() {
+    const index = document.querySelectorAll('.counsel-row').length;
+    const html = `
+        <div class="row g-2 mb-2 counsel-row">
+            <div class="col-md-6">
+                <select class="form-control counsel-id" name="counsels[${index}][id]" onchange="updateCounselType(this)">
+                    <option value="">Select Counsel</option>
+                    <optgroup label="Internal (Government Counsel)">
+                        @foreach($internalCounsels as $id => $name)
+                            <option value="{{ $id }}" data-type="user">{{ $name }}</option>
+                        @endforeach
+                    </optgroup>
+                    <optgroup label="External (Opposing Party)">
+                        @foreach($externalCounsels as $id => $name)
+                            <option value="{{ $id }}" data-type="external">{{ $name }}</option>
+                        @endforeach
+                    </optgroup>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <select class="form-control" name="counsels[${index}][role]">
+                    <option value="plaintiff">Plaintiff</option>
+                    <option value="defendant">Defendant</option>
+                </select>
+                <input type="hidden" class="counsel-type" name="counsels[${index}][type]" value="">
+            </div>
+        </div>
+    `;
+    document.getElementById('counsel-rows').insertAdjacentHTML('beforeend', html);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const courtTypeSelect = document.getElementById('court_type_id');
+    const fileNumberInput = document.getElementById('case_file_no');
+
+    const courtPrefixes = {
+        'Magistrate Court': 'MM',
+        'High Court': 'Lit',
+        'Court of Appeal': 'Coa'
+    };
+
+    function updateFileNumber() {
+        const selectedOption = courtTypeSelect.options[courtTypeSelect.selectedIndex];
+        const prefix = courtPrefixes[selectedOption?.text] || '';
+        if (prefix) {
+            const cleaned = fileNumberInput.value.replace(/^(MM|Lit|Coa)-?/, '').trim();
+            fileNumberInput.value = `${prefix}-${cleaned}`;
+        }
+    }
+
+    courtTypeSelect.addEventListener('change', updateFileNumber);
+    if (courtTypeSelect.value && fileNumberInput.value.trim() !== '') {
+        updateFileNumber();
+    }
+});
+</script>
+@endpush
+
 @endsection
