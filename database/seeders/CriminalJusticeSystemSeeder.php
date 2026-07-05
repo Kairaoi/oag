@@ -20,7 +20,7 @@ class CriminalJusticeSystemSeeder extends Seeder
             $userIds[$name] = DB::table('users')->insertGetId([
                 'name' => $name,
                 'email' => strtolower(str_replace(' ', '', $name)) . '@example.com',
-                'password' => bcrypt('password'),
+                'password' => bcrypt('1'),
             ]);
         }
 
@@ -63,7 +63,11 @@ foreach ([
             ]);
         }
 
-   
+
+        /* Cases (and everything keyed off case_id: accused, victims, incidents,
+           court_cases) are no longer seeded here — only users and lookup/reference
+           data (offence categories, islands, closure reasons, offences).
+
        // Seed cases table (ensuring date_of_incident is not null)
 $caseIds = [];
 for ($i = 1; $i <= 2; $i++) {
@@ -82,7 +86,7 @@ for ($i = 1; $i <= 2; $i++) {
     ]);
 }
 
-        
+
 
 
 for ($i = 1; $i <= 2; $i++) {
@@ -139,7 +143,7 @@ for ($i = 1; $i <= 2; $i++) {
         'updated_by'    => null,
     ]);
 }
-
+        */
 
         // Seed offences table
         $offenceIds = [];
@@ -151,6 +155,8 @@ for ($i = 1; $i <= 2; $i++) {
                 'updated_by' => null,
             ]);
         }
+
+        /* Depends on $caseIds / accused rows from the disabled block above.
 
         // // Seed accused_offence table
         for ($i = 1; $i <= 2; $i++) {
@@ -181,7 +187,7 @@ for ($i = 1; $i <= 2; $i++) {
                 'charge_file_dated' => $faker->date(),
                 'high_court_case_number' => $faker->optional()->word,
                 'verdict' => $faker->randomElement(['guilty', 'not_guilty', 'dismissed', 'withdrawn', 'other']),
-                             
+
                 'judgment_delivered_date' => $faker->optional()->date(),
                 'court_outcome' => $faker->randomElement(['win', 'lose']),
                 'decision_principle_established' => $faker->optional()->text,
@@ -192,5 +198,6 @@ for ($i = 1; $i <= 2; $i++) {
                 'updated_at' => now(),
             ]);
         }
+        */
     }
 }

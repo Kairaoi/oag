@@ -20,6 +20,7 @@ class Accused extends Model
         'case_id',
         'first_name',
         'last_name',
+        'accused_particulars',
         'address',
         'contact',
         'phone',
@@ -27,6 +28,7 @@ class Accused extends Model
         'age',
         'date_of_birth',
         'island_id',
+        'custom_offence',
         'created_by',
         'updated_by',
     ];
@@ -59,6 +61,12 @@ class Accused extends Model
     public function updatedBy()
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function offences()
+    {
+        return $this->belongsToMany(Offence::class, 'accused_offence', 'accused_id', 'offence_id')
+            ->withTimestamps();
     }
 
     public function getGenderAttribute($value)

@@ -70,13 +70,11 @@ class AppealDetailRepository extends CustomBaseRepository
     {
         $query = $this->getModelInstance()->newQuery()
             ->leftJoin('cases', 'appeal_details.case_id', '=', 'cases.id')
-            ->leftJoin('court_cases', 'appeal_details.court_case_id', '=', 'court_cases.id')
             ->leftJoin('users as creator', 'appeal_details.created_by', '=', 'creator.id')
             ->leftJoin('users as updater', 'appeal_details.updated_by', '=', 'updater.id')
             ->select([
                 'appeal_details.*',
                 'cases.case_name',
-                'court_cases.court_case_number',
                 'creator.name as created_by_name',
                 'updater.name as updated_by_name',
             ]);
@@ -104,7 +102,6 @@ class AppealDetailRepository extends CustomBaseRepository
                 'appeal_status',
                 'appeal_decision_date',
                 'cases.case_name',
-                'court_cases.court_case_number',
                 'creator.name',
                 'updater.name',
             ];
@@ -155,16 +152,23 @@ class AppealDetailRepository extends CustomBaseRepository
         return $this->getModelInstance()->pluck('appeal_case_number', 'id');
     }
 
-    public function getAppealDetailsByCaseId(int $caseId, bool $onlyTrashed = false): \Illuminate\Support\Collection
+    /**
+     * The full report-shape query (case name, offences, accused/victim
+     * particulars) shared by getAppealDetailsByCaseId() and
+     * getAppealDetailById() — one appeal_details.appeal.blade.php view
+     * renders either a case's appeals or a single appeal from this same
+     * shape, so both fetch it the same way.
+     */
+    private function fullAppealDetailsQuery(bool $onlyTrashed = false)
     {
         $query = $this->getModelInstance()->newQuery();
-    
+
         if ($onlyTrashed) {
             $query->onlyTrashed();
         } else {
             $query->whereNull('appeal_details.deleted_at');
         }
-    
+
         return $query
             ->leftJoin('cases', 'appeal_details.case_id', '=', 'cases.id')
             ->leftJoin('users as creator', 'appeal_details.created_by', '=', 'creator.id')
@@ -174,7 +178,6 @@ class AppealDetailRepository extends CustomBaseRepository
             ->leftJoin('offence_categories', 'offences.offence_category_id', '=', 'offence_categories.id')
             ->leftJoin('accused', 'appeal_details.case_id', '=', 'accused.case_id')
             ->leftJoin('victims', 'appeal_details.case_id', '=', 'victims.case_id')
-            ->where('appeal_details.case_id', $caseId)
             ->selectRaw('
                 appeal_details.id,
                 appeal_details.case_id,
@@ -185,7 +188,12 @@ class AppealDetailRepository extends CustomBaseRepository
                 appeal_details.deleted_at,
                 appeal_details.filing_date_source,
                 appeal_details.appeal_filing_date,
-                cases.case_name, 
+                appeal_details.appeal_case_number,
+                appeal_details.verdict,
+                appeal_details.court_outcome,
+                appeal_details.judgment_delivered_date,
+                appeal_details.decision_principle_established,
+                cases.case_name,
                 cases.status as case_status, 
                 creator.name as created_by_name, 
                 updater.name as updated_by_name, 
@@ -225,13 +233,29 @@ class AppealDetailRepository extends CustomBaseRepository
                 'appeal_details.deleted_at',
                 'appeal_details.filing_date_source',
                 'appeal_details.appeal_filing_date',
+                'appeal_details.appeal_case_number',
+                'appeal_details.verdict',
+                'appeal_details.court_outcome',
+                'appeal_details.judgment_delivered_date',
+                'appeal_details.decision_principle_established',
                 'cases.case_name',
                 'cases.status',
                 'creator.name',
                 'updater.name'
-            )
+            );
+    }
+
+    public function getAppealDetailsByCaseId(int $caseId, bool $onlyTrashed = false): \Illuminate\Support\Collection
+    {
+        return $this->fullAppealDetailsQuery($onlyTrashed)
+            ->where('appeal_details.case_id', $caseId)
             ->get();
     }
 
-    
+    public function getAppealDetailById(int $id, bool $onlyTrashed = false): ?Model
+    {
+        return $this->fullAppealDetailsQuery($onlyTrashed)
+            ->where('appeal_details.id', $id)
+            ->first();
+    }
 }

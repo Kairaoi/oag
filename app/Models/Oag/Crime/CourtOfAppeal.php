@@ -28,6 +28,17 @@ class CourtOfAppeal extends Model
     ];
 
     /**
+     * case_name isn't a column on this table — it only ever arrives as a
+     * joined 'cases.case_name' select alias — so this accessor fires
+     * whenever it's read (DataTables listing, show page, etc.) and reverses
+     * the caption when the defendant, not the court, filed the appeal.
+     */
+    public function getCaseNameAttribute($value)
+    {
+        return \App\Support\CaseCaption::forAppeal($value, $this->filing_date_source);
+    }
+
+    /**
      * Relationship to the main case.
      */
     public function case()

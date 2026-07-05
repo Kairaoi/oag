@@ -140,5 +140,35 @@
             document.getElementById('add_another_accused').checked = false;
         }
     });
+
+    // Case names typically follow "Republic vs <First> <Last>" — suggest the
+    // accused's name from that pattern when a case is selected, without ever
+    // overwriting anything the user has already typed themselves.
+    function suggestAccusedNameFromCase() {
+        const caseSelect = document.getElementById('case_id');
+        const firstNameInput = document.getElementById('first_name');
+        const lastNameInput = document.getElementById('last_name');
+
+        if (firstNameInput.value.trim() !== '' || lastNameInput.value.trim() !== '') {
+            return;
+        }
+
+        const selectedText = caseSelect.options[caseSelect.selectedIndex]?.text ?? '';
+        const match = selectedText.match(/\bvs\.?\s+(.+)$/i);
+        if (!match) {
+            return;
+        }
+
+        const nameParts = match[1].trim().split(/\s+/);
+        if (nameParts.length < 2) {
+            return;
+        }
+
+        firstNameInput.value = nameParts[0];
+        lastNameInput.value = nameParts.slice(1).join(' ');
+    }
+
+    document.getElementById('case_id').addEventListener('change', suggestAccusedNameFromCase);
+    suggestAccusedNameFromCase();
 </script>
 @endpush

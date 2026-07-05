@@ -31,12 +31,20 @@
         <!-- Case Selection -->
         <div class="form-group">
             <label for="case_id" class="text-white">Original Case</label>
-            <select id="case_id" name="case_id" class="form-control @error('case_id') is-invalid @enderror" required>
-                <option value="">-- Select Case --</option>
-                @foreach($cases as $id => $name)
-                    <option value="{{ $id }}" {{ old('case_id') == $id ? 'selected' : '' }}>{{ $name }}</option>
-                @endforeach
-            </select>
+            @if(count($cases) === 0)
+                <div class="alert alert-warning mb-0">
+                    No eligible cases found. Every case either already has an unresolved appeal in progress,
+                    or is itself an appeal case. Resolve an existing appeal (mark it decided or withdrawn) to
+                    make its case eligible again.
+                </div>
+            @else
+                <select id="case_id" name="case_id" class="form-control @error('case_id') is-invalid @enderror" required>
+                    <option value="">-- Select Case --</option>
+                    @foreach($cases as $id => $name)
+                        <option value="{{ $id }}" {{ old('case_id') == $id ? 'selected' : '' }}>{{ $name }}</option>
+                    @endforeach
+                </select>
+            @endif
             @error('case_id')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror

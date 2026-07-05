@@ -253,6 +253,11 @@ Breadcrumbs::for('crime.court-cases.create', function (BreadcrumbTrail $trail) {
     $trail->push('Create Court Case');
 });
 
+Breadcrumbs::for('crime.CourtCase.create', function (BreadcrumbTrail $trail) {
+    $trail->parent('crime.court-cases.index');
+    $trail->push('Create Court Case');
+});
+
 Breadcrumbs::for('crime.court-cases.show', function (BreadcrumbTrail $trail, $courtCase) {
     $trail->parent('crime.court-cases.index');
     $trail->push('Court Case Details');
@@ -288,6 +293,16 @@ Breadcrumbs::for('crime.courtcase', function (BreadcrumbTrail $trail) {
 Breadcrumbs::for('crime.casereview.reviewed', function (BreadcrumbTrail $trail) {
     $trail->parent('crime.criminalCase.index');
     $trail->push('Reviewed Cases');
+});
+
+Breadcrumbs::for('crime.relatedRecords', function (BreadcrumbTrail $trail) {
+    $trail->parent('crime.criminalCase.index');
+    $trail->push('Related Records');
+});
+
+Breadcrumbs::for('crime.caseTimeline', function (BreadcrumbTrail $trail) {
+    $trail->parent('crime.criminalCase.index');
+    $trail->push('Case Timeline');
 });
 
 // Closure Reasons - Create

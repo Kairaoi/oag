@@ -23,16 +23,32 @@ class AppealDetail extends Model
     'case_id',
     'appeal_case_number',
     'appeal_filing_date',
+    'appeal_filing_received_date',
+    'filing_date_source',
     'court_outcome',
     'judgment_delivered_date',
     'verdict',
     'decision_principle_established',
-    'filing_date_source', // ✅ add this line
+    'appeal_status',
+    'appeal_grounds',
+    'appeal_decision',
+    'appeal_decision_date',
     'created_by',
     'updated_by',
 ];
 
 
+
+    /**
+     * case_name isn't a column on this table — it only ever arrives as a
+     * joined 'cases.case_name' select alias — so this accessor fires
+     * whenever it's read (DataTables listing, show page, etc.) and reverses
+     * the caption when the defendant, not the court, filed the appeal.
+     */
+    public function getCaseNameAttribute($value)
+    {
+        return \App\Support\CaseCaption::forAppeal($value, $this->filing_date_source);
+    }
 
     /**
      * Relationship to the original criminal case.

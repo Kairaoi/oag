@@ -75,9 +75,9 @@ class AccusedController extends Controller
     
         return view('oag.accused.create')
             ->with('islands', $islands)
-            
             ->with('cases', $cases)
-            ->with('offencesByCategory', $offencesByCategory); // Correct variable name
+            ->with('offencesByCategory', $offencesByCategory)
+            ->with('selected_case_id', null);
     }
     
 

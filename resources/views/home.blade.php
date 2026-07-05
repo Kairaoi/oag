@@ -125,7 +125,7 @@
                     </div>
                     <h5 class="card-title">Case Reviews</h5>
                     <p class="card-text text-muted">View cases pending or completed review processes.</p>
-                    <a href="{{ route('crime.CaseReview.datatables') }}" class="btn btn-info btn-action w-100 text-white">
+                    <a href="{{ route('crime.CaseReview.index') }}" class="btn btn-info btn-action w-100 text-white">
                         <i class="fas fa-clipboard-list me-2"></i> Review Cases
                     </a>
                 </div>
@@ -139,7 +139,7 @@
                     </div>
                     <h5 class="card-title">Appeal Cases</h5>
                     <p class="card-text text-muted">Track and manage appeal cases with detailed documentation.</p>
-                    <a href="{{ route('crime.criminalCase.appealDatatables') }}" class="btn btn-warning btn-action w-100 text-white">
+                    <a href="{{ route('crime.appeal.index') }}" class="btn btn-warning btn-action w-100 text-white">
                         <i class="fas fa-gavel me-2"></i> Manage Appeals
                     </a>
                 </div>

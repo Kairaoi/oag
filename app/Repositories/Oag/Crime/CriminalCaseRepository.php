@@ -91,11 +91,16 @@ public function getForDataTable($search = '', $order_by = '', $sort = 'asc', $tr
             'reasons_for_closure.reason_description',
             DB::raw('(SELECT COUNT(*) FROM case_reviews WHERE case_reviews.case_id = cases.id) as reviewed_count'),
             DB::raw('(SELECT COUNT(*) FROM court_cases WHERE court_cases.case_id = cases.id) as court_case_count'),
-            DB::raw('(SELECT COUNT(*) FROM appeal_details WHERE appeal_details.case_id = cases.id) as appeal_count')
+            DB::raw('(SELECT COUNT(*) FROM appeal_details WHERE appeal_details.case_id = cases.id) as appeal_count'),
+            DB::raw('(SELECT COUNT(*) FROM accused WHERE accused.case_id = cases.id) as accused_count'),
+            DB::raw("(SELECT GROUP_CONCAT(CONCAT(first_name, ' ', last_name) SEPARATOR ', ') FROM accused WHERE accused.case_id = cases.id) as accused_names"),
+            DB::raw("(SELECT GROUP_CONCAT(CONCAT(first_name, ' ', last_name) SEPARATOR ', ') FROM victims WHERE victims.case_id = cases.id) as victim_names")
         ]);
 
-    // 🔐 Role-based filtering: cm.user can see unassigned + self-assigned cases
-    if ($user->hasRole('cm.user')) {
+    // 🔐 Role-based filtering: a plain cm.user (lawyer) can see only unassigned +
+    // self-assigned cases. cm.admin accounts (even if they also hold cm.user)
+    // always see every case.
+    if ($user->hasRole('cm.user') && !$user->hasRole('cm.admin')) {
         $query->where(function ($q) use ($user) {
             $q->whereNull('cases.lawyer_id')
               ->orWhere('cases.lawyer_id', $user->id);
@@ -150,8 +155,8 @@ public function getForDataTable($search = '', $order_by = '', $sort = 'asc', $tr
 public function getNonAppealCases()
 {
     return $this->model
-        // ->where('is_appeal_case', false)
-        // ->where('is_on_appeal', false)
+        ->where('is_appeal_case', false)
+        ->where('is_on_appeal', false)
         ->pluck('case_name', 'id')
         ->toArray();
 }

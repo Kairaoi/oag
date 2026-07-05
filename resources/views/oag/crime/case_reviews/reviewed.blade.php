@@ -32,83 +32,82 @@
 <div class="container mt-4 mb-5">
     @foreach($caseReviews as $review)
     <div class="case-review-document">
-        <!-- Document Header -->
+        <!-- Document Header / Letterhead -->
         <div class="document-header">
             <div class="header-content text-center">
                 <div class="coat-of-arms">
-                    <!-- You can place an actual image here -->
-                    <img src="{{ asset('images/kiribati-coat-arms.png') }}" alt="Kiribati Coat of Arms" class="coat-of-arms-img">
+                    <img src="{{ asset('images/oag_logo.png') }}" alt="Republic of Kiribati Coat of Arms" class="coat-of-arms-img">
                 </div>
-                <h1 class="document-title">CASE REVIEW REPORT</h1>
-                <div class="document-subtitle">OFFICE OF THE PUBLIC PROSECUTOR</div>
-                <div class="document-subtitle">REPUBLIC OF KIRIBATI</div>
-                <div class="confidential-stamp">CONFIDENTIAL LEGAL DOCUMENT</div>
+                <div class="document-kicker">Republic of Kiribati</div>
+                <h1 class="document-title">Case Review Report</h1>
+                <div class="document-subtitle">Office of the Attorney General</div>
+                <div class="confidential-stamp">Confidential Legal Document</div>
             </div>
         </div>
 
         <!-- Case Reference -->
         <div class="section">
             <div class="reference-box">
-                <h2 class="section-title">MATTER REFERENCE: {{ $review->case_name }}</h2>
-                <div class="d-flex justify-content-between">
-                    <div><strong>Review Date:</strong> {{ \Carbon\Carbon::parse($review->review_date)->format('F j, Y') }}</div>
-                    <div><strong>Reviewing Attorney:</strong> {{ $review->created_by_name }}</div>
+                <h2 class="section-title">Matter Reference: {{ $review->case_name }}</h2>
+                <div class="d-flex justify-content-between reference-meta">
+                    <div><span class="meta-label">Review Date:</span> {{ \Carbon\Carbon::parse($review->review_date)->format('F j, Y') }}</div>
+                    <div><span class="meta-label">Reviewing Attorney:</span> {{ $review->created_by_name ?? 'Not assigned' }}</div>
                 </div>
             </div>
         </div>
 
         <!-- Summary Section -->
         <div class="section">
-            <h2 class="section-title">SUMMARY OF PROCEEDINGS</h2>
+            <h2 class="section-title">Summary of Proceedings</h2>
             <div class="section-content">
-                <p>This memorandum constitutes a formal review of the criminal proceedings against <strong>{{ $review->accused_names }}</strong> ("the Accused") in relation to charges of <strong>{{ $review->offence_names }}</strong>. This matter falls within the category of <strong>{{ $review->category_names }}</strong> under the jurisdiction of the Kiribati Courts.</p>
-                
-                <p>The Office of the Public Prosecutor has conducted this review to assess the current status of evidence, evaluate legal positions, and determine appropriate next steps in accordance with the interests of justice and the laws of Kiribati.</p>
+                <p>This memorandum constitutes a formal review of the criminal proceedings against <strong>{{ $review->accused_names ?? 'the Accused' }}</strong> ("the Accused") in relation to charges of <strong>{{ $review->offence_names ?? 'Not yet specified' }}</strong>. This matter falls within the category of <strong>{{ $review->category_names ?? 'Not yet specified' }}</strong> under the jurisdiction of the Kiribati Courts.</p>
+
+                <p>The Office of the Attorney General has conducted this review to assess the current status of evidence, evaluate legal positions, and determine appropriate next steps in accordance with the interests of justice and the laws of Kiribati.</p>
             </div>
         </div>
 
         <!-- Accused Particulars -->
         <div class="section">
-            <h2 class="section-title">ACCUSED PARTICULARS</h2>
+            <h2 class="section-title">Accused Particulars</h2>
             <div class="section-content">
                 <p>The Accused in this matter is identified as follows:</p>
-                
+
                 <div class="particulars-table">
                     <table class="table table-striped">
                         <tr>
                             <th width="30%">Full Name:</th>
-                            <td>{{ $review->accused_names }}</td>
+                            <td>{{ $review->accused_names ?? 'Not on record' }}</td>
                         </tr>
                         <tr>
                             <th>Gender:</th>
-                            <td>{{ $review->accused_genders }}</td>
+                            <td>{{ $review->accused_genders ?? 'Not on record' }}</td>
                         </tr>
                         <tr>
-    <th>Date of Birth:</th>
-    @php
-        $dobParts = explode(',', $review->accused_dob);
-    @endphp
-    <td>
-        @foreach ($dobParts as $dob)
-            {{ \Carbon\Carbon::parse(trim($dob))->format('F j, Y') }}<br>
-        @endforeach
-        ({{ $review->accused_ages }} years of age)
-    </td>
-</tr>
-
+                            <th>Date of Birth:</th>
+                            <td>
+                                @if($review->accused_dob)
+                                    @foreach(explode(',', $review->accused_dob) as $dob)
+                                        {{ \Carbon\Carbon::parse(trim($dob))->format('F j, Y') }}<br>
+                                    @endforeach
+                                    ({{ $review->accused_ages }} years of age)
+                                @else
+                                    Not on record
+                                @endif
+                            </td>
+                        </tr>
                         <tr>
                             <th>Island of Origin:</th>
-                            <td>{{ $review->accused_islands }}</td>
+                            <td>{{ $review->accused_islands ?? 'Not on record' }}</td>
                         </tr>
                         <tr>
                             <th>Current Residential Address:</th>
-                            <td>{{ $review->accused_addresses }}</td>
+                            <td>{{ $review->accused_addresses ?? 'Not on record' }}</td>
                         </tr>
                         <tr>
                             <th>Contact Information:</th>
                             <td>
-                                <div>Telephone: {{ $review->accused_phones }}</div>
-                                <div>Other Contact: {{ $review->accused_contacts }}</div>
+                                <div>Telephone: {{ $review->accused_phones ?? 'Not on record' }}</div>
+                                <div>Other Contact: {{ $review->accused_contacts ?? 'Not on record' }}</div>
                             </td>
                         </tr>
                     </table>
@@ -118,41 +117,47 @@
 
         <!-- Victim Particulars -->
         <div class="section">
-            <h2 class="section-title">VICTIM PARTICULARS</h2>
+            <h2 class="section-title">Victim Particulars</h2>
             <div class="section-content">
                 <p>The alleged victim in this matter is identified as follows:</p>
-                
+
                 <div class="particulars-table">
                     <table class="table table-striped">
                         <tr>
                             <th width="30%">Full Name:</th>
-                            <td>{{ $review->victim_names }}</td>
+                            <td>{{ $review->victim_names ?? 'Not on record' }}</td>
                         </tr>
                         <tr>
                             <th>Gender:</th>
-                            <td>{{ $review->victim_genders }}</td>
+                            <td>{{ $review->victim_genders ?? 'Not on record' }}</td>
                         </tr>
                         <tr>
                             <th>Date of Birth:</th>
-                            <td>{{ \Carbon\Carbon::parse($review->victim_dob)->format('F j, Y') }} ({{ $review->victim_ages }} years of age)</td>
+                            <td>
+                                @if($review->victim_dob)
+                                    {{ \Carbon\Carbon::parse($review->victim_dob)->format('F j, Y') }} ({{ $review->victim_ages }} years of age)
+                                @else
+                                    Not on record
+                                @endif
+                            </td>
                         </tr>
                         <tr>
                             <th>Age Category:</th>
-                            <td>{{ $review->victim_age_groups }}</td>
+                            <td>{{ $review->victim_age_groups ?? 'Not on record' }}</td>
                         </tr>
                         <tr>
                             <th>Island of Origin:</th>
-                            <td>{{ $review->victim_islands }}</td>
+                            <td>{{ $review->victim_islands ?? 'Not on record' }}</td>
                         </tr>
                         <tr>
                             <th>Current Residential Address:</th>
-                            <td>{{ $review->victim_addresses }}</td>
+                            <td>{{ $review->victim_addresses ?? 'Not on record' }}</td>
                         </tr>
                         <tr>
                             <th>Contact Information:</th>
                             <td>
-                                <div>Telephone: {{ $review->victim_phones }}</div>
-                                <div>Other Contact: {{ $review->victim_contacts }}</div>
+                                <div>Telephone: {{ $review->victim_phones ?? 'Not on record' }}</div>
+                                <div>Other Contact: {{ $review->victim_contacts ?? 'Not on record' }}</div>
                             </td>
                         </tr>
                     </table>
@@ -162,15 +167,15 @@
 
         <!-- Evidence Assessment -->
         <div class="section">
-            <h2 class="section-title">EVIDENCE ASSESSMENT</h2>
+            <h2 class="section-title">Evidence Assessment</h2>
             <div class="section-content">
                 <div class="evidence-status">
-                    <strong>Current Status of Evidence:</strong> 
+                    <span class="meta-label">Current Status of Evidence:</span>
                     <span class="status-badge status-{{ strtolower(str_replace(' ', '-', str_replace('_', '-', $review->evidence_status))) }}">
                         {{ ucfirst(str_replace('_', ' ', $review->evidence_status)) }}
                     </span>
                 </div>
-                
+
                 <h3>Key Evidentiary Materials:</h3>
                 <ul class="evidence-list">
                     <li>Witness statements</li>
@@ -179,52 +184,55 @@
                     <li>Medical reports (if applicable)</li>
                     <li>Expert testimony (if applicable)</li>
                 </ul>
-                
+
                 <h3>Offence Particulars:</h3>
                 <div class="evidence-analysis">
-                    {{ $review->offence_particulars }}
+                    {{ $review->offence_particulars ?: 'Not provided.' }}
                 </div>
-
             </div>
         </div>
 
         <!-- Case Assignment History -->
         <div class="section">
-            <h2 class="section-title">CASE ASSIGNMENT HISTORY</h2>
+            <h2 class="section-title">Case Assignment History</h2>
             <div class="section-content">
-                <p>This matter was initially assigned to <strong>{{ $review->from_lawyer_name }}</strong> and has subsequently been reassigned to <strong>{{ $review->to_lawyer_name }}</strong> as of <strong>{{ \Carbon\Carbon::parse($review->reallocation_date)->format('F j, Y') }}</strong>.</p>
-                
-                <h3>Reassignment Rationale:</h3>
-                <div class="reassignment-details">
-                    {{ $review->reallocation_details }}
-                </div>
+                @if($review->to_lawyer_name)
+                    <p>This matter was initially assigned to <strong>{{ $review->from_lawyer_name ?? 'no lawyer' }}</strong> and has subsequently been reassigned to <strong>{{ $review->to_lawyer_name }}</strong> as of <strong>{{ \Carbon\Carbon::parse($review->reallocation_date)->format('F j, Y') }}</strong>.</p>
+
+                    <h3>Reassignment Rationale:</h3>
+                    <div class="reassignment-details">
+                        {{ $review->reallocation_details ?: 'Not provided.' }}
+                    </div>
+                @else
+                    <p>No reassignment has been recorded for this matter.</p>
+                @endif
             </div>
         </div>
 
         <!-- Legal Issues and Considerations -->
         <div class="section">
-            <h2 class="section-title">LEGAL ISSUES AND CONSIDERATIONS</h2>
+            <h2 class="section-title">Legal Issues and Considerations</h2>
             <div class="section-content">
                 <p>The prosecution of this matter involves consideration of the following legal elements:</p>
-                
+
                 <h3>1. Elements of the Offence:</h3>
                 <ul>
-                    <li>The prosecution must establish beyond reasonable doubt that the Accused committed the acts constituting the offence of {{ $review->offence_names }}.</li>
+                    <li>The prosecution must establish beyond reasonable doubt that the Accused committed the acts constituting the offence of {{ $review->offence_names ?? 'the alleged offence' }}.</li>
                     <li>Each element of the offence must be proven according to the Criminal Code of Kiribati.</li>
                 </ul>
-                
+
                 <h3>2. Potential Defences:</h3>
                 <ul>
                     <li>Assessment of available defences under Kiribati law.</li>
                     <li>Evaluation of mitigating factors that may be relevant to sentencing.</li>
                 </ul>
-                
+
                 <h3>3. Evidentiary Challenges:</h3>
                 <ul>
                     <li>Analysis of any evidentiary gaps or challenges.</li>
                     <li>Consideration of admissibility issues.</li>
                 </ul>
-                
+
                 <h3>4. Public Interest Considerations:</h3>
                 <ul>
                     <li>Assessment of prosecution in light of public interest factors.</li>
@@ -235,12 +243,12 @@
 
         <!-- Recommendations and Next Steps -->
         <div class="section">
-            <h2 class="section-title">RECOMMENDATIONS AND NEXT STEPS</h2>
+            <h2 class="section-title">Recommendations and Next Steps</h2>
             <div class="section-content">
                 <p>Based on the comprehensive review of this matter, the following recommendations are made:</p>
-                
+
                 <ol class="recommendations-list">
-                    <li><strong>[Further Investigation Required/Proceed to Trial/Consider Resolution]</strong></li>
+                    <li><strong>[Further Investigation Required / Proceed to Trial / Consider Resolution]</strong></li>
                     <li><strong>[Specific Evidence to be Gathered]</strong></li>
                     <li><strong>[Legal Strategy Recommendations]</strong></li>
                     <li><strong>[Timeline for Next Procedural Steps]</strong></li>
@@ -250,31 +258,31 @@
 
         <!-- Conclusion -->
         <div class="section">
-            <h2 class="section-title">CONCLUSION</h2>
+            <h2 class="section-title">Conclusion</h2>
             <div class="section-content">
-                <p>This review has been conducted in accordance with the prosecutorial guidelines of the Office of the Public Prosecutor of Kiribati and represents a thorough assessment of the available evidence and applicable law in this matter. The recommendations provided aim to ensure that justice is served while upholding the rights of all parties involved.</p>
+                <p>This review has been conducted in accordance with the prosecutorial guidelines of the Office of the Attorney General of Kiribati and represents a thorough assessment of the available evidence and applicable law in this matter. The recommendations provided aim to ensure that justice is served while upholding the rights of all parties involved.</p>
             </div>
         </div>
 
         <!-- Document Footer -->
         <div class="document-footer">
             <div class="footer-info">
-                <div><strong>Document Prepared By:</strong> {{ $review->created_by_name }}</div>
-                <div><strong>Position:</strong> Prosecuting Attorney</div>
-                <div><strong>Date of Report:</strong> {{ \Carbon\Carbon::parse($review->created_at)->format('F j, Y') }}</div>
-                <div><strong>Last Updated:</strong> {{ $review->updated_at ? \Carbon\Carbon::parse($review->updated_at)->format('F j, Y') : 'Not updated' }}</div>
+                <div><span class="meta-label">Document Prepared By:</span> {{ $review->created_by_name ?? 'Not on record' }}</div>
+                <div><span class="meta-label">Position:</span> Prosecuting Attorney</div>
+                <div><span class="meta-label">Date of Report:</span> {{ \Carbon\Carbon::parse($review->created_at)->format('F j, Y') }}</div>
+                <div><span class="meta-label">Last Updated:</span> {{ $review->updated_at ? \Carbon\Carbon::parse($review->updated_at)->format('F j, Y') : 'Not updated' }}</div>
             </div>
-            
+
             <div class="confidentiality-notice">
-                <h3>CONFIDENTIALITY NOTICE:</h3>
-                <p>This document contains legally privileged and confidential information intended solely for the use of authorized personnel within the Office of the Public Prosecutor. Unauthorized disclosure, copying, distribution, or use of the contents of this document is strictly prohibited and may result in legal action.</p>
+                <h3>Confidentiality Notice</h3>
+                <p>This document contains legally privileged and confidential information intended solely for the use of authorized personnel within the Office of the Attorney General. Unauthorized disclosure, copying, distribution, or use of the contents of this document is strictly prohibited and may result in legal action.</p>
             </div>
-            
+
             <div class="government-footer text-center mt-4">
+                <div class="government-seal-line"></div>
                 <div><strong>Government of Kiribati</strong></div>
-                <div>Office of the Public Prosecutor</div>
-                <div>[Official Address]</div>
-                <div>[Contact Information]</div>
+                <div>Office of the Attorney General</div>
+                <div>Bairiki, Tarawa &middot; Republic of Kiribati</div>
             </div>
         </div>
 
@@ -283,19 +291,18 @@
             <button class="btn btn-primary" onclick="window.print()">
                 <i class="fas fa-print"></i> Print Report
             </button>
-            <a href="" class="btn btn-secondary">
+            <a href="{{ route('crime.criminalCase.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Back to All Reviews
             </a>
-            <a href="" class="btn btn-info">
+            <a href="{{ route('crime.CaseReview.edit', $review->id) }}" class="btn btn-info">
                 <i class="fas fa-edit"></i> Edit Review
             </a>
             <button id="download-btn" class="btn btn-success">
                 <i class="fas fa-download"></i> Download PDF
             </button>
-
         </div>
     </div>
-    
+
     @if(!$loop->last)
     <div class="page-break"></div>
     @endif
@@ -304,223 +311,279 @@
 
 @push('styles')
 <style>
+    /* Scoped reset: neutralize any site-wide decorative ::before/::after
+       rules (icons, dividers, etc.) that would otherwise bleed into this
+       formal document and cut across the text. */
+    .case-review-document * {
+        background-image: none !important;
+        text-shadow: none !important;
+    }
+    .case-review-document *::before,
+    .case-review-document *::after {
+        content: none !important;
+    }
+
     /* General Document Styling */
     .case-review-document {
-        background-color: #fff;
-        padding: 30px;
-        box-shadow: 0 0 15px rgba(0,0,0,0.1);
-        border: 1px solid #ddd;
+        background-color: #fffdf8;
+        padding: 50px 60px;
+        box-shadow: 0 0 0 1px #d8cfa9, 0 8px 24px rgba(0,0,0,0.08);
+        border: 1px solid #b9a76a;
         margin-bottom: 30px;
-        font-family: 'Times New Roman', Times, serif;
-        color: #333;
-        line-height: 1.6;
+        font-family: 'Georgia', 'Times New Roman', Times, serif;
+        color: #1c1c1c;
+        line-height: 1.65;
+        position: relative;
     }
-    
-    /* Document Header */
+
+    /* Document Header / Letterhead */
     .document-header {
-        margin-bottom: 30px;
-        padding-bottom: 20px;
-        border-bottom: 2px solid #000;
+        margin-bottom: 35px;
+        padding-bottom: 22px;
+        border-bottom: 3px double #1a2b4a;
     }
-    
+
     .coat-of-arms-img {
-        max-height: 100px;
-        margin-bottom: 15px;
+        max-height: 90px;
+        margin-bottom: 12px;
     }
-    
+
+    .document-kicker {
+        font-size: 13px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: #7a1f1f;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
     .document-title {
-        font-size: 24px;
+        font-size: 27px;
         font-weight: bold;
-        margin-bottom: 10px;
+        letter-spacing: 1px;
+        color: #1a2b4a;
+        margin-bottom: 6px;
     }
-    
+
     .document-subtitle {
-        font-size: 16px;
-        margin-bottom: 5px;
+        font-size: 15px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: #3a3a3a;
+        margin-bottom: 14px;
     }
-    
+
     .confidential-stamp {
-        margin-top: 15px;
-        color: #cc0000;
+        margin-top: 6px;
+        color: #7a1f1f;
         font-weight: bold;
-        font-size: 18px;
-        padding: 5px 15px;
-        border: 2px solid #cc0000;
+        font-size: 13px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        padding: 6px 18px;
+        border: 2px solid #7a1f1f;
         display: inline-block;
+        transform: rotate(-1.5deg);
     }
-    
+
     /* Section Styling */
     .section {
         margin-bottom: 25px;
     }
-    
+
     .section-title {
-        background-color: #003366;
-        color: white;
-        padding: 8px 15px;
-        font-size: 18px;
+        background-color: #1a2b4a;
+        color: #f5efe0;
+        padding: 8px 16px;
+        font-size: 15px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
         margin-bottom: 15px;
+        border-left: 4px solid #b9975a;
     }
-    
+
     .section-content {
         padding: 0 15px;
     }
-    
+
+    .meta-label {
+        font-weight: bold;
+        color: #1a2b4a;
+    }
+
     /* Reference Box */
     .reference-box {
-        border: 1px solid #ddd;
-        padding: 15px;
-        background-color: #f9f9f9;
+        border: 1px solid #b9a76a;
+        padding: 15px 18px;
+        background-color: #f7f2e2;
     }
-    
+
+    .reference-meta {
+        font-size: 14px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
     /* Tables */
     .particulars-table {
         margin: 15px 0;
     }
-    
+
     .table {
-        border: 1px solid #ddd;
+        border: 1px solid #d8cfa9;
     }
-    
+
     .table th {
-        background-color: #f0f0f0;
+        background-color: #f2ede0;
+        color: #1a2b4a;
+        font-weight: bold;
     }
-    
+
     /* Evidence Status */
     .evidence-status {
         margin-bottom: 15px;
     }
-    
+
     .status-badge {
-        padding: 5px 10px;
-        border-radius: 3px;
+        padding: 4px 12px;
+        border-radius: 2px;
         font-weight: bold;
+        font-size: 13px;
+        letter-spacing: 0.5px;
+        border: 1px solid currentColor;
     }
-    
-    .status-complete {
-        background-color: #dff0d8;
-        color: #3c763d;
+
+    .status-sufficient-evidence {
+        background-color: #e7f2e9;
+        color: #245c33;
     }
-    
-    .status-incomplete {
-        background-color: #fcf8e3;
-        color: #8a6d3b;
+
+    .status-insufficient-evidence,
+    .status-returned-to-police {
+        background-color: #f7ecec;
+        color: #7a1f1f;
     }
-    
-    .status-pending {
-        background-color: #d9edf7;
-        color: #31708f;
+
+    .status-pending-review {
+        background-color: #eef1f6;
+        color: #1a2b4a;
     }
-    
+
     /* Evidence Analysis */
-    .evidence-analysis {
-        background-color: #f9f9f9;
-        padding: 15px;
-        border-left: 3px solid #003366;
-    }
-    
-    /* Reassignment Details */
+    .evidence-analysis,
     .reassignment-details {
-        background-color: #f9f9f9;
+        background-color: #f7f2e2;
         padding: 15px;
-        border-left: 3px solid #003366;
+        border-left: 3px solid #b9975a;
+        font-style: italic;
     }
-    
+
     /* Lists */
     .evidence-list, .recommendations-list {
         margin-left: 20px;
         margin-bottom: 15px;
     }
-    
+
     /* Document Footer */
     .document-footer {
         margin-top: 40px;
         padding-top: 20px;
-        border-top: 1px solid #ddd;
+        border-top: 1px solid #d8cfa9;
     }
-    
+
     .footer-info {
         margin-bottom: 20px;
-    }
-    
-    .confidentiality-notice {
-        background-color: #f9f9f9;
-        padding: 15px;
-        border: 1px solid #ddd;
-        margin-bottom: 20px;
-    }
-    
-    .confidentiality-notice h3 {
-        color: #cc0000;
-        font-size: 16px;
-        margin-bottom: 10px;
-    }
-    
-    .government-footer {
-        margin-top: 30px;
         font-size: 14px;
     }
-    
+
+    .confidentiality-notice {
+        background-color: #f7f2e2;
+        padding: 15px 18px;
+        border: 1px solid #d8cfa9;
+        margin-bottom: 20px;
+    }
+
+    .confidentiality-notice h3 {
+        color: #7a1f1f;
+        font-size: 13px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+    }
+
+    .government-footer {
+        margin-top: 30px;
+        font-size: 13px;
+        color: #3a3a3a;
+    }
+
+    .government-seal-line {
+        width: 80px;
+        height: 2px;
+        background-color: #b9975a;
+        margin: 0 auto 12px;
+    }
+
     /* Print Specific Styles */
     @media print {
         body {
             background-color: white;
             font-size: 12pt;
         }
-        
+
         .case-review-document {
             box-shadow: none;
             border: none;
             padding: 0;
         }
-        
+
         .action-buttons {
             display: none;
         }
-        
+
         .page-break {
             page-break-after: always;
         }
-        
+
         .section-title {
             background-color: #f0f0f0 !important;
             color: black !important;
             -webkit-print-color-adjust: exact;
         }
     }
-     /* PDF generation specific styles */
-     .pdf-generating .action-buttons {
+
+    /* PDF generation specific styles */
+    .pdf-generating .action-buttons {
         display: none !important;
     }
-    
-    /* Improved print and PDF styling */
+
     @media print {
         body {
             background-color: white !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
         }
-        
+
         .section-title {
-            background-color: #003366 !important;
-            color: white !important;
+            background-color: #1a2b4a !important;
+            color: #f5efe0 !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
         }
-        
+
         .status-badge {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
         }
-        
+
         .confidential-stamp {
-            color: #cc0000 !important;
-            border-color: #cc0000 !important;
+            color: #7a1f1f !important;
+            border-color: #7a1f1f !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
         }
     }
-    
+
     /* Loading spinner for PDF generation */
     .pdf-loading {
         position: fixed;
@@ -534,7 +597,7 @@
         align-items: center;
         z-index: 9999;
     }
-    
+
     .pdf-loading-content {
         text-align: center;
         padding: 20px;
@@ -542,7 +605,7 @@
         border-radius: 5px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
     }
-    
+
     .spinner {
         margin: 20px auto;
         width: 50px;
@@ -550,59 +613,42 @@
         text-align: center;
         font-size: 10px;
     }
-    
+
     .spinner > div {
-        background-color: #003366;
+        background-color: #1a2b4a;
         height: 100%;
         width: 6px;
         display: inline-block;
         animation: sk-stretchdelay 1.2s infinite ease-in-out;
         margin: 0 2px;
     }
-    
-    .spinner .rect2 {
-        animation-delay: -1.1s;
-    }
-    
-    .spinner .rect3 {
-        animation-delay: -1.0s;
-    }
-    
-    .spinner .rect4 {
-        animation-delay: -0.9s;
-    }
-    
-    .spinner .rect5 {
-        animation-delay: -0.8s;
-    }
-    
+
+    .spinner .rect2 { animation-delay: -1.1s; }
+    .spinner .rect3 { animation-delay: -1.0s; }
+    .spinner .rect4 { animation-delay: -0.9s; }
+    .spinner .rect5 { animation-delay: -0.8s; }
+
     @keyframes sk-stretchdelay {
-        0%, 40%, 100% { 
-            transform: scaleY(0.4);
-        }  20% { 
-            transform: scaleY(1.0);
-        }
+        0%, 40%, 100% { transform: scaleY(0.4); }
+        20% { transform: scaleY(1.0); }
     }
 </style>
 @endpush
-// Replace your current script section with this complete implementation
+
 @push('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
    document.addEventListener('DOMContentLoaded', function() {
-      // Add PDF download functionality to all download buttons
       document.querySelectorAll('#download-btn').forEach(button => {
          button.addEventListener('click', function(e) {
             e.preventDefault();
             generatePDF(this);
          });
       });
-      
-      // Function to generate PDF from the case review document
+
       function generatePDF(buttonElement) {
-         // Create and show loading overlay
          const loadingOverlay = document.createElement('div');
          loadingOverlay.className = 'pdf-loading';
          loadingOverlay.innerHTML = `
@@ -619,83 +665,60 @@
             </div>
          `;
          document.body.appendChild(loadingOverlay);
-         
-         // Find the closest case review document to the button
+
          const reviewDocument = buttonElement.closest('.case-review-document');
-         
-         // Save original display state of action buttons
          const actionButtons = reviewDocument.querySelector('.action-buttons');
          const originalDisplay = actionButtons.style.display;
-         
-         // Hide action buttons for PDF generation
          actionButtons.style.display = 'none';
-         
-         // Add a class to indicate we're generating a PDF (for CSS purposes)
          reviewDocument.classList.add('pdf-generating');
-         
-         // Small delay to ensure DOM updates before capture
+
          setTimeout(() => {
-            // Get case reference for filename
             let caseRef = 'case-review';
             const refElement = reviewDocument.querySelector('.reference-box h2');
             if (refElement) {
                const refText = refElement.textContent;
-               const match = refText.match(/MATTER REFERENCE:\s*(.*)/i);
+               const match = refText.match(/Matter Reference:\s*(.*)/i);
                if (match && match[1]) {
                   caseRef = match[1].trim();
                }
             }
-            
-            // Generate a clean filename
+
             const filename = 'case-review-' + caseRef.replace(/[^a-z0-9]/gi, '-').toLowerCase() + '.pdf';
-            
-            // Use html2canvas to capture the document
+
             html2canvas(reviewDocument, {
-               scale: 2, // Higher scale for better quality
+               scale: 2,
                useCORS: true,
                logging: false,
                allowTaint: true,
                backgroundColor: '#ffffff'
             }).then(canvas => {
                try {
-                  // Initialize jsPDF
                   const { jsPDF } = window.jspdf;
-                  
-                  // Calculate dimensions for A4 paper
-                  const imgWidth = 210; // A4 width in mm (210mm)
-                  const pageHeight = 295; // A4 height in mm (slightly less than 297mm to account for margins)
+                  const imgWidth = 210;
+                  const pageHeight = 295;
                   const imgHeight = canvas.height * imgWidth / canvas.width;
-                  
-                  // Create new PDF document
                   const pdf = new jsPDF('p', 'mm', 'a4');
-                  
-                  // Add image to PDF with paging for long documents
+
                   let position = 0;
                   let heightLeft = imgHeight;
-                  
-                  // Add first page
+
                   pdf.addImage(canvas, 'PNG', 0, 0, imgWidth, imgHeight);
                   heightLeft -= pageHeight;
-                  
-                  // Add subsequent pages if needed
+
                   while (heightLeft > 0) {
                      position = heightLeft - imgHeight;
                      pdf.addPage();
                      pdf.addImage(canvas, 'PNG', 0, position, imgWidth, imgHeight);
                      heightLeft -= pageHeight;
                   }
-                  
-                  // Save the PDF file
+
                   pdf.save(filename);
-                  
-                  // Show success message
                   alert('PDF has been successfully generated and downloaded.');
                } catch (error) {
                   console.error('Error generating PDF:', error);
                   alert('There was an error generating the PDF: ' + error.message);
                }
-               
-               // Clean up
+
                cleanupAfterPdfGeneration();
             }).catch(error => {
                console.error('Error capturing document:', error);
@@ -703,18 +726,12 @@
                cleanupAfterPdfGeneration();
             });
          }, 200);
-         
-         // Function to clean up after PDF generation
+
          function cleanupAfterPdfGeneration() {
-            // Remove loading overlay
             if (loadingOverlay.parentNode) {
                loadingOverlay.parentNode.removeChild(loadingOverlay);
             }
-            
-            // Restore action buttons display
             actionButtons.style.display = originalDisplay;
-            
-            // Remove the PDF generation class
             reviewDocument.classList.remove('pdf-generating');
          }
       }

@@ -31,8 +31,10 @@
                     <th>Case Name</th>
                     <th>Date File Received</th>
                     <th>Date of Incident</th>
-                    <th>Place of Incident</th>
+                    <th>Island</th>
                     <th>Council Name</th>
+                    <th>Accused</th>
+                    <th>Victim</th>
                     <th>Reviewer Action</th>
                     <th>Actions</th>
                 </tr>
@@ -170,18 +172,40 @@
         box-shadow: 0 7px 14px rgba(50, 50, 93, 0.15);
         transform: translateY(-1px);
     }
-    
+
+    .btn-workflow {
+        background: linear-gradient(135deg, #38a169, #2f855a);
+        border: none;
+        color: white;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11);
+    }
+
+    .btn-workflow:hover {
+        color: white;
+        box-shadow: 0 7px 14px rgba(50, 50, 93, 0.15);
+        transform: translateY(-1px);
+    }
+
+    .btn-actions-compact {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.85rem;
+    }
+
     .record-item {
         transition: all 0.2s ease;
         border-radius: 0;
         border-left: 3px solid transparent;
     }
-    
+
     .record-item:hover {
         background-color: #f7fafc;
         border-left-color: #4299e1;
     }
-    
+
     .icon-wrapper {
         width: 32px;
         height: 32px;
@@ -191,7 +215,7 @@
         border-radius: 8px;
         flex-shrink: 0;
     }
-    
+
     /* Badge styling */
     .badge {
         font-weight: normal;
@@ -244,12 +268,6 @@
         }
     }
     
-    /* Fix for dropdown positioning on bottom of table */
-    .dropup .dropdown-menu {
-        bottom: 100%;
-        top: auto !important;
-        margin-bottom: 0.125rem;
-    }
 </style>
 
 <script>
@@ -259,6 +277,7 @@
         canReallocate: {{ auth()->user()->hasRole('cm.admin') ? 'true' : 'false' }},
         canAppeal: {{ auth()->user()->hasRole('cm.user') ? 'true' : 'false' }},
         canallocate: {{ auth()->user()->hasRole('cm.admin') ? 'true' : 'false' }},
+        canViewRelatedRecords: {{ (auth()->user()->hasRole('cm.user') || auth()->user()->hasRole('cm.admin')) ? 'true' : 'false' }},
     };
     
     // Define route URLs for cleaner code
@@ -275,37 +294,37 @@
         reviewedCases: @json(route('crime.casereview.reviewed', ':id')),
         courtCases: @json(route('crime.courtcase', ':id')),
         appealCases: @json(route('crime.appealcase', ':id')),
-        courtOfAppealCases: @json(route('crime.courtofappealcase', ':id'))
+        courtOfAppealCases: @json(route('crime.courtofappealcase', ':id')),
+        relatedRecords: @json(route('crime.relatedRecords', ':id'))
     };
 </script>
 
-<!-- Bootstrap 5 JavaScript -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
 $(document).ready(function () {
-    // Check screen size and adjust dropdown positions
-    function positionDropdowns() {
-        const screenHeight = $(window).height();
-        
-        $('#criminal-case-table tbody tr').each(function() {
-            const $tr = $(this);
-            const position = $tr.position();
-            const dropdowns = $tr.find('.dropdown');
-            
-            dropdowns.each(function() {
-                const $dropdown = $(this);
-                // Reset classes
-                $dropdown.removeClass('dropup');
-                
-                // Check if dropdown is near bottom of screen
-                if ((screenHeight - position.top) < 300) {
-                    $dropdown.addClass('dropup');
-                }
+    // The table sits inside a scrollable .table-responsive container, which
+    // clips any dropdown-menu positioned with Bootstrap's default "absolute"
+    // Popper strategy the moment it would overflow that container's bounds
+    // (horizontally or vertically). Rendering the menu with "fixed" strategy
+    // instead positions it relative to the viewport, so it floats freely above
+    // the table and its scrollbars — Popper also handles flipping it above/below
+    // and repositioning on scroll/resize automatically, so no manual dropup
+    // class juggling is needed anymore.
+    function initDropdowns() {
+        document.querySelectorAll('#criminal-case-table [data-bs-toggle="dropdown"]').forEach(function (toggleEl) {
+            const existing = bootstrap.Dropdown.getInstance(toggleEl);
+            if (existing) {
+                existing.dispose();
+            }
+
+            new bootstrap.Dropdown(toggleEl, {
+                popperConfig: (defaultBsPopperConfig) => ({
+                    ...defaultBsPopperConfig,
+                    strategy: 'fixed',
+                }),
             });
         });
     }
-    
+
     // DataTable initialization
     const table = $('#criminal-case-table').DataTable({
         processing: true,
@@ -321,6 +340,22 @@ $(document).ready(function () {
             { data: 'date_of_incident', render: data => data ? new Date(data).toLocaleDateString() : '' },
             { data: 'island_name', defaultContent: '' },
             { data: 'lawyer_name', defaultContent: '' },
+            {
+                data: 'accused_names',
+                render: function(names) {
+                    if (!names) {
+                        return '<span class="badge bg-danger" title="No accused added yet">None added</span>';
+                    }
+                    return names;
+                }
+            },
+            {
+                data: 'victim_names',
+                defaultContent: '<span class="text-muted">&mdash;</span>',
+                render: function(names) {
+                    return names ? names : '<span class="text-muted">&mdash;</span>';
+                }
+            },
             {
                 data: null,
                 render: function(row) {
@@ -359,7 +394,7 @@ $(document).ready(function () {
                     @endif
 
                     @if(auth()->user()->hasRole('cm.user'))
-                        if (status !== 'accepted' && status !== 'rejected' && status !== 'closed') {
+                        if (status === 'allocated' || status === 'reallocated') {
                             actionButtons = `
                                 <div class="d-flex gap-2 mt-2">
                                     <button class="btn btn-action btn-accept" onclick="handleCaseAction(${row.id}, 'accept')">
@@ -381,71 +416,36 @@ $(document).ready(function () {
                 orderable: false,
                 searchable: false,
                 render: function(row) {
-                    // Actions dropdown
+                    // A rejected case is a dead end for every action except
+                    // "Case Reallocate" (the designed recovery path) — mirrors
+                    // the server-side AuthorizesCriminalCase::assertCaseIsActionable() check.
+                    const isRejected = row.status === 'rejected';
+
+                    const canReviewNow = userRoles.canCaseReview && row.status === 'accepted';
+                    const canCourtCaseNow = userRoles.canCourtCase && row.status === 'accepted';
+                    const canAllocateNow = userRoles.canallocate && row.status === 'pending';
+                    const canReallocateNow = userRoles.canReallocate && row.status === 'rejected';
+                    const canAppealNow = userRoles.canAppeal && !isRejected;
+                    const hasWorkflowItems = canReviewNow || canCourtCaseNow || canAllocateNow || canReallocateNow || canAppealNow;
+
+                    // Record actions dropdown: Edit / Show / Delete only
                     let actions = `
                     <div class="d-md-flex gap-2">
-                        <!-- Main Actions Dropdown -->
+                        <!-- Record Actions Dropdown -->
                         <div class="dropdown mb-2 mb-md-0">
-                            <button class="btn btn-primary dropdown-toggle" type="button" id="actionsDropdown${row.id}" data-bs-toggle="dropdown" aria-expanded="false">
+                            <button class="btn btn-primary btn-sm dropdown-toggle btn-actions-compact" type="button" id="actionsDropdown${row.id}" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fas fa-cog me-1"></i> Actions
                             </button>
-                            <ul class="dropdown-menu shadow" aria-labelledby="actionsDropdown${row.id}">
+                            <ul class="dropdown-menu shadow" aria-labelledby="actionsDropdown${row.id}">`;
+
+                    if (!isRejected) {
+                        actions += `
                                 <li><a class="dropdown-item" href="${routeUrls.edit.replace(':id', row.id)}">
                                     <i class="fas fa-edit text-primary"></i> Edit
                                 </a></li>
                                 <li><a class="dropdown-item" href="${routeUrls.show.replace(':id', row.id)}">
                                     <i class="fas fa-eye text-info"></i> Show
-                                </a></li>`;
-
-                    if (userRoles.canCaseReview && row.status === 'accepted') {
-                        actions += `<li>
-                            <a class="dropdown-item d-flex justify-content-between align-items-center" href="${routeUrls.caseReview.replace(':id', row.id)}">
-                                <span><i class="fas fa-clipboard-check text-success"></i> Case Review</span>
-                                ${row.reviewed_count > 0 ? '<span class="badge bg-success">✓</span>' : ''}
-                            </a>
-                        </li>`;
-                    }
-
-                    if (userRoles.canCourtCase && row.status === 'accepted') {
-                        actions += `<li>
-                            <a class="dropdown-item d-flex justify-content-between align-items-center" href="${routeUrls.courtCase.replace(':id', row.id)}">
-                                <span><i class="fas fa-gavel text-warning"></i> Court Case</span>
-                                ${row.court_case_count > 0 ? '<span class="badge bg-warning">✓</span>' : ''}
-                            </a>
-                        </li>`;
-                    }
-
-                    if (userRoles.canallocate && row.status === 'pending') {
-                        actions += `<li><a class="dropdown-item" href="${routeUrls.allocate.replace(':id', row.id)}">
-                            <i class="fas fa-user-check text-primary"></i> Case Allocation
-                        </a></li>`;
-                    }
-
-                    if (userRoles.canReallocate && row.status === 'rejected') {
-                        actions += `<li><a class="dropdown-item" href="${routeUrls.reallocate.replace(':id', row.id)}">
-                            <i class="fas fa-exchange-alt text-info"></i> Case Reallocate
-                        </a></li>`;
-                    }
-
-                    if (userRoles.canAppeal) {
-                        actions += `<li>
-                            <a class="dropdown-item d-flex justify-content-between align-items-center" href="${routeUrls.appeal.replace(':id', row.id)}">
-                                <span><i class="fas fa-balance-scale text-danger"></i> Appeal</span>
-                                ${row.appeal_count > 0 ? '<span class="badge bg-danger">✓</span>' : ''}
-                            </a>
-                        </li>`;
-                    }
-
-                    if (userRoles.canAppeal) {
-                        actions += `<li>
-                            <a class="dropdown-item d-flex justify-content-between align-items-center" href="${routeUrls.courtOfAppeal.replace(':id', row.id)}">
-                                <span><i class="fas fa-balance-scale text-danger"></i> Court of Appeal</span>
-                                ${row.appeal_count > 0 ? '<span class="badge bg-danger">✓</span>' : ''}
-                            </a>
-                        </li>`;
-                    }
-
-                    actions += `
+                                </a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); if(confirm('Are you sure?')) document.getElementById('delete-form-${row.id}').submit();">
@@ -454,84 +454,83 @@ $(document).ready(function () {
                                     <form id="delete-form-${row.id}" action="${routeUrls.destroy.replace(':id', row.id)}" method="POST" class="d-none">
                                         @csrf @method('DELETE')
                                     </form>
-                                </li>
-                            </ul>
-                        </div>
+                                </li>`;
+                    }
 
-                        <!-- Related Records Dropdown -->
-                        <div class="dropdown">
-                            <button class="btn btn-related dropdown-toggle" type="button" id="relatedRecordsDropdown${row.id}" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-folder-open me-1"></i> Related Records
+                    actions += `
+                            </ul>
+                        </div>`;
+
+                    // Workflow Actions Dropdown: Case Review / Court Case / Allocate / Reallocate / Appeal / Court of Appeal
+                    if (hasWorkflowItems) {
+                        actions += `
+                        <div class="dropdown mb-2 mb-md-0">
+                            <button class="btn btn-workflow dropdown-toggle" type="button" id="workflowDropdown${row.id}" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-diagram-project me-1"></i> Workflow
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="relatedRecordsDropdown${row.id}" style="min-width: 280px;">
-                                <li class="dropdown-header">
-                                    <span class="fw-bold">Case ID: ${row.id}</span>
-                                </li>
-                                
-                                <li>
-                                    <a href="${routeUrls.reviewedCases.replace(':id', row.id)}" 
-                                    class="dropdown-item record-item py-2 d-flex align-items-center">
-                                        <div class="icon-wrapper me-2" style="background-color: rgba(66, 153, 225, 0.15);">
-                                            <i class="fas fa-clipboard-check text-primary"></i>
-                                        </div>
-                                        <div>
-                                            <span class="fw-medium d-block">Reviewed Cases</span>
-                                            <small class="text-muted">View case review history</small>
-                                        </div>
-                                        ${row.reviewed_count > 0 ? '<span class="badge bg-success ms-auto">✓</span>' : ''}
-                                    </a>
-                                </li>
-                                
-                                <li><hr class="dropdown-divider"></li>
-                                
-                                <li>
-                                    <a href="${routeUrls.courtCases.replace(':id', row.id)}" 
-                                    class="dropdown-item record-item py-2 d-flex align-items-center">
-                                        <div class="icon-wrapper me-2" style="background-color: rgba(236, 201, 75, 0.15);">
-                                            <i class="fas fa-gavel text-warning"></i>
-                                        </div>
-                                        <div>
-                                            <span class="fw-medium d-block">Court Cases</span>
-                                            <small class="text-muted">View court proceedings</small>
-                                        </div>
-                                        ${row.court_case_count > 0 ? '<span class="badge bg-warning ms-auto">✓</span>' : ''}
-                                    </a>
-                                </li>
-                                
-                               <li><hr class="dropdown-divider"></li>
-                                
-                                <li>
-                                    <a href="${routeUrls.appealCases.replace(':id', row.id)}" 
-                                    class="dropdown-item record-item py-2 d-flex align-items-center">
-                                        <div class="icon-wrapper me-2" style="background-color: rgba(237, 100, 100, 0.15);">
-                                            <i class="fas fa-balance-scale text-danger"></i>
-                                        </div>
-                                        <div>
-                                            <span class="fw-medium d-block">Appeal Cases</span>
-                                            <small class="text-muted">View case appeals</small>
-                                        </div>
-                                        ${row.appeal_count > 0 ? '<span class="badge bg-danger ms-auto">✓</span>' : ''}
-                                    </a>
-                                </li>
+                            <ul class="dropdown-menu shadow" aria-labelledby="workflowDropdown${row.id}">`;
 
-                                <li><hr class="dropdown-divider"></li>
-                                
-                                <li>
-                                    <a href="${routeUrls.courtOfAppealCases.replace(':id', row.id)}" 
-                                    class="dropdown-item record-item py-2 d-flex align-items-center">
-                                        <div class="icon-wrapper me-2" style="background-color: rgba(40, 167, 69, 0.15);">
-                                            <i class="fas fa-gavel text-success"></i>
-                                        </div>
-                                        <div>
-                                            <span class="fw-medium d-block">Court of Appeal Cases</span>
-                                            <small class="text-muted">View court of appeal cases</small>
-                                        </div>
-                                        ${row.appeal_count > 0 ? '<span class="badge bg-purple ms-auto">✓</span>' : ''}
-                                    </a>
-                                </li>
+                        if (canReviewNow) {
+                            actions += `<li>
+                                <a class="dropdown-item d-flex justify-content-between align-items-center" href="${routeUrls.caseReview.replace(':id', row.id)}">
+                                    <span><i class="fas fa-clipboard-check text-success"></i> Case Review</span>
+                                    ${row.reviewed_count > 0 ? '<span class="badge bg-success">✓</span>' : ''}
+                                </a>
+                            </li>`;
+                        }
+
+                        if (canCourtCaseNow) {
+                            actions += `<li>
+                                <a class="dropdown-item d-flex justify-content-between align-items-center" href="${routeUrls.courtCase.replace(':id', row.id)}">
+                                    <span><i class="fas fa-gavel text-warning"></i> Court Case</span>
+                                    ${row.court_case_count > 0 ? '<span class="badge bg-warning">✓</span>' : ''}
+                                </a>
+                            </li>`;
+                        }
+
+                        if (canAllocateNow) {
+                            actions += `<li><a class="dropdown-item" href="${routeUrls.allocate.replace(':id', row.id)}">
+                                <i class="fas fa-user-check text-primary"></i> Case Allocation
+                            </a></li>`;
+                        }
+
+                        if (canReallocateNow) {
+                            actions += `<li><a class="dropdown-item" href="${routeUrls.reallocate.replace(':id', row.id)}">
+                                <i class="fas fa-exchange-alt text-info"></i> Case Reallocate
+                            </a></li>`;
+                        }
+
+                        if (canAppealNow) {
+                            actions += `<li>
+                                <a class="dropdown-item d-flex justify-content-between align-items-center" href="${routeUrls.appeal.replace(':id', row.id)}">
+                                    <span><i class="fas fa-balance-scale text-danger"></i> Appeal</span>
+                                    ${row.appeal_count > 0 ? '<span class="badge bg-danger">✓</span>' : ''}
+                                </a>
+                            </li>`;
+                        }
+
+                        if (canAppealNow) {
+                            actions += `<li>
+                                <a class="dropdown-item d-flex justify-content-between align-items-center" href="${routeUrls.courtOfAppeal.replace(':id', row.id)}">
+                                    <span><i class="fas fa-balance-scale text-danger"></i> Court of Appeal</span>
+                                    ${row.appeal_count > 0 ? '<span class="badge bg-danger">✓</span>' : ''}
+                                </a>
+                            </li>`;
+                        }
+
+                        actions += `
                             </ul>
-                        </div>
-                    </div>`;
+                        </div>`;
+                    }
+
+                    if (!isRejected && userRoles.canViewRelatedRecords) {
+                        actions += `
+                        <a href="${routeUrls.relatedRecords.replace(':id', row.id)}" class="btn btn-related">
+                            <i class="fas fa-folder-open me-1"></i> Related Records
+                        </a>`;
+                    }
+
+                    actions += `</div>`;
 
                     return actions;
                 }
@@ -557,21 +556,11 @@ $(document).ready(function () {
             }
         ],
         drawCallback: function() {
-            positionDropdowns();
+            initDropdowns();
         },
         language: {
             processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>'
         }
-    });
-
-    // Reposition dropdowns on window resize
-    $(window).resize(function() {
-        positionDropdowns();
-    });
-
-    // Reposition dropdowns on scroll
-    $('.table-responsive').on('scroll', function() {
-        positionDropdowns();
     });
 
     // Rejection modal setup
@@ -589,10 +578,6 @@ $(document).ready(function () {
         });
     }
     
-    // Fix dropdown position on long tables with scrolling
-    $('.dataTables_scrollBody').on('scroll', function() {
-        $('.dropdown-menu.show').removeClass('show');
-    });
 });
 
 // Accept action

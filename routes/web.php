@@ -98,6 +98,8 @@ Route::resource('CaseReview', CaseReviewController::class)->except(['create', 's
     Route::get('crime/courtcase/{id}', [CriminalCaseController::class, 'showCourtCases'])->name('courtcase');
     Route::get('crime/courtofappealcase/{id}', [CriminalCaseController::class, 'showcourtofappealcase'])->name('courtofappealcase');
     Route::get('crime/casereview/{id}', [CriminalCaseController::class, 'showReviewedCases'])->name('casereview.reviewed');
+    Route::get('crime/relatedRecords/{id}', [CriminalCaseController::class, 'showRelatedRecords'])->name('relatedRecords');
+    Route::get('crime/caseTimeline/{id}', [CriminalCaseController::class, 'showCaseTimeline'])->name('caseTimeline');
     Route::get('crime/criminalCase/{id}/create-incident', [CriminalCaseController::class, 'createIncident'])
         ->name('criminalCase.createIncident');
     Route::match(['get', 'post'], 'reason/datatables', [ReasonsForClosureController::class, 'getDataTables'])->name('reason.datatables');
@@ -122,13 +124,6 @@ Route::resource('CaseReview', CaseReviewController::class)->except(['create', 's
 Route::post('criminalCase/{id}/accept', [CriminalCaseController::class, 'accept'])->name('criminalCase.accept');
 Route::post('criminalCase/{id}/reject', [CriminalCaseController::class, 'reject'])->name('criminalCase.reject');
 
-Route::post('criminalCase/appeal/store', [CriminalCaseController::class, 'storeAppeal'])
-->name('criminalCase.storeAppeal');
-
-// Ngkana ko kainnanoia te appeal datatables route
-
-Route::match(['get', 'post'], 'criminalCase/appeal/datatables', [CriminalCaseController::class, 'getAppealDataTables'])
-->name('criminalCase.appealDatatables');
 Route::post('criminalCase/{id}/reallocate', [CriminalCaseController::class, 'reallocateCase'])
 ->name('criminalCase.reallocate');
 // Show reallocation form
@@ -244,6 +239,7 @@ Route::group([
     'middleware' => ['auth'],
 ], function () {
     Route::get('/roles', [RolePermissionController::class, 'index'])->name('roles.index');
+    Route::post('/users', [RolePermissionController::class, 'storeUser'])->name('users.store');
     Route::post('/roles', [RolePermissionController::class, 'storeRole'])->name('roles.store');
     Route::post('/permissions', [RolePermissionController::class, 'storePermission'])->name('permissions.store');
     Route::post('/assign-role', [RolePermissionController::class, 'assignRole'])->name('roles.assign');

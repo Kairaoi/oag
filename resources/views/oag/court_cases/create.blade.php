@@ -1,15 +1,32 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <h2>Create Court Case</h2>
+<div class="container mt-5">
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb">
+        {{ Breadcrumbs::render() }}
+    </nav>
 
-    <form action="{{ route('crime.court-cases.store') }}" method="POST">
+    <!-- Title -->
+    <h1 class="text-center mb-4" style="font-family: 'Courier New', Courier, monospace; color: #333; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);">
+        Create Court Case
+    </h1>
+
+    <!-- Info Card -->
+    <div class="card bg-light mb-4">
+        <div class="card-body">
+            <h5 class="card-title">High Court Proceedings</h5>
+            <p class="card-text mb-0">This form records the High Court stage of an existing criminal case.</p>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <form action="{{ route('crime.court-cases.store') }}" method="POST" class="p-4 shadow-lg rounded" style="background: linear-gradient(90deg, #ff416c, #ff4b2b); border-radius: 20px;">
         @csrf
 
         <!-- Case Selection -->
         <div class="form-group">
-            <label for="case_id" class="form-label">Case</label>
+            <label for="case_id" class="text-white">Case</label>
             <select class="form-control @error('case_id') is-invalid @enderror" id="case_id" name="case_id" required>
                 <option value="">Select a case</option>
                 <option value="{{ $case->id }}" {{ old('case_id', $case->id) == $case->id ? 'selected' : '' }}>
@@ -22,8 +39,8 @@
         </div>
 
         <!-- Charge File Date -->
-        <div class="mb-3">
-            <label for="charge_file_dated" class="form-label">Charge File Dated</label>
+        <div class="form-group">
+            <label for="charge_file_dated" class="text-white">Charge File Dated</label>
             <input type="date" name="charge_file_dated" id="charge_file_dated"
                    class="form-control @error('charge_file_dated') is-invalid @enderror"
                    value="{{ old('charge_file_dated') }}" required>
@@ -33,8 +50,8 @@
         </div>
 
         <!-- High Court Case Number -->
-        <div class="mb-3">
-            <label for="high_court_case_number" class="form-label">High Court Case Number</label>
+        <div class="form-group">
+            <label for="high_court_case_number" class="text-white">High Court Case Number</label>
             <input type="text" name="high_court_case_number" id="high_court_case_number"
                    class="form-control @error('high_court_case_number') is-invalid @enderror"
                    value="{{ old('high_court_case_number') }}">
@@ -44,8 +61,8 @@
         </div>
 
         <!-- Verdict -->
-        <div class="mb-3">
-            <label for="verdict" class="form-label">Verdict</label>
+        <div class="form-group">
+            <label for="verdict" class="text-white">Verdict</label>
             <select name="verdict" id="verdict" class="form-control @error('verdict') is-invalid @enderror">
                 <option value="">Select Verdict</option>
                 @foreach(['guilty', 'not_guilty', 'dismissed', 'withdrawn', 'other'] as $verdict)
@@ -60,8 +77,8 @@
         </div>
 
         <!-- Judgment Delivered Date -->
-        <div class="mb-3">
-            <label for="judgment_delivered_date" class="form-label">Judgment Delivered Date</label>
+        <div class="form-group">
+            <label for="judgment_delivered_date" class="text-white">Judgment Delivered Date</label>
             <input type="date" name="judgment_delivered_date" id="judgment_delivered_date"
                    class="form-control @error('judgment_delivered_date') is-invalid @enderror"
                    value="{{ old('judgment_delivered_date') }}">
@@ -71,8 +88,8 @@
         </div>
 
         <!-- Court Outcome -->
-        <div class="mb-3">
-            <label for="court_outcome" class="form-label">Court Outcome</label>
+        <div class="form-group">
+            <label for="court_outcome" class="text-white">Court Outcome</label>
             <select name="court_outcome" id="court_outcome" class="form-control @error('court_outcome') is-invalid @enderror">
                 <option value="">Select Outcome</option>
                 @foreach(['win', 'lose'] as $outcome)
@@ -87,8 +104,8 @@
         </div>
 
         <!-- Decision Principle Established -->
-        <div class="mb-3">
-            <label for="decision_principle_established" class="form-label">Decision Principle Established</label>
+        <div class="form-group">
+            <label for="decision_principle_established" class="text-white">Decision Principle Established</label>
             <textarea name="decision_principle_established" id="decision_principle_established"
                       class="form-control @error('decision_principle_established') is-invalid @enderror"
                       rows="3">{{ old('decision_principle_established') }}</textarea>
@@ -100,7 +117,15 @@
         <!-- Hidden Created By -->
         <input type="hidden" name="created_by" value="{{ auth()->id() }}">
 
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <!-- Submit and Cancel -->
+        <div class="row mt-4">
+            <div class="col-md-6 mb-2">
+                <a href="{{ route('crime.criminalCase.index') }}" class="btn btn-light btn-lg btn-block rounded-pill font-weight-bold">Cancel</a>
+            </div>
+            <div class="col-md-6">
+                <button type="submit" class="btn btn-light btn-lg btn-block rounded-pill font-weight-bold">Submit</button>
+            </div>
+        </div>
     </form>
 </div>
 @endsection

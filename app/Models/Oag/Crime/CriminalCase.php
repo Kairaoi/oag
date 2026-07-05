@@ -55,7 +55,9 @@ class CriminalCase extends Model
 
     protected $fillable = [
         'case_file_number', 'date_file_received', 'case_name', 'date_of_incident',
-        'lawyer_id', 'island_id', 'created_by', 'updated_by', 'status', 'reviewer_id', 'reviewed_at', 'rejection_reason'
+        'lawyer_id', 'island_id', 'created_by', 'updated_by', 'status', 'reviewer_id', 'reviewed_at', 'rejection_reason',
+        'is_appeal_case', 'is_on_appeal', 'accepted_at', 'rejected_at', 'accepted_by', 'rejected_by',
+        'date_of_allocation', 'allocated_by',
     ];
     
 
@@ -119,7 +121,25 @@ class CriminalCase extends Model
     // Relation with the closure reason
     public function closureReason()
     {
-        return $this->belongsTo(ClosureReason::class, 'reason_for_closure_id');
+        return $this->belongsTo(ReasonsForClosure::class, 'reason_for_closure_id');
+    }
+
+    // User who accepted the case (may differ from the assigned lawyer when a cm.admin acts on it)
+    public function acceptedBy()
+    {
+        return $this->belongsTo(User::class, 'accepted_by');
+    }
+
+    // User who rejected the case (may differ from the assigned lawyer when a cm.admin acts on it)
+    public function rejectedBy()
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
+    }
+
+    // User (cm.admin) who allocated the case to its current lawyer
+    public function allocatedBy()
+    {
+        return $this->belongsTo(User::class, 'allocated_by');
     }
 
     // Relation with the Accused model
@@ -128,10 +148,22 @@ class CriminalCase extends Model
         return $this->hasMany(Accused::class, 'case_id');
     }
 
+    // Relation with the Victim model
+    public function victims()
+    {
+        return $this->hasMany(Victim::class, 'case_id');
+    }
+
+    // Relation with the Incident model
+    public function incidents()
+    {
+        return $this->hasMany(Incident::class, 'case_id');
+    }
+
     public function offences()
 {
     return $this->belongsToMany(Offence::class, 'case_offence', 'case_id', 'offence_id')
-                ->withPivot('offence_particulars', 'category_id') // 👈 include this
+                ->withPivot('category_id')
                 ->withTimestamps();
 }
 

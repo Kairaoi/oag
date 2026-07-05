@@ -240,7 +240,7 @@ public function store(Request $request)
         
         $data = $request->validate([
             'case_id' => 'required|exists:cases,id',
-            'lawyer_id' => 'required|exists:users,id',
+            'lawyer_id' => ['required', 'exists:users,id', new \App\Rules\UserHasRole('cm.user')],
             'island_id' => 'required|exists:islands,id',
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',

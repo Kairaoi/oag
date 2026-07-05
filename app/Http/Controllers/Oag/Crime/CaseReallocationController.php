@@ -53,7 +53,7 @@ class CaseReallocationController extends Controller
         $data = $request->validate([
             'case_id'              => 'required|exists:cases,id',
             'from_lawyer_id'       => 'required|exists:users,id',
-            'to_lawyer_id'         => 'required|exists:users,id|different:from_lawyer_id',
+            'to_lawyer_id'         => ['required', 'exists:users,id', 'different:from_lawyer_id', new \App\Rules\UserHasRole('cm.user')],
             'reallocation_reason'  => 'required|string',
             'reallocation_date'    => 'required|date',
         ]);
@@ -98,7 +98,7 @@ class CaseReallocationController extends Controller
         $data = $request->validate([
             'case_id'              => 'required|exists:cases,id',
             'from_lawyer_id'       => 'required|exists:users,id',
-            'to_lawyer_id'         => 'required|exists:users,id|different:from_lawyer_id',
+            'to_lawyer_id'         => ['required', 'exists:users,id', 'different:from_lawyer_id', new \App\Rules\UserHasRole('cm.user')],
             'reallocation_reason'  => 'required|string',
             'reallocation_date'    => 'required|date',
         ]);

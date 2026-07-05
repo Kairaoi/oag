@@ -149,16 +149,8 @@
             <div class="outcome-box p-3 rounded" style="background-color: #f8f9fa;">
               <h5 class="mb-2">Court Outcome</h5>
               <p class="mb-1"><strong>Decision:</strong> <span class="text-{{ $appeal->court_outcome == 'guilty' ? 'danger' : 'success' }}">{{ ucfirst($appeal->court_outcome) }}</span></p>
-              <p class="mb-1"><strong>Date:</strong> {{ date('F j, Y', strtotime($appeal->court_outcome_date)) }}</p>
+              <p class="mb-1"><strong>Date:</strong> {{ $appeal->judgment_delivered_date ? date('F j, Y', strtotime($appeal->judgment_delivered_date)) : 'Not on record' }}</p>
               <p class="mb-0"><strong>Verdict:</strong> {{ ucfirst($appeal->verdict) }}</p>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="details-box p-3 rounded" style="background-color: #f8f9fa;">
-              <h5 class="mb-2">Outcome Details</h5>
-              <div class="border-start ps-3 text-muted fst-italic">
-                {{ $appeal->court_outcome_details }}
-              </div>
             </div>
           </div>
         </div>
@@ -257,6 +249,9 @@
         </div>
 
         <div class="action-buttons mt-4 text-center">
+          <a href="{{ route('crime.appeal.edit', $appeal->id) }}" class="btn btn-outline-primary">
+            <i class="fas fa-edit"></i> Edit
+          </a>
           <button id="download-btn" class="btn btn-primary">Download Appeal Report PDF</button>
         </div>
       </div>

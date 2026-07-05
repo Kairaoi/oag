@@ -91,12 +91,14 @@ class UserRepository extends CustomBaseRepository
     }
 
     /**
-     * Pluck the names and IDs of the users.
+     * Pluck the names and IDs of users eligible to be assigned as a case's
+     * lawyer — every caller of this method populates a lawyer/counsel
+     * dropdown, and only cm.user accounts may be allocated a case.
      *
      * @return \Illuminate\Support\Collection
      */
     public function pluck(): \Illuminate\Support\Collection
     {
-        return $this->getModelInstance()->pluck('name', 'id');
+        return $this->getModelInstance()->role('cm.user')->pluck('name', 'id');
     }
 }

@@ -125,7 +125,7 @@ public function store(Request $request)
     // Validate request data
     $data = $request->validate([
         'case_id' => 'required|exists:cases,id',
-        'lawyer_id' => 'required|exists:users,id',
+        'lawyer_id' => ['required', 'exists:users,id', new \App\Rules\UserHasRole('cm.user')],
         'island_id' => 'required|exists:islands,id',
         'date_of_incident_start' => 'required|date',
         'date_of_incident_end' => 'nullable|date|after_or_equal:date_of_incident_start',
@@ -218,7 +218,7 @@ public function store(Request $request)
     {
         $data = $request->validate([
             'case_id' => 'required|exists:cases,id',
-            'lawyer_id' => 'required|exists:users,id',
+            'lawyer_id' => ['required', 'exists:users,id', new \App\Rules\UserHasRole('cm.user')],
             'island_id' => 'required|exists:islands,id',
             'date_of_incident_start' => 'nullable|date',
             'date_of_incident_end' => 'nullable|date',

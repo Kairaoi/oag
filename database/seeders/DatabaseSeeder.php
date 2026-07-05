@@ -28,5 +28,6 @@ class DatabaseSeeder extends Seeder
     ExternalCounselSeeder::class,
 ]);
 
+    $this->call(UserSeeder::class);
 }
 }

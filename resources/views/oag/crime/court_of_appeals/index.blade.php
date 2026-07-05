@@ -54,11 +54,7 @@
                                     <li><a class="dropdown-item" href="{{ route('crime.courtOfAppeal.edit', $appeal->id) }}">Edit</a></li>
                                     <li><a class="dropdown-item" href="{{ route('crime.courtOfAppeal.show', $appeal->id) }}">Show</a></li>
                                     <li>
-                                        <a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); if(confirm('Delete this record?')) document.getElementById('delete-form-{{ $appeal->id }}').submit();">Delete</a>
-                                        <form id="delete-form-{{ $appeal->id }}" action="{{ route('crime.courtOfAppeal.destroy', $appeal->id) }}" method="POST" class="d-none">
-                                            @csrf
-                                            @method('DELETE')
-                                        </form>
+                                        <a class="dropdown-item text-danger" href="#" onclick="event.preventDefault(); deleteCourtOfAppeal({{ $appeal->id }});">Delete</a>
                                     </li>
                                 </ul>
                             </div>
@@ -73,10 +69,29 @@
 @endsection
 
 @push('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
 <script>
     $(document).ready(function() {
         $('#court-appeal-table').DataTable();
     });
+
+    function deleteCourtOfAppeal(id) {
+        if (!confirm('Delete this record?')) {
+            return;
+        }
+
+        $.ajax({
+            url: '{{ route('crime.courtOfAppeal.destroy', ':id') }}'.replace(':id', id),
+            method: 'POST',
+            data: { _method: 'DELETE', _token: '{{ csrf_token() }}' },
+            success: function () {
+                location.reload();
+            },
+            error: function () {
+                alert('Failed to delete the record.');
+            }
+        });
+    }
 </script>
 @endpush

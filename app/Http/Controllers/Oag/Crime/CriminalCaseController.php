@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Oag\Crime;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\AuthorizesCriminalCase;
 use App\Repositories\Oag\Crime\CriminalCaseRepository;
 use App\Repositories\Oag\Crime\AccusedRepository;
 use App\Repositories\Oag\Crime\IslandRepository;
@@ -32,6 +33,8 @@ use Illuminate\Support\Facades\DB;
 
 class CriminalCaseController extends Controller
 {
+    use AuthorizesCriminalCase;
+
     protected $criminalCaseRepository;
     protected $accusedRepository; // Fixed typo: acussedRepository → accusedRepository
     protected $islandRepository;
@@ -168,7 +171,7 @@ class CriminalCaseController extends Controller
             'date_of_incident'    => 'nullable|date',
             'date_file_closed'      => 'nullable|date',
             'reason_for_closure_id' => 'nullable|exists:reasons_for_closure,id',
-           'lawyer_id'              => 'nullable|exists:users,id',
+           'lawyer_id'              => ['nullable', 'exists:users,id', new \App\Rules\UserHasRole('cm.user')],
             'island_id'             => 'required|exists:islands,id',
             'court_case_number'     => 'nullable|string|max:255', // Added to match update method
         ]);
@@ -199,6 +202,8 @@ class CriminalCaseController extends Controller
                 ->with('error', 'Criminal Case not found');
         }
 
+        $this->assertCaseIsActionable($criminalCase);
+
         return view('oag.crime.show')->with('criminalCase', $criminalCase);
     }
 
@@ -216,7 +221,9 @@ class CriminalCaseController extends Controller
             return redirect()->route('crime.criminalCase.index')
                 ->with('error', 'Criminal Case not found');
         }
-    
+
+        $this->assertCaseIsActionable($criminalCase);
+
         // Ensure correct date formatting
         $criminalCase->date_file_received = $this->formatDate($criminalCase->date_file_received);
         $criminalCase->date_of_incident = $this->formatDate($criminalCase->date_of_incident);
@@ -268,7 +275,14 @@ class CriminalCaseController extends Controller
     {
         // Retrieve the criminal case
         $criminalCase = $this->criminalCaseRepository->getById($id);
-    
+
+        if (!$criminalCase) {
+            return redirect()->route('crime.criminalCase.index')
+                ->with('error', 'Criminal Case not found');
+        }
+
+        $this->assertCaseIsActionable($criminalCase);
+
         // Validation rules
         $data = $request->validate([
             'case_file_number'      => 'required|string|max:255|unique:cases,case_file_number,' . $criminalCase->id,
@@ -277,7 +291,7 @@ class CriminalCaseController extends Controller
             'date_of_incident'    => 'nullable|date',
             'date_file_closed'      => 'nullable|date',
             'reason_for_closure_id' => 'nullable|exists:reasons_for_closure,id',
-            'lawyer_id'             => 'required|exists:users,id',
+            'lawyer_id'             => ['required', 'exists:users,id', new \App\Rules\UserHasRole('cm.user')],
             'island_id'             => 'required|exists:islands,id',
             'court_case_number'     => 'nullable|string|max:255',
         ]);
@@ -286,8 +300,8 @@ class CriminalCaseController extends Controller
     
         // Check if lawyer_id has changed
         if ((int) $data['lawyer_id'] !== (int) $criminalCase->lawyer_id) {
-            $data['status'] = 'reallocate';
-            \Log::info('Status changed to reallocate');
+            $data['status'] = 'reallocated';
+            \Log::info('Status changed to reallocated');
         }
     
         // Update the criminal case with the validated data
@@ -308,6 +322,15 @@ class CriminalCaseController extends Controller
      */
     public function destroy($id)
     {
+        $criminalCase = $this->criminalCaseRepository->getById($id);
+
+        if (!$criminalCase) {
+            return redirect()->route('crime.criminalCase.index')
+                ->with('error', 'Criminal Case not found');
+        }
+
+        $this->assertCaseIsActionable($criminalCase);
+
         $deleted = $this->criminalCaseRepository->deleteById($id);
 
         if (!$deleted) {
@@ -383,32 +406,44 @@ public function createIncident($id)
 public function accept($id)
 {
     $case = $this->criminalCaseRepository->getById($id);
+    $user = auth()->user();
 
-    if (auth()->user()->hasRole('cm.user')) {
-        $case->status = 'accepted';
-        $case->rejection_reason = null;
-        $case->save();
-
-        return back()->with('success', 'Case accepted successfully.');
+    if (!$user->hasRole('cm.user')) {
+        abort(403);
     }
 
-    abort(403);
+    $this->assertCanActOnCase($case, $user);
+    abort_unless(in_array($case->status, ['allocated', 'reallocated']), 403, 'This case must be allocated to a lawyer before it can be accepted or rejected.');
+
+    $case->status = 'accepted';
+    $case->rejection_reason = null;
+    $case->accepted_at = now();
+    $case->accepted_by = $user->id;
+    $case->save();
+
+    return back()->with('success', 'Case accepted successfully.');
 }
 
 public function reject(Request $request, $id)
 {
     $request->validate(['rejection_reason' => 'required|string']);
     $case = $this->criminalCaseRepository->getById($id);
+    $user = auth()->user();
 
-    if (auth()->user()->hasRole('cm.user')) {
-        $case->status = 'rejected';
-        $case->rejection_reason = $request->rejection_reason;
-        $case->save();
-
-        return back()->with('success', 'Case rejected with reason.');
+    if (!$user->hasRole('cm.user')) {
+        abort(403);
     }
 
-    abort(403);
+    $this->assertCanActOnCase($case, $user);
+    abort_unless(in_array($case->status, ['allocated', 'reallocated']), 403, 'This case must be allocated to a lawyer before it can be accepted or rejected.');
+
+    $case->status = 'rejected';
+    $case->rejection_reason = $request->rejection_reason;
+    $case->rejected_at = now();
+    $case->rejected_by = $user->id;
+    $case->save();
+
+    return back()->with('success', 'Case rejected with reason.');
 }
 
 public function showReallocationForm($id)
@@ -426,7 +461,7 @@ public function reallocateCase(Request $request, $caseId)
     Log::info("Reallocation request received", ['case_id' => $caseId, 'request' => $request->all()]);
 
     $request->validate([
-        'to_lawyer_id' => 'required|exists:users,id',
+        'to_lawyer_id' => ['required', 'exists:users,id', new \App\Rules\UserHasRole('cm.user')],
         'reallocation_reason' => 'required|string',
         'reallocation_date' => 'required|date',
     ]);
@@ -444,6 +479,7 @@ public function reallocateCase(Request $request, $caseId)
         DB::transaction(function () use ($request, $caseId, $user) {
 
             $case = $this->criminalCaseRepository->getById($caseId);
+            abort_if(!$case, 404);
             Log::info("Criminal case fetched", ['lawyer_id' => $case->lawyer_id]);
 
             // Create a new reallocation record
@@ -481,6 +517,12 @@ public function reallocateCase(Request $request, $caseId)
 
 public function showReviewedCases($id)
 {
+    $this->assertCanViewRelatedRecords();
+
+    $case = $this->criminalCaseRepository->getById($id);
+    abort_if(!$case, 404);
+    $this->assertCaseIsActionable($case);
+
     $caseReviews = $this->caseReviewRepository->getReviewsByCaseId($id);
 
     // dd($caseReviews);
@@ -490,6 +532,12 @@ public function showReviewedCases($id)
 
 public function showCourtCases($id)
 {
+    $this->assertCanViewRelatedRecords();
+
+    $case = $this->criminalCaseRepository->getById($id);
+    abort_if(!$case, 404);
+    $this->assertCaseIsActionable($case);
+
     $courtCases = $this->courtCaseRepository->getCourtCasesByCaseId($id);
 
     // dd($courtCases);
@@ -499,6 +547,12 @@ public function showCourtCases($id)
 
 public function showAppealCases($id)
 {
+    $this->assertCanViewRelatedRecords();
+
+    $case = $this->criminalCaseRepository->getById($id);
+    abort_if(!$case, 404);
+    $this->assertCaseIsActionable($case);
+
     $appealDetails = $this->appealDetailRepository->getAppealDetailsByCaseId($id);
 
     // dd($appealDetails);
@@ -509,11 +563,224 @@ public function showAppealCases($id)
 
 public function showcourtofappealcase($id)
 {
+    $this->assertCanViewRelatedRecords();
+
+    $case = $this->criminalCaseRepository->getById($id);
+    abort_if(!$case, 404);
+    $this->assertCaseIsActionable($case);
+
     $appealDetails = $this->courtOfAppealRepository->getCourtOfAppealByCaseId($id);
 
     // dd($appealDetails);
 
     return view('oag.crime.court_of_appeals.appeal', compact('appealDetails'));
+}
+
+/**
+ * Unified tabbed view of all four related-record types for a case
+ * (Reviewed Cases, Court Cases, Appeal Cases, Court of Appeal Cases),
+ * replacing the old dropdown of separate pages with one page.
+ *
+ * @param int $id Criminal case ID
+ * @return \Illuminate\View\View
+ */
+public function showRelatedRecords($id)
+{
+    $this->assertCanViewRelatedRecords();
+
+    $case = $this->criminalCaseRepository->getById($id);
+    abort_if(!$case, 404);
+    $this->assertCaseIsActionable($case);
+
+    $caseReviews = $this->caseReviewRepository->getReviewsByCaseId($id);
+    $courtCases = $this->courtCaseRepository->getCourtCasesByCaseId($id);
+    $appealDetails = $this->appealDetailRepository->getAppealDetailsByCaseId($id);
+    $courtOfAppeals = $this->courtOfAppealRepository->getCourtOfAppealByCaseId($id);
+
+    return view('oag.crime.related_records.index', compact(
+        'case',
+        'caseReviews',
+        'courtCases',
+        'appealDetails',
+        'courtOfAppeals'
+    ));
+}
+
+/**
+ * Consolidated chronological timeline for a case: registration through
+ * case review, court case, appeal, and court of appeal, all merged into
+ * one ordered list instead of separate tabs.
+ *
+ * @param int $id Criminal case ID
+ * @return \Illuminate\View\View
+ */
+public function showCaseTimeline($id)
+{
+    $this->assertCanViewRelatedRecords();
+
+    $case = $this->criminalCaseRepository->getById($id);
+    abort_if(!$case, 404);
+    $this->assertCaseIsActionable($case);
+
+    $case->load(['lawyer', 'island', 'accused.island', 'victims.island', 'offences', 'incidents.island', 'acceptedBy', 'rejectedBy', 'allocatedBy']);
+
+    // Case progression order, used as a tiebreaker below: several of these
+    // dates (e.g. charge_file_dated, appeal_filing_date) are DATE-only columns
+    // that carry an implicit midnight time, while others (review_date) carry
+    // a real time-of-day. Sorting purely by timestamp can then put a same-day
+    // review after a same-day court filing purely because 00:00:00 < 22:09:00,
+    // even though a review must always precede the filing it led to. The rank
+    // below breaks ties by where the stage actually sits in the case's
+    // lifecycle instead of by incidental time-of-day.
+    $stageRank = [
+        'Case Registered' => 1,
+        'Case Allocated' => 2,
+        'Case Accepted' => 3,
+        'Case Rejected' => 3,
+        'Case Reviewed' => 4,
+        'Court Case Filed' => 5,
+        'Court Case Judgment' => 6,
+        'Appeal Filed' => 7,
+        'Court of Appeal Filed' => 8,
+        'Court of Appeal Judgment' => 9,
+    ];
+
+    $events = [];
+
+    $events[] = [
+        'date' => $case->date_file_received,
+        'stage' => 'Case Registered',
+        'icon' => 'fa-folder-open',
+        'color' => 'primary',
+        'summary' => "Case file {$case->case_file_number} received.",
+    ];
+
+    if ($case->date_of_allocation) {
+        $events[] = [
+            'date' => $case->date_of_allocation,
+            'stage' => 'Case Allocated',
+            'icon' => 'fa-user-check',
+            'color' => 'primary',
+            'summary' => trim(($case->lawyer ? 'Allocated to ' . $case->lawyer->name . '. ' : '')
+                . ($case->allocatedBy ? 'Allocated by ' . $case->allocatedBy->name : '')),
+        ];
+    }
+
+    if ($case->status === 'accepted' || $case->status === 'rejected') {
+        // Prefer the precise accepted_at/rejected_at stamp; fall back to
+        // updated_at only for cases accepted/rejected before those columns
+        // existed, since that's the closest approximation available for them.
+        $events[] = [
+            'date' => $case->status === 'accepted'
+                ? ($case->accepted_at ?? $case->updated_at)
+                : ($case->rejected_at ?? $case->updated_at),
+            'stage' => $case->status === 'accepted' ? 'Case Accepted' : 'Case Rejected',
+            'icon' => $case->status === 'accepted' ? 'fa-check-circle' : 'fa-times-circle',
+            'color' => $case->status === 'accepted' ? 'success' : 'danger',
+            'summary' => $case->status === 'accepted'
+                ? ($case->acceptedBy ? 'Accepted by ' . $case->acceptedBy->name : null)
+                : trim(($case->rejection_reason ?? '')
+                    . ($case->rejectedBy ? ' — rejected by ' . $case->rejectedBy->name : '')),
+        ];
+    }
+
+    // A case is only ever closed via a review (insufficient evidence /
+    // returned to police), so the closure reason lives on case_reviews, not
+    // on cases itself — captured here for display in Particulars of the Case.
+    $closureReasonDescription = null;
+    $dateFileClosed = null;
+
+    foreach ($this->caseReviewRepository->getReviewsByCaseId($id) as $review) {
+        $events[] = [
+            'date' => $review->review_date,
+            'stage' => 'Case Reviewed',
+            'icon' => 'fa-clipboard-check',
+            'color' => 'success',
+            'summary' => 'Evidence status: ' . ucfirst(str_replace('_', ' ', $review->evidence_status))
+                . ($review->created_by_name ? ' — reviewed by ' . $review->created_by_name : ''),
+        ];
+
+        if (in_array($review->evidence_status, ['insufficient_evidence', 'returned_to_police'])) {
+            $closureReasonDescription = $review->closure_reason_description;
+            $dateFileClosed = $review->date_file_closed;
+        }
+    }
+
+    foreach ($this->courtCaseRepository->getCourtCasesByCaseId($id) as $courtCase) {
+        $events[] = [
+            'date' => $courtCase->charge_file_dated,
+            'stage' => 'Court Case Filed',
+            'icon' => 'fa-gavel',
+            'color' => 'warning',
+            'summary' => trim(($courtCase->high_court_case_number ? 'High Court Case ' . $courtCase->high_court_case_number . '. ' : '')
+                . ($courtCase->verdict ? 'Verdict: ' . ucfirst(str_replace('_', ' ', $courtCase->verdict)) . '. ' : '')
+                . ($courtCase->court_outcome ? 'Outcome: ' . ucfirst($courtCase->court_outcome) . '.' : '')),
+        ];
+
+        if ($courtCase->judgment_delivered_date) {
+            $events[] = [
+                'date' => $courtCase->judgment_delivered_date,
+                'stage' => 'Court Case Judgment',
+                'icon' => 'fa-gavel',
+                'color' => 'warning',
+                'summary' => $courtCase->court_outcome ? 'Outcome: ' . ucfirst($courtCase->court_outcome) : null,
+            ];
+        }
+    }
+
+    foreach ($this->appealDetailRepository->getAppealDetailsByCaseId($id) as $appeal) {
+        $events[] = [
+            'date' => $appeal->appeal_filing_date,
+            'stage' => 'Appeal Filed',
+            'icon' => 'fa-balance-scale',
+            'color' => 'danger',
+            'summary' => trim(($appeal->appeal_case_number ? 'Appeal Case ' . $appeal->appeal_case_number . '. ' : '')
+                . ($appeal->verdict ? 'Verdict: ' . ucfirst(str_replace('_', ' ', $appeal->verdict)) . '. ' : '')
+                . ($appeal->court_outcome ? 'Outcome: ' . ucfirst($appeal->court_outcome) . '.' : '')),
+        ];
+    }
+
+    foreach ($this->courtOfAppealRepository->getCourtOfAppealByCaseId($id) as $coa) {
+        $events[] = [
+            'date' => $coa->appeal_filing_date,
+            'stage' => 'Court of Appeal Filed',
+            'icon' => 'fa-gavel',
+            'color' => 'success',
+            'summary' => trim(($coa->appeal_case_number ? 'Appeal Case ' . $coa->appeal_case_number . '. ' : '')
+                . ($coa->court_outcome ? 'Outcome: ' . ucfirst($coa->court_outcome) . '.' : '')),
+        ];
+
+        if ($coa->judgment_delivered_date) {
+            $events[] = [
+                'date' => $coa->judgment_delivered_date,
+                'stage' => 'Court of Appeal Judgment',
+                'icon' => 'fa-gavel',
+                'color' => 'success',
+                'summary' => $coa->court_outcome ? 'Outcome: ' . ucfirst($coa->court_outcome) : null,
+            ];
+        }
+    }
+
+    // The Register of Proceedings represents a fixed legal-process pipeline
+    // (registered -> allocated -> accepted/rejected -> reviewed -> court case
+    // -> appeal -> court of appeal), so stage order is the primary sort key.
+    // Recorded dates are not reliable as the primary key: they're entered
+    // independently per module and can be out of real-world sequence (e.g. a
+    // court case's charge_file_dated entered earlier than the case's own
+    // date_file_received). Date is only used to order events that share the
+    // same stage (e.g. two appeals).
+    usort($events, function ($a, $b) use ($stageRank) {
+        $rankA = $stageRank[$a['stage']] ?? 99;
+        $rankB = $stageRank[$b['stage']] ?? 99;
+
+        if ($rankA !== $rankB) {
+            return $rankA <=> $rankB;
+        }
+
+        return strtotime($a['date'] ?? 'now') <=> strtotime($b['date'] ?? 'now');
+    });
+
+    return view('oag.crime.related_records.timeline', compact('case', 'events', 'closureReasonDescription', 'dateFileClosed'));
 }
 
 /**
@@ -550,7 +817,10 @@ public function showAllocationForm($id)
 public function allocateLawyer(Request $request, $id)
 {
     $case = $this->criminalCaseRepository->getById($id);
+    abort_if(!$case, 404);
     $user = auth()->user();
+
+    $this->assertCaseIsActionable($case);
 
     Log::info('Reallocation request received', [
         'case_id' => $id,
@@ -565,11 +835,11 @@ public function allocateLawyer(Request $request, $id)
     ]);
 
     $validated = $request->validate([
-        'to_lawyer_id' => 'required|exists:users,id',
+        'to_lawyer_id' => ['required', 'exists:users,id', new \App\Rules\UserHasRole('cm.user')],
         'reallocation_reason' => 'nullable|string|max:1000',
         'reallocation_date' => 'required|date',
     ]);
-    
+
 
     DB::beginTransaction();
 
@@ -590,13 +860,22 @@ public function allocateLawyer(Request $request, $id)
         }
 
         // Update the case regardless
-        $this->criminalCaseRepository->update($case->id, [
-            'reallocation_reason' => $validated['reallocation_reason'], 
-            'reallocation_date' => $validated['reallocation_date'], 
-            'lawyer_id' => $request->to_lawyer_id,   
-            'status' => 'allocated',
+        $updateData = [
+            'reallocation_reason' => $validated['reallocation_reason'],
+            'reallocation_date' => $validated['reallocation_date'],
+            'lawyer_id' => $request->to_lawyer_id,
+            'status' => $isReallocation ? 'reallocated' : 'allocated',
             'updated_by' => $user->id,
-        ]);
+        ];
+
+        // Only stamp the original allocation event once — a reallocation
+        // changes the assigned lawyer but is not a new "Case Allocated" event.
+        if (!$isReallocation) {
+            $updateData['date_of_allocation'] = $validated['reallocation_date'];
+            $updateData['allocated_by'] = $user->id;
+        }
+
+        $this->criminalCaseRepository->update($case->id, $updateData);
         Log::info('Updating lawyer_id', [
             'lawyer_id' => $validated['to_lawyer_id']
         ]);

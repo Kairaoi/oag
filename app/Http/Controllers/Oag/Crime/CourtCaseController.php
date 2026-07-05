@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Oag\Crime;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\AuthorizesCriminalCase;
 use App\Repositories\Oag\Crime\CourtCaseRepository;
 use App\Repositories\Oag\Crime\CriminalCaseRepository;
 use App\Repositories\Oag\Crime\UserRepository;
@@ -12,6 +13,8 @@ use DataTables;
 
 class CourtCaseController extends Controller
 {
+    use AuthorizesCriminalCase;
+
     protected $courtCaseRepository;
     protected $criminalCaseRepository;
     protected $userRepository;
@@ -40,13 +43,22 @@ class CourtCaseController extends Controller
 
     public function create($id)
     {
+        abort_unless(auth()->user()->hasRole('cm.user'), 403);
+
         $case = $this->criminalCaseRepository->getById($id);
-      
+
         return view('oag.court_cases.create', compact('case'));
     }
 
     public function store(Request $request)
     {
+        abort_unless(auth()->user()->hasRole('cm.user'), 403);
+
+        $case = $this->criminalCaseRepository->getById($request->input('case_id'));
+        abort_if(!$case, 404);
+        $this->assertCanActOnCase($case, auth()->user());
+        $this->assertCaseIsActionable($case);
+
         $data = $request->validate([
             'case_id' => 'required|exists:cases,id',
             'charge_file_dated' => 'required|date',

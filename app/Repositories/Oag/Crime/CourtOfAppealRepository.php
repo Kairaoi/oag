@@ -43,6 +43,25 @@ class CourtOfAppealRepository extends CustomBaseRepository
     }
 
     /**
+     * Fetch a single record with the joined case_name — needed because
+     * plain getById() (a bare find()) never populates case_name at all,
+     * and going through the case_id relation instead reads the real
+     * CriminalCase model directly, bypassing CourtOfAppeal's case_name
+     * accessor (and so the defendant-filed reversal) entirely.
+     *
+     * @param int $id
+     * @return Model|null
+     */
+    public function getByIdWithCaseName(int $id): ?Model
+    {
+        return $this->getModelInstance()
+            ->leftJoin('cases', 'court_of_appeals.case_id', '=', 'cases.id')
+            ->select(['court_of_appeals.*', 'cases.case_name'])
+            ->where('court_of_appeals.id', $id)
+            ->first();
+    }
+
+    /**
      * Fetch all Court of Appeal records for a given case.
      *
      * @param int $caseId

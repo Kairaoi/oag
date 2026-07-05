@@ -13,6 +13,16 @@
     
     <h1 class="text-center mb-4" style="font-family: 'Courier New', Courier, monospace; color: #333; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);">Edit Case Review</h1>
 
+    @if($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <form action="{{ route('crime.CaseReview.update', $caseReview->id) }}" method="POST" class="p-4 shadow-lg rounded" style="background: linear-gradient(90deg, #ff416c, #ff4b2b); border-radius: 20px;">
         @csrf
         @method('PUT')
@@ -110,6 +120,66 @@
             @enderror
         </div>
 
+        <!-- Dynamic Offences Group -->
+        <div id="offenceGroupsSection" style="display: none;">
+            <label class="text-white">Offences Charged</label>
+            <div id="offenceGroupsContainer">
+                @forelse($case->offences as $offence)
+                    <div class="offence-group row mb-3">
+                        <div class="form-group col-md-4">
+                            <select class="form-control" name="offence_id[]">
+                                <option value="">Select an offence</option>
+                                @foreach($offences as $id => $name)
+                                    <option value="{{ $id }}" {{ $id == $offence->id ? 'selected' : '' }}>{{ $name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="form-group col-md-4">
+                            <select class="form-control" name="category_id[]">
+                                <option value="">Select a category</option>
+                                @foreach($categories as $id => $name)
+                                    <option value="{{ $id }}" {{ $id == $offence->pivot->category_id ? 'selected' : '' }}>{{ $name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="form-group col-md-1 d-flex align-items-end">
+                            <button type="button" class="btn btn-danger btn-sm remove-offence-group">&times;</button>
+                        </div>
+                    </div>
+                @empty
+                    <div class="offence-group row mb-3">
+                        <div class="form-group col-md-4">
+                            <select class="form-control" name="offence_id[]">
+                                <option value="">Select an offence</option>
+                                @foreach($offences as $id => $name)
+                                    <option value="{{ $id }}">{{ $name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="form-group col-md-4">
+                            <select class="form-control" name="category_id[]">
+                                <option value="">Select a category</option>
+                                @foreach($categories as $id => $name)
+                                    <option value="{{ $id }}">{{ $name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="form-group col-md-1 d-flex align-items-end">
+                            <button type="button" class="btn btn-danger btn-sm remove-offence-group">&times;</button>
+                        </div>
+                    </div>
+                @endforelse
+            </div>
+
+            <div class="text-right mb-4">
+                <button type="button" class="btn btn-light btn-sm" id="addOffenceGroup">+ Add Offence</button>
+            </div>
+        </div>
+
         <!-- Review Date -->
         <div class="form-group">
             <label for="review_date" class="text-white">Review Date</label>
@@ -137,7 +207,8 @@
         const courtInfoContainer = document.getElementById('court_info_container');
         const reasonForClosureContainer = document.getElementById('reason_for_closure_container');
         const evidenceStatusSelect = document.getElementById('evidence_status');
-        
+        const offenceSection = document.getElementById('offenceGroupsSection');
+
         // Function to toggle display of fields based on selected action and evidence status
         function toggleActionFields() {
             const action = actionTypeSelect.value;
@@ -163,6 +234,9 @@
             } else {
                 reasonForClosureContainer.style.display = 'none';
             }
+
+            // Toggle Offences Fields based on Evidence Status
+            offenceSection.style.display = evidenceStatus === 'sufficient_evidence' ? 'block' : 'none';
         }
 
         // Initial call to function to set field visibility on page load
@@ -171,6 +245,25 @@
         // Event listeners for dynamic field display
         actionTypeSelect.addEventListener('change', toggleActionFields);
         evidenceStatusSelect.addEventListener('change', toggleActionFields);
+
+        // Dynamic offence groups logic
+        const offenceContainer = document.getElementById('offenceGroupsContainer');
+        document.getElementById('addOffenceGroup').addEventListener('click', function () {
+            const original = offenceContainer.querySelector('.offence-group');
+            const clone = original.cloneNode(true);
+
+            clone.querySelectorAll('select, input').forEach(el => el.value = '');
+            offenceContainer.appendChild(clone);
+        });
+
+        offenceContainer.addEventListener('click', function (e) {
+            if (e.target.classList.contains('remove-offence-group')) {
+                const groups = offenceContainer.querySelectorAll('.offence-group');
+                if (groups.length > 1) {
+                    e.target.closest('.offence-group').remove();
+                }
+            }
+        });
     });
 </script>
 @endpush

@@ -170,10 +170,12 @@ class CaseReviewRepository extends CustomBaseRepository
 
         ->leftJoin('accused', 'case_reviews.case_id', '=', 'accused.case_id')
         ->leftJoin('victims', 'case_reviews.case_id', '=', 'victims.case_id')
+        ->leftJoin('reasons_for_closure', 'case_reviews.reason_for_closure_id', '=', 'reasons_for_closure.id')
         ->select([
             'case_reviews.*',
             'cases.case_name',
             'cases.status as case_status',
+            'reasons_for_closure.reason_description as closure_reason_description',
             'creator.name as created_by_name',
             'new_lawyer.name as new_lawyer_name',
             'case_reallocations.reallocation_date',

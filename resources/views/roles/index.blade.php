@@ -4,9 +4,25 @@
 <div class="container">
     <h2>Role & Permission Management</h2>
 
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+    @if (session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+
     <ul class="nav nav-tabs" id="rolePermissionTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="roles-tab" data-bs-toggle="tab" data-bs-target="#roles" type="button" role="tab">Roles</button>
+            <button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#create-user" type="button" role="tab">Create User</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="roles-tab" data-bs-toggle="tab" data-bs-target="#roles" type="button" role="tab">Roles</button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="permissions-tab" data-bs-toggle="tab" data-bs-target="#permissions" type="button" role="tab">Permissions</button>
@@ -17,8 +33,32 @@
     </ul>
 
     <div class="tab-content pt-3" id="rolePermissionTabsContent">
+        {{-- Create User Tab --}}
+        <div class="tab-pane fade show active" id="create-user" role="tabpanel">
+            <form method="POST" action="{{ route('admin.users.store') }}">
+                @csrf
+                <div class="mb-3">
+                    <label>Name:</label>
+                    <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
+                </div>
+                <div class="mb-3">
+                    <label>Email:</label>
+                    <input type="email" name="email" class="form-control" value="{{ old('email') }}" required>
+                </div>
+                <div class="mb-3">
+                    <label>Password:</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label>Confirm Password:</label>
+                    <input type="password" name="password_confirmation" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Create User</button>
+            </form>
+        </div>
+
         {{-- Roles Tab --}}
-        <div class="tab-pane fade show active" id="roles" role="tabpanel">
+        <div class="tab-pane fade" id="roles" role="tabpanel">
             <form method="POST" action="{{ route('admin.roles.store') }}">
                 @csrf
                 <div class="mb-3">

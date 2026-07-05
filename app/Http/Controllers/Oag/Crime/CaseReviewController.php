@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Oag\Crime;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\AuthorizesCriminalCase;
 use App\Repositories\Oag\Crime\CaseReviewRepository;
 use App\Repositories\Oag\Crime\CriminalCaseRepository;
 use App\Repositories\Oag\Crime\UserRepository;
 use App\Repositories\Oag\Crime\ReasonsForClosureRepository;
 use App\Repositories\Oag\Crime\OffenceRepository;
 use App\Repositories\Oag\Crime\OffenceCategoryRepository;
+use App\Repositories\Oag\Crime\CaseReallocationRepository;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use DataTables;
@@ -16,12 +18,15 @@ use Illuminate\Support\Facades\Log;
 
 class CaseReviewController extends Controller
 {
+    use AuthorizesCriminalCase;
+
     protected $caseReviewRepository;
     protected $criminalCaseRepository;
     protected $userRepository;
     protected $reasonsForClosureRepository;
     protected $offenceRepository;
     protected $offenceCategoryRepository;
+    protected $caseReallocationRepository;
 
     public function __construct(
         CaseReviewRepository $caseReviewRepository,
@@ -29,7 +34,8 @@ class CaseReviewController extends Controller
         UserRepository $userRepository,
         ReasonsForClosureRepository $reasonsForClosureRepository,
         OffenceRepository $offenceRepository,
-        OffenceCategoryRepository $offenceCategoryRepository
+        OffenceCategoryRepository $offenceCategoryRepository,
+        CaseReallocationRepository $caseReallocationRepository
     ) {
         $this->caseReviewRepository = $caseReviewRepository;
         $this->criminalCaseRepository = $criminalCaseRepository;
@@ -37,6 +43,7 @@ class CaseReviewController extends Controller
         $this->reasonsForClosureRepository = $reasonsForClosureRepository;
         $this->offenceRepository = $offenceRepository;
         $this->offenceCategoryRepository = $offenceCategoryRepository;
+        $this->caseReallocationRepository = $caseReallocationRepository;
     }
 
     public function getDataTables(Request $request)
@@ -53,7 +60,13 @@ class CaseReviewController extends Controller
 
     public function create($id)
     {
+        abort_unless(auth()->user()->hasRole('cm.user'), 403);
+
         $case = $this->criminalCaseRepository->getById($id);
+        abort_if(!$case, 404);
+        $this->assertCanActOnCase($case, auth()->user());
+        abort_unless($case->status === 'accepted', 403, 'This case must be accepted before it can be reviewed.');
+
         $reasonsForClosure = $this->reasonsForClosureRepository->pluck();
         $councils = $this->userRepository->pluck();
         $offences = $this->offenceRepository->pluck2();
@@ -69,8 +82,16 @@ class CaseReviewController extends Controller
 
     public function store(Request $request)
     {
+        abort_unless(auth()->user()->hasRole('cm.user'), 403);
+
         // Retrieve the case ID from the request
         $caseId = $request->input('case_id');
+        $case = $this->criminalCaseRepository->getById($caseId);
+        abort_if(!$case, 404);
+        $this->assertCanActOnCase($case, auth()->user());
+        abort_unless($case->status === 'accepted', 403, 'This case must be accepted before it can be reviewed.');
+        $this->assertCaseIsActionable($case);
+
         Log::info("Full request:", $request->all());
     
         // Define validation rules
@@ -190,9 +211,12 @@ class CaseReviewController extends Controller
 
     public function edit($id)
     {
-        $case = $this->criminalCaseRepository->getById($id);
-        $review = $this->caseReviewRepository->getById($id); // Assuming 1 review per case
-    
+        // $id is the case_review's own primary key (this is a resource route),
+        // so the case must be looked up via the review's case_id, not $id itself.
+        $review = $this->caseReviewRepository->getById($id);
+        $case = $review ? $this->criminalCaseRepository->getById($review->case_id) : null;
+        $case?->load('offences');
+
         $reasonsForClosure = $this->reasonsForClosureRepository->pluck();
         $councils = $this->userRepository->pluck();
         $offences = $this->offenceRepository->pluck2();
@@ -211,22 +235,105 @@ class CaseReviewController extends Controller
 
     public function update(Request $request, $id)
     {
-        $data = $request->validate([
-            'case_id' => 'required|exists:cases,id',
-            'lawyer_id' => 'required|exists:users,id',
-            'evidence_status' => 'required|in:pending_review,sufficient_evidence,insufficient_evidence,returned_to_police',
-         
-            'review_date' => 'required|date',
-            'reason_for_closure_id' => 'required_if:evidence_status,insufficient_evidence,returned_to_police|exists:reasons_for_closure,id|nullable',
+        Log::info('CaseReview update request received', [
+            'review_id' => $id,
+            'user_id' => auth()->id(),
+            'roles' => auth()->user()->roles->pluck('name'),
+            'request' => $request->except(['_token']),
         ]);
 
-        $data['updated_by'] = auth()->id();
+        try {
+            $validated = $request->validate([
+                'case_id' => 'required|exists:cases,id',
+                'evidence_status' => 'required|in:pending_review,sufficient_evidence,insufficient_evidence,returned_to_police',
+
+                'review_date' => 'required|date',
+                'reason_for_closure_id' => 'required_if:evidence_status,insufficient_evidence,returned_to_police|exists:reasons_for_closure,id|nullable',
+                'offence_id.*' => 'required_if:evidence_status,sufficient_evidence|nullable|exists:offences,id',
+                'category_id.*' => 'required_if:evidence_status,sufficient_evidence|nullable|exists:offence_categories,id',
+                'action_type' => 'nullable|in:review,reallocate,update_court_info',
+                'new_lawyer_id' => ['required_if:action_type,reallocate', 'nullable', 'exists:users,id', new \App\Rules\UserHasRole('cm.user')],
+                'reallocation_reason' => 'required_if:action_type,reallocate|nullable|string',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // The edit form has no @error/error-summary markup for
+            // new_lawyer_id or reallocation_reason, so a validation failure
+            // on either of those fields previously looked like the button
+            // silently did nothing — logged here so a failed reallocation
+            // attempt is visible even though the UI won't show it.
+            Log::warning('CaseReview update validation failed', [
+                'review_id' => $id,
+                'action_type' => $request->input('action_type'),
+                'errors' => $e->errors(),
+            ]);
+            throw $e;
+        }
+
+        $actionType = $validated['action_type'] ?? 'review';
+
+        // Reallocation is an admin-level action everywhere else in the app
+        // (CriminalCaseController::allocateLawyer/reallocateCase both require
+        // cm.admin) — enforced here too, before any side effects, so a
+        // lawyer can't use this form to move a case to themselves or
+        // someone else without approval.
+        if ($actionType === 'reallocate') {
+            if (!auth()->user()->hasRole('cm.admin')) {
+                Log::warning('CaseReview reallocation blocked: user lacks cm.admin role', [
+                    'review_id' => $id,
+                    'user_id' => auth()->id(),
+                    'roles' => auth()->user()->roles->pluck('name'),
+                ]);
+            }
+            abort_unless(auth()->user()->hasRole('cm.admin'), 403, 'Only an administrator can reallocate a case.');
+        }
+
+        // action_type and reallocation_reason are form-only concepts with no
+        // matching column on case_reviews (only new_lawyer_id is a real
+        // column there) — only real columns are passed through so mass
+        // assignment doesn't throw "unknown column".
+        $data = [
+            'case_id' => $validated['case_id'],
+            'evidence_status' => $validated['evidence_status'],
+            'review_date' => $validated['review_date'],
+            'reason_for_closure_id' => $validated['reason_for_closure_id'] ?? null,
+            'updated_by' => auth()->id(),
+        ];
+
+        if ($actionType === 'reallocate') {
+            $data['new_lawyer_id'] = $validated['new_lawyer_id'];
+        }
+
         $currentReview = $this->caseReviewRepository->getById($id);
         $newStatus = $data['evidence_status'];
         $updated = $this->caseReviewRepository->update($id, $data);
 
         if (!$updated) {
             return response()->json(['message' => 'Case review not found or failed to update'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Offences are recorded against the case (not the individual review),
+        // so a case can accumulate multiple charged offences across reviews.
+        // sync() (not syncWithoutDetaching) here so unchecking/removing a row
+        // in the edit form actually detaches it, reflecting the full current
+        // state of what's charged rather than only ever adding.
+        if ($newStatus === 'sufficient_evidence') {
+            $case = $this->criminalCaseRepository->getById($data['case_id']);
+            if ($case) {
+                $offenceIds = $request->input('offence_id', []);
+                $categoryIds = $request->input('category_id', []);
+                $syncData = [];
+
+                foreach ($offenceIds as $index => $offenceId) {
+                    if ($offenceId) {
+                        $syncData[$offenceId] = [
+                            'category_id' => $categoryIds[$index] ?? null,
+                        ];
+                    }
+                }
+
+                $case->offences()->sync($syncData);
+                Log::info("Synced offences for case ID {$data['case_id']}", ['syncData' => $syncData]);
+            }
         }
 
         if ($currentReview && $currentReview->evidence_status !== $newStatus) {
@@ -248,7 +355,45 @@ class CaseReviewController extends Controller
             }
         }
 
-        return redirect()->route('crime.case_reviews.index')->with('success', 'Case review updated successfully.');
+        if ($actionType === 'reallocate') {
+            $case = $this->criminalCaseRepository->getById($validated['case_id']);
+            abort_if(!$case, 404);
+
+            Log::info('CaseReview reallocation starting', [
+                'review_id' => $id,
+                'case_id' => $case->id,
+                'from_lawyer_id' => $case->lawyer_id,
+                'to_lawyer_id' => $validated['new_lawyer_id'],
+                'reallocation_reason' => $validated['reallocation_reason'],
+            ]);
+
+            $reallocation = $this->caseReallocationRepository->create([
+                'case_id' => $case->id,
+                'from_lawyer_id' => $case->lawyer_id,
+                'to_lawyer_id' => $validated['new_lawyer_id'],
+                'reallocation_reason' => $validated['reallocation_reason'],
+                'reallocation_date' => now()->format('Y-m-d'),
+                'created_by' => auth()->id(),
+                'updated_by' => auth()->id(),
+            ]);
+
+            Log::info('CaseReview reallocation record created', ['case_reallocation_id' => $reallocation->id ?? null]);
+
+            $this->criminalCaseRepository->update($case->id, [
+                'lawyer_id' => $validated['new_lawyer_id'],
+                'status' => 'reallocated',
+                'updated_by' => auth()->id(),
+            ]);
+
+            Log::info("Case {$case->id} reallocated via case review edit", [
+                'from_lawyer_id' => $case->lawyer_id,
+                'to_lawyer_id' => $validated['new_lawyer_id'],
+            ]);
+
+            return redirect()->route('crime.CaseReview.index')->with('success', 'Case review updated and case reallocated successfully.');
+        }
+
+        return redirect()->route('crime.CaseReview.index')->with('success', 'Case review updated successfully.');
     }
 
     public function destroy($id)
