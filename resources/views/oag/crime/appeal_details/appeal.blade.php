@@ -7,10 +7,6 @@
     break-inside: avoid;
   }
 
-  h4 {
-    page-break-after: avoid;
-  }
-
   .pdf-loading {
     position: fixed;
     top: 0;
@@ -50,27 +46,6 @@
     0%, 40%, 100% { transform: scaleY(0.4); }
     20% { transform: scaleY(1.0); }
   }
-  
-  .badge-status {
-    font-size: 14px;
-    padding: 5px 10px;
-    border-radius: 4px;
-  }
-  
-  .badge-accepted {
-    background-color: #d4edda;
-    color: #155724;
-  }
-  
-  .badge-guilty {
-    background-color: #f8d7da;
-    color: #721c24;
-  }
-  
-  .badge-win {
-    background-color: #cce5ff;
-    color: #004085;
-  }
 </style>
 @endpush
 
@@ -82,173 +57,175 @@
   @else
     <div id="appeal-details-report">
       @foreach($appealDetails as $appeal)
-      <div class="appeal-document p-5 border rounded shadow-sm bg-white mb-5 page-break-avoid" style="font-family: 'Georgia', serif; line-height: 1.7;">
-        <div class="reference-box mb-3">
-          <h2>APPEAL REFERENCE: {{ $appeal->appeal_case_number }}</h2>
-        </div>
-
-        <h2 class="text-center mb-4 text-uppercase" style="font-weight: bold;">Appeal Case Report</h2>
-
-        <!-- Updated case header section with dynamic date display -->
-        <div class="case-header d-flex justify-content-between align-items-center mb-4">
-          <div>
-            <p class="fs-5 mb-1"><strong>Case Name:</strong> <span class="text-primary">{{ $appeal->case_name }}</span></p>
-            <p class="mb-0">
-              <strong>Appeal Filed:</strong> 
-              {{ date('F j, Y', strtotime($appeal->appeal_filing_date)) }}
-              @if($appeal->filing_date_source)
-                <small class="text-muted">({{ ucfirst($appeal->filing_date_source) }} Date)</small>
+      @php
+        $appealDocRef = 'AP/' . str_pad($appeal->id, 4, '0', STR_PAD_LEFT) . '/' . date('Y', strtotime($appeal->created_at));
+      @endphp
+      <div class="appeal-document page-break-avoid mb-5" data-doc-ref="{{ $appeal->appeal_case_number }}">
+        <x-official-document
+          title="Appeal Case Report"
+          subtitle="Certified Record of Appeal Proceedings"
+          :doc-ref="$appealDocRef"
+          secondary-label="Appeal Reference"
+          :secondary-value="$appeal->appeal_case_number"
+          attestation="This is to certify that the particulars set out below constitute a true and accurate extract of the official appeal record maintained by the Office of the Attorney General, Republic of Kiribati, in respect of the matter referenced herein."
+          certification-text="I certify that the foregoing particulars have been extracted from, and are consistent with, the official appeal record of the Office of the Attorney General as at the date of issue of this document, and that this document may be relied upon as an accurate statement of the appeal record for the purpose stated."
+        >
+          <!-- 1. Appeal Overview -->
+          <div class="doc-section">
+            <h2 class="doc-heading">1. Appeal Overview</h2>
+            <p>
+              This appeal, referenced as <strong>{{ $appeal->appeal_case_number }}</strong>, was filed on
+              <strong>{{ date('F j, Y', strtotime($appeal->appeal_filing_date)) }}</strong>
+              @if($appeal->filing_date_source == 'court')
+                (Court Filing Date)
+              @elseif($appeal->filing_date_source == 'defendant')
+                (Defendant Filing Date)
               @endif
+              . The judgment was delivered on <strong>{{ date('F j, Y', strtotime($appeal->judgment_delivered_date)) }}</strong>.
             </p>
-          </div>
-          <div>
-            <span class="badge-status badge-{{ $appeal->case_status }}">{{ ucfirst($appeal->case_status) }}</span>
-          </div>
-        </div>
 
-        <hr class="my-4">
+            <table class="doc-table doc-table--kv">
+              <tr>
+                <th>Case Name</th>
+                <td>{{ $appeal->case_name }}</td>
+              </tr>
+              <tr>
+                <th>Case Status</th>
+                <td>{{ ucfirst($appeal->case_status) }}</td>
+              </tr>
+              <tr>
+                <th>Filing Date</th>
+                <td>{{ date('F j, Y', strtotime($appeal->appeal_filing_date)) }}</td>
+              </tr>
+              <tr>
+                <th>Filing Source</th>
+                <td>{{ $appeal->filing_date_source ? ucfirst($appeal->filing_date_source) : 'Not specified' }}</td>
+              </tr>
+              <tr>
+                <th>Filing Origin</th>
+                <td>{{ $appeal->filing_date_origin ?? 'Not on record' }}</td>
+              </tr>
+              <tr>
+                <th>Effective Date</th>
+                <td>{{ $appeal->appeal_filing_effective_date ? date('F j, Y', strtotime($appeal->appeal_filing_effective_date)) : 'Not on record' }}</td>
+              </tr>
+              <tr>
+                <th>Court Outcome</th>
+                <td>{{ ucfirst($appeal->court_outcome) }}</td>
+              </tr>
+              <tr>
+                <th>Verdict</th>
+                <td>{{ ucfirst($appeal->verdict) }}</td>
+              </tr>
+            </table>
 
-        <!-- Updated Appeal Overview section -->
-        <h4 class="text-decoration-underline">I. Appeal Overview</h4>
-        <p>
-          This appeal, referenced as <strong>{{ $appeal->appeal_case_number }}</strong>, was filed on 
-          <strong>{{ date('F j, Y', strtotime($appeal->appeal_filing_date)) }}</strong>
-          @if($appeal->filing_date_source == 'court')
-            <em>(Court Filing Date)</em>
-          @elseif($appeal->filing_date_source == 'defendant')
-            <em>(Defendant Filing Date)</em>
-          @endif
-          . The judgment was delivered on <strong>{{ date('F j, Y', strtotime($appeal->judgment_delivered_date)) }}</strong>.
-        </p>
-
-        <!-- New detailed filing information section -->
-        <div class="filing-info-box mt-4 p-3 rounded" style="background-color: #e3f2fd;">
-          <h5 class="mb-2">Filing Information</h5>
-          <div class="row">
-            <div class="col-md-6">
-              <p><strong>Filing Date:</strong> {{ date('F j, Y', strtotime($appeal->appeal_filing_date)) }}</p>
-              <p><strong>Filing Source:</strong> 
-                @if($appeal->filing_date_source == 'court')
-                  <span class="badge bg-primary">Court</span>
-                @elseif($appeal->filing_date_source == 'defendant')
-                  <span class="badge bg-warning text-dark">Defendant</span>
-                @else
-                  <span class="badge bg-secondary">Not Specified</span>
-                @endif
-              </p>
-            </div>
-            <div class="col-md-6">
-              <p><strong>Filing Origin:</strong> {{ $appeal->filing_date_origin ?? 'N/A' }}</p>
-              <p><strong>Effective Date:</strong> {{ date('F j, Y', strtotime($appeal->appeal_filing_effective_date)) }}</p>
-            </div>
+            @if($appeal->decision_principle_established)
+              <p class="doc-heading" style="margin-top:22px;">Principle of Law Established</p>
+              <p class="doc-quote">{{ $appeal->decision_principle_established }}</p>
+            @endif
           </div>
-        </div>
 
-        <div class="row gx-5 mt-4">
-          <div class="col-md-6">
-            <div class="outcome-box p-3 rounded" style="background-color: #f8f9fa;">
-              <h5 class="mb-2">Court Outcome</h5>
-              <p class="mb-1"><strong>Decision:</strong> <span class="text-{{ $appeal->court_outcome == 'guilty' ? 'danger' : 'success' }}">{{ ucfirst($appeal->court_outcome) }}</span></p>
-              <p class="mb-1"><strong>Date:</strong> {{ $appeal->judgment_delivered_date ? date('F j, Y', strtotime($appeal->judgment_delivered_date)) : 'Not on record' }}</p>
-              <p class="mb-0"><strong>Verdict:</strong> {{ ucfirst($appeal->verdict) }}</p>
-            </div>
+          <!-- 2. Legal Classifications -->
+          <div class="doc-section">
+            <h2 class="doc-heading">2. Legal Classifications</h2>
+            <table class="doc-table doc-table--kv">
+              <tr>
+                <th>Offences</th>
+                <td>{{ $appeal->offence_names ?: 'Not on record' }}</td>
+              </tr>
+              <tr>
+                <th>Categories</th>
+                <td>{{ $appeal->category_names ?: 'Not on record' }}</td>
+              </tr>
+            </table>
           </div>
-        </div>
 
-        <div class="principle-box mt-4 p-3 rounded" style="background-color: #f8f9fa;">
-          <h5 class="mb-2">Principle of Law Established</h5>
-          <div class="border-start ps-3 text-muted fst-italic">
-            {{ $appeal->decision_principle_established }}
-          </div>
-        </div>
+          <!-- 3. Parties Information -->
+          <div class="doc-section">
+            <h2 class="doc-heading">3. Parties Information</h2>
 
-        <hr class="my-4">
+            <p class="doc-heading" style="font-size:13px;">Accused Details</p>
+            <table class="doc-table doc-table--kv">
+              <tr>
+                <th>Full Name</th>
+                <td>{{ $appeal->accused_names ?: 'Not on record' }}</td>
+              </tr>
+              <tr>
+                <th>Gender</th>
+                <td>{{ $appeal->accused_genders ?: 'Not on record' }}</td>
+              </tr>
+              <tr>
+                <th>Date of Birth</th>
+                <td>{{ $appeal->accused_dob ? date('F j, Y', strtotime($appeal->accused_dob)) : 'Not on record' }} ({{ $appeal->accused_ages }} years)</td>
+              </tr>
+              <tr>
+                <th>Contact</th>
+                <td>{{ $appeal->accused_contacts ?: 'Not on record' }} &middot; {{ $appeal->accused_phones ?: 'Not on record' }}</td>
+              </tr>
+              <tr>
+                <th>Address</th>
+                <td>{!! nl2br(e($appeal->accused_addresses ?: 'Not on record')) !!}</td>
+              </tr>
+              <tr>
+                <th>Island</th>
+                <td>{{ $appeal->accused_islands ?: 'Not on record' }}</td>
+              </tr>
+            </table>
 
-        <h4 class="text-decoration-underline">II. Legal Classifications</h4>
-        <div class="row gx-4">
-          <div class="col-md-6">
-            <p><strong>Offences:</strong> 
-              <span class="badge bg-secondary">{{ $appeal->offence_names }}</span>
-            </p>
+            <p class="doc-heading" style="font-size:13px; margin-top:22px;">Victim Details</p>
+            <table class="doc-table doc-table--kv">
+              <tr>
+                <th>Full Name</th>
+                <td>{{ $appeal->victim_names ?: 'Not on record' }}</td>
+              </tr>
+              <tr>
+                <th>Gender</th>
+                <td>{{ $appeal->victim_genders ?: 'Not on record' }}</td>
+              </tr>
+              <tr>
+                <th>Date of Birth</th>
+                <td>{{ $appeal->victim_dob ? date('F j, Y', strtotime($appeal->victim_dob)) : 'Not on record' }} ({{ $appeal->victim_ages ?: 'Not on record' }} years, {{ $appeal->victim_age_groups ?: 'Not on record' }})</td>
+              </tr>
+              <tr>
+                <th>Contact</th>
+                <td>{{ $appeal->victim_contacts ?: 'Not on record' }} &middot; {{ $appeal->victim_phones ?: 'Not on record' }}</td>
+              </tr>
+              <tr>
+                <th>Address</th>
+                <td>{!! nl2br(e($appeal->victim_addresses ?: 'Not on record')) !!}</td>
+              </tr>
+              <tr>
+                <th>Island</th>
+                <td>{{ $appeal->victim_islands ?: 'Not on record' }}</td>
+              </tr>
+            </table>
           </div>
-          <div class="col-md-6">
-            <p><strong>Categories:</strong> 
-              <span class="badge bg-info text-dark">{{ $appeal->category_names }}</span>
-            </p>
-          </div>
-        </div>
 
-        <hr class="my-4">
+          <!-- 4. Record Information -->
+          <div class="doc-section">
+            <h2 class="doc-heading">4. Record Information</h2>
+            <table class="doc-table doc-table--kv">
+              <tr>
+                <th>Created By</th>
+                <td>{{ $appeal->created_by_name }}</td>
+              </tr>
+              <tr>
+                <th>Created At</th>
+                <td>{{ date('F j, Y H:i', strtotime($appeal->created_at)) }}</td>
+              </tr>
+              <tr>
+                <th>Updated By</th>
+                <td>{{ $appeal->updated_by_name ?? 'Not on record' }}</td>
+              </tr>
+              <tr>
+                <th>Updated At</th>
+                <td>{{ date('F j, Y H:i', strtotime($appeal->updated_at)) }}</td>
+              </tr>
+            </table>
+          </div>
+        </x-official-document>
 
-        <h4 class="text-decoration-underline">III. Parties Information</h4>
-        
-        <div class="card mb-4">
-          <div class="card-header bg-light">
-            <h5 class="mb-0">Accused Details</h5>
-          </div>
-          <div class="card-body">
-            <div class="row">
-              <div class="col-md-6">
-                <p><strong>Name:</strong> {{ $appeal->accused_names }}</p>
-                <p><strong>Contact:</strong> {{ $appeal->accused_contacts }}</p>
-                <p><strong>Phone:</strong> {{ $appeal->accused_phones }}</p>
-              </div>
-              <div class="col-md-6">
-                <p><strong>Gender:</strong> {{ $appeal->accused_genders }}</p>
-                <p><strong>Age:</strong> {{ $appeal->accused_ages }} years</p>
-                <p><strong>Date of Birth:</strong> {{ date('F j, Y', strtotime($appeal->accused_dob)) }}</p>
-              </div>
-            </div>
-            <div class="row mt-2">
-              <div class="col-12">
-                <p><strong>Address:</strong><br>{!! nl2br(e($appeal->accused_addresses)) !!}</p>
-                <p><strong>Island:</strong> {{ $appeal->accused_islands }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header bg-light">
-            <h5 class="mb-0">Victim Details</h5>
-          </div>
-          <div class="card-body">
-            <div class="row">
-              <div class="col-md-6">
-                <p><strong>Name:</strong> {{ $appeal->victim_names }}</p>
-                <p><strong>Contact:</strong> {{ $appeal->victim_contacts }}</p>
-                <p><strong>Phone:</strong> {{ $appeal->victim_phones }}</p>
-              </div>
-              <div class="col-md-6">
-                <p><strong>Gender:</strong> {{ $appeal->victim_genders }}</p>
-                <p><strong>Age:</strong> {{ $appeal->victim_ages }} years ({{ $appeal->victim_age_groups }})</p>
-                <p><strong>Date of Birth:</strong> {{ date('F j, Y', strtotime($appeal->victim_dob)) }}</p>
-              </div>
-            </div>
-            <div class="row mt-2">
-              <div class="col-12">
-                <p><strong>Address:</strong><br>{!! nl2br(e($appeal->victim_addresses)) !!}</p>
-                <p><strong>Island:</strong> {{ $appeal->victim_islands }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <hr class="my-4">
-
-        <h4 class="text-decoration-underline">IV. Record Information</h4>
-        <div class="row">
-          <div class="col-md-6">
-            <p><strong>Created By:</strong> {{ $appeal->created_by_name }}</p>
-            <p><strong>Created At:</strong> {{ date('F j, Y H:i', strtotime($appeal->created_at)) }}</p>
-          </div>
-          <div class="col-md-6">
-            <p><strong>Updated By:</strong> {{ $appeal->updated_by_name ?? 'N/A' }}</p>
-            <p><strong>Updated At:</strong> {{ date('F j, Y H:i', strtotime($appeal->updated_at)) }}</p>
-          </div>
-        </div>
-
-        <div class="action-buttons mt-4 text-center">
+        <div class="action-buttons no-print mt-4 text-center">
           <a href="{{ route('crime.appeal.edit', $appeal->id) }}" class="btn btn-outline-primary">
             <i class="fas fa-edit"></i> Edit
           </a>
@@ -301,14 +278,7 @@
       appealDocument.classList.add('pdf-generating');
 
       setTimeout(() => {
-        let appealRef = 'appeal-report';
-        const refElement = appealDocument.querySelector('.reference-box h2');
-        if (refElement) {
-          const match = refElement.textContent.match(/APPEAL REFERENCE:\s*(.*)/i);
-          if (match && match[1]) {
-            appealRef = match[1].trim();
-          }
-        }
+        const appealRef = appealDocument.dataset.docRef || 'appeal-report';
         const filename = 'appeal-report-' + appealRef.replace(/[^a-z0-9]/gi, '-').toLowerCase() + '.pdf';
 
         html2canvas(appealDocument, {

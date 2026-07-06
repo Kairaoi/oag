@@ -19,44 +19,13 @@
         $docRef = 'CP/' . str_pad($case->id, 4, '0', STR_PAD_LEFT) . '/' . ($case->created_at?->format('Y') ?? now()->format('Y'));
     @endphp
 
-    <div class="official-doc">
-        <div class="doc-watermark">Official Copy</div>
-
-        <!-- Letterhead -->
-        <div class="doc-letterhead">
-            <img src="{{ asset('images/oag_logo.png') }}" alt="Coat of Arms of the Republic of Kiribati" class="doc-crest">
-            <div class="doc-state">Republic of Kiribati</div>
-            <div class="doc-office">Office of the Attorney General</div>
-        </div>
-        <div class="doc-rule doc-rule--double"></div>
-
-        <!-- Title block -->
-        <div class="doc-title-block">
-            <h1 class="doc-title">Case Proof</h1>
-            <div class="doc-title-sub">Certified Record of Case Proceedings</div>
-
-            <p class="doc-attestation">
-                This is to certify that the particulars set out below constitute a true and accurate
-                extract of the official case record maintained by the Office of the Attorney General,
-                Republic of Kiribati, in respect of the matter referenced herein.
-            </p>
-
-            <table class="doc-refs">
-                <tr>
-                    <td class="doc-refs-label">Document Reference</td>
-                    <td>{{ $docRef }}</td>
-                    <td class="doc-refs-label">Case File Number</td>
-                    <td>{{ $case->case_file_number }}</td>
-                </tr>
-                <tr>
-                    <td class="doc-refs-label">Date Issued</td>
-                    <td>{{ now()->format('d F Y') }}</td>
-                    <td class="doc-refs-label">Classification</td>
-                    <td>Official &mdash; For Internal Use</td>
-                </tr>
-            </table>
-        </div>
-
+    <x-official-document
+        title="Case Proof"
+        subtitle="Certified Record of Case Proceedings"
+        :doc-ref="$docRef"
+        secondary-label="Case File Number"
+        :secondary-value="$case->case_file_number"
+    >
         <!-- 1. Particulars of the Case -->
         <div class="doc-section">
             <h2 class="doc-heading">1. Particulars of the Case</h2>
@@ -222,9 +191,54 @@
             @endif
         </div>
 
-        <!-- 6. Register of Proceedings -->
+        <!-- 6. Appeal Proceedings -->
         <div class="doc-section">
-            <h2 class="doc-heading">6. Register of Proceedings</h2>
+            <h2 class="doc-heading">6. Appeal Proceedings</h2>
+            @if($appealDetails->isEmpty())
+                <p class="doc-empty">No appeal has been filed for this case.</p>
+            @else
+                @foreach($appealDetails as $appeal)
+                    <table class="doc-table doc-table--kv" @if(!$loop->last) style="margin-bottom:18px;" @endif>
+                        <tr>
+                            <th>Case Name</th>
+                            <td>{{ $appeal->case_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Appeal Reference</th>
+                            <td>{{ $appeal->appeal_case_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>Filing Date</th>
+                            <td>
+                                {{ \Carbon\Carbon::parse($appeal->appeal_filing_date)->format('d F Y') }}
+                                @if($appeal->filing_date_source)
+                                    ({{ ucfirst($appeal->filing_date_source) }} filing)
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Judgment Delivered</th>
+                            <td>{{ $appeal->judgment_delivered_date ? \Carbon\Carbon::parse($appeal->judgment_delivered_date)->format('d F Y') : 'Not on record' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Verdict</th>
+                            <td>{{ $appeal->verdict ? ucfirst($appeal->verdict) : 'Not on record' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Court Outcome</th>
+                            <td>{{ $appeal->court_outcome ? ucfirst($appeal->court_outcome) : 'Not on record' }}</td>
+                        </tr>
+                    </table>
+                    @if($appeal->decision_principle_established)
+                        <p class="doc-quote">{{ $appeal->decision_principle_established }}</p>
+                    @endif
+                @endforeach
+            @endif
+        </div>
+
+        <!-- 7. Register of Proceedings -->
+        <div class="doc-section">
+            <h2 class="doc-heading">7. Register of Proceedings</h2>
             @if(count($events) === 0)
                 <p class="doc-empty">No recorded milestones for this case yet.</p>
             @else
@@ -250,314 +264,6 @@
                 </table>
             @endif
         </div>
-
-        <!-- Certification / Attestation -->
-        <div class="doc-certification">
-            <h2 class="doc-heading">Certification</h2>
-            <p>
-                I certify that the foregoing particulars have been extracted from, and are consistent with,
-                the official case management records of the Office of the Attorney General as at the date
-                of issue of this document, and that this Case Proof may be relied upon as an accurate
-                statement of the case record for the purpose stated.
-            </p>
-
-            <table class="doc-attest-grid">
-                <tr>
-                    <td class="doc-attest-cell">
-                        <div class="doc-signline"></div>
-                        <div class="doc-attest-label">Signature</div>
-                    </td>
-                    <td class="doc-attest-cell">
-                        <div class="doc-signline"></div>
-                        <div class="doc-attest-label">Full Name &amp; Position</div>
-                    </td>
-                    <td class="doc-attest-cell">
-                        <div class="doc-signline"></div>
-                        <div class="doc-attest-label">Date</div>
-                    </td>
-                    <td class="doc-attest-cell doc-attest-cell--seal">
-                        <div class="doc-seal">Official<br>Seal</div>
-                    </td>
-                </tr>
-            </table>
-        </div>
-
-        <!-- Footer -->
-        <div class="doc-footer">
-            <span>{{ $docRef }}</span>
-            <span>Office of the Attorney General &middot; Bairiki, Tarawa &middot; Republic of Kiribati</span>
-            <span>Page 1 of 1</span>
-        </div>
-    </div>
+    </x-official-document>
 </div>
 @endsection
-
-@push('styles')
-<style>
-    .official-doc * {
-        background-image: none !important;
-        text-shadow: none !important;
-    }
-    .official-doc *::before,
-    .official-doc *::after {
-        content: none !important;
-    }
-
-    .official-doc {
-        position: relative;
-        background-color: #ffffff;
-        padding: 55px 65px;
-        font-family: 'Times New Roman', Times, serif;
-        color: #111;
-        line-height: 1.7;
-        font-size: 15px;
-        overflow: hidden;
-    }
-
-    .doc-watermark {
-        position: absolute;
-        top: 45%;
-        left: 50%;
-        transform: translate(-50%, -50%) rotate(-32deg);
-        font-size: 84px;
-        font-weight: bold;
-        letter-spacing: 4px;
-        text-transform: uppercase;
-        color: #000;
-        opacity: 0.035;
-        white-space: nowrap;
-        pointer-events: none;
-        z-index: 0;
-    }
-
-    .doc-letterhead,
-    .doc-title-block,
-    .doc-section,
-    .doc-certification,
-    .doc-footer,
-    .doc-rule {
-        position: relative;
-        z-index: 1;
-    }
-
-    .doc-letterhead {
-        text-align: center;
-    }
-
-    .doc-crest {
-        max-height: 70px;
-        margin-bottom: 8px;
-    }
-
-    .doc-state {
-        font-size: 20px;
-        font-weight: bold;
-        letter-spacing: 1px;
-    }
-
-    .doc-office {
-        font-size: 14px;
-        letter-spacing: 0.5px;
-        color: #333;
-    }
-
-    .doc-rule {
-        height: 1px;
-        background: #111;
-        margin: 18px 0 26px;
-    }
-
-    .doc-rule--double {
-        height: 3px;
-        background: linear-gradient(#111, #111) top / 100% 1px no-repeat,
-                    linear-gradient(#111, #111) bottom / 100% 1px no-repeat;
-    }
-
-    .doc-title-block {
-        margin-bottom: 34px;
-    }
-
-    .doc-title {
-        font-size: 24px;
-        font-weight: bold;
-        text-align: center;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        margin-bottom: 4px;
-    }
-
-    .doc-title-sub {
-        text-align: center;
-        font-size: 13.5px;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        color: #555;
-        margin-bottom: 20px;
-    }
-
-    .doc-attestation {
-        font-style: italic;
-        text-align: justify;
-        color: #222;
-        margin: 0 0 22px;
-        padding: 0 10px;
-    }
-
-    .doc-refs {
-        width: 100%;
-        font-size: 14px;
-    }
-
-    .doc-refs td {
-        padding: 3px 0;
-    }
-
-    .doc-refs-label {
-        color: #555;
-        width: 150px;
-        white-space: nowrap;
-    }
-
-    .doc-section {
-        margin-bottom: 28px;
-    }
-
-    .doc-heading {
-        font-size: 15px;
-        font-weight: bold;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 12px;
-    }
-
-    .doc-empty {
-        font-style: italic;
-        color: #666;
-        margin: 0;
-    }
-
-    .doc-table {
-        width: 100%;
-        font-size: 14.5px;
-    }
-
-    .doc-table thead th {
-        text-align: left;
-        font-weight: bold;
-        padding: 0 12px 8px 0;
-        border-bottom: 1px solid #111;
-    }
-
-    .doc-table tbody td {
-        padding: 8px 12px 8px 0;
-        border-bottom: 1px solid #ccc;
-        vertical-align: top;
-    }
-
-    .doc-table tbody tr:last-child td {
-        border-bottom: none;
-    }
-
-    .doc-table--kv th {
-        width: 220px;
-        text-align: left;
-        font-weight: bold;
-        padding: 6px 12px 6px 0;
-        border-bottom: 1px solid #eee;
-        vertical-align: top;
-    }
-
-    .doc-table--kv td {
-        padding: 6px 0;
-        border-bottom: 1px solid #eee;
-    }
-
-    .doc-table--kv tr:last-child th,
-    .doc-table--kv tr:last-child td {
-        border-bottom: none;
-    }
-
-    .doc-table--register td:first-child {
-        font-weight: bold;
-    }
-
-    .doc-list {
-        margin: 0;
-        padding-left: 22px;
-    }
-
-    .doc-certification {
-        margin-top: 42px;
-        padding-top: 22px;
-        border-top: 3px double #111;
-    }
-
-    .doc-certification > p {
-        text-align: justify;
-        font-size: 14px;
-    }
-
-    .doc-attest-grid {
-        width: 100%;
-        margin-top: 34px;
-        table-layout: fixed;
-    }
-
-    .doc-attest-cell {
-        text-align: center;
-        vertical-align: bottom;
-        padding: 0 10px;
-    }
-
-    .doc-signline {
-        border-bottom: 1px solid #111;
-        height: 34px;
-    }
-
-    .doc-attest-label {
-        font-size: 11.5px;
-        color: #555;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-top: 6px;
-    }
-
-    .doc-attest-cell--seal {
-        vertical-align: middle;
-    }
-
-    .doc-seal {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 76px;
-        height: 76px;
-        border: 2px dashed #999;
-        border-radius: 50%;
-        font-size: 10.5px;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        color: #999;
-        text-align: center;
-        line-height: 1.3;
-    }
-
-    .doc-footer {
-        position: relative;
-        z-index: 1;
-        margin-top: 40px;
-        padding-top: 14px;
-        border-top: 1px solid #111;
-        display: flex;
-        justify-content: space-between;
-        font-size: 11px;
-        color: #555;
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-    }
-
-    @media print {
-        .no-print { display: none; }
-    }
-</style>
-@endpush

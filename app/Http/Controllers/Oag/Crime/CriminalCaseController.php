@@ -728,7 +728,9 @@ public function showCaseTimeline($id)
         }
     }
 
-    foreach ($this->appealDetailRepository->getAppealDetailsByCaseId($id) as $appeal) {
+    $appealDetails = $this->appealDetailRepository->getAppealDetailsByCaseId($id);
+
+    foreach ($appealDetails as $appeal) {
         $events[] = [
             'date' => $appeal->appeal_filing_date,
             'stage' => 'Appeal Filed',
@@ -780,7 +782,7 @@ public function showCaseTimeline($id)
         return strtotime($a['date'] ?? 'now') <=> strtotime($b['date'] ?? 'now');
     });
 
-    return view('oag.crime.related_records.timeline', compact('case', 'events', 'closureReasonDescription', 'dateFileClosed'));
+    return view('oag.crime.related_records.timeline', compact('case', 'events', 'closureReasonDescription', 'dateFileClosed', 'appealDetails'));
 }
 
 /**
