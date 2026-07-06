@@ -2,7 +2,7 @@
 
 namespace App\Repositories\Oag\Civil2;
 
-use App\Models\Oag\Civil2\PartyType;
+use App\Models\OAG\Civil2\PartyType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use App\Repositories\CustomBaseRepository;

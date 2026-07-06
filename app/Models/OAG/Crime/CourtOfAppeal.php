@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\User;
-use App\Models\Oag\Crime\CriminalCase; // Assumes case model is in this namespace
+use App\Models\OAG\Crime\CriminalCase; // Assumes case model is in this namespace
 
 class CourtOfAppeal extends Model
 {

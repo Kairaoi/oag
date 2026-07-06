@@ -2,7 +2,7 @@
 
 namespace App\Repositories\Oag\Crime;
 
-use App\Models\Oag\Crime\Report;
+use App\Models\OAG\Crime\Report;
 use Illuminate\Support\Facades\DB;
 
 class ReportRepository

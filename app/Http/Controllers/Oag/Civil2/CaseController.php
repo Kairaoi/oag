@@ -15,7 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Response;
-use App\Models\Oag\Civil2\Civil2Case;
+use App\Models\OAG\Civil2\Civil2Case;
 use Illuminate\Support\Arr; // Added for Arr::only
 use DataTables;
 
@@ -127,14 +127,14 @@ public function store(Request $request)
         // External counsel helper
         $getOrCreateExternal = function ($counselData) {
             if (!empty($counselData['id'])) {
-                $external = \App\Models\Oag\Civil2\ExternalCounsel::find($counselData['id']);
+                $external = \App\Models\OAG\Civil2\ExternalCounsel::find($counselData['id']);
                 if ($external) {
                     Log::info('External counsel retrieved by ID', ['counsel' => $external]);
                     return $external;
                 }
             }
 
-            $external = \App\Models\Oag\Civil2\ExternalCounsel::create([
+            $external = \App\Models\OAG\Civil2\ExternalCounsel::create([
                 'name' => $counselData['name'] ?? 'Unnamed External Counsel',
                 'email' => $counselData['email'] ?? null,
                 'phone' => $counselData['phone'] ?? null,
@@ -154,7 +154,7 @@ public function store(Request $request)
             $case->caseCounsels()->create([
                 'counsel_id' => $counselId,
                 'counsel_type' => $counsel['type'] === 'external'
-                    ? \App\Models\Oag\Civil2\ExternalCounsel::class
+                    ? \App\Models\OAG\Civil2\ExternalCounsel::class
                     : \App\Models\User::class,
                 'role' => $counsel['role'],
             ]);
@@ -312,14 +312,14 @@ public function update(Request $request, $caseId)
             $case->caseCounsels()->delete(); // Remove existing counsels
             $getOrCreateExternal = function ($counselData) {
                 if (!empty($counselData['id'])) {
-                    $external = \App\Models\Oag\Civil2\ExternalCounsel::find($counselData['id']);
+                    $external = \App\Models\OAG\Civil2\ExternalCounsel::find($counselData['id']);
                     if ($external) {
                         Log::info('External counsel retrieved by ID', ['counsel' => $external]);
                         return $external;
                     }
                 }
 
-                $external = \App\Models\Oag\Civil2\ExternalCounsel::create([
+                $external = \App\Models\OAG\Civil2\ExternalCounsel::create([
                     'name' => $counselData['name'] ?? 'Unnamed External Counsel',
                     'email' => $counselData['email'] ?? null,
                     'phone' => $counselData['phone'] ?? null,
@@ -338,7 +338,7 @@ public function update(Request $request, $caseId)
                 $case->caseCounsels()->create([
                     'counsel_id' => $counselId,
                     'counsel_type' => $counsel['type'] === 'external'
-                        ? \App\Models\Oag\Civil2\ExternalCounsel::class
+                        ? \App\Models\OAG\Civil2\ExternalCounsel::class
                         : \App\Models\User::class,
                     'role' => $counsel['role'],
                 ]);

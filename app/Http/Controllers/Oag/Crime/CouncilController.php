@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Oag\Crime;
 
 use App\Http\Controllers\Controller;
-use App\Repositories\OAG\Crime\CouncilRepository;
+use App\Repositories\Oag\Crime\CouncilRepository;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use DataTables;

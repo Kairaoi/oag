@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Concerns;
 
-use App\Models\Oag\Crime\CriminalCase;
+use App\Models\OAG\Crime\CriminalCase;
 use App\Models\User;
 
 trait AuthorizesCriminalCase

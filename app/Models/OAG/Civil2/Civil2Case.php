@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\User;
-use App\Models\Oag\Civil\CourtCategory;
+use App\Models\OAG\Civil\CourtCategory;
 
 class Civil2Case extends Model
 {

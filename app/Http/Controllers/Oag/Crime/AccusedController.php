@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Oag\Crime;
 
 use App\Http\Controllers\Controller;
-use App\Repositories\OAG\Crime\AccusedRepository;
+use App\Repositories\Oag\Crime\AccusedRepository;
 use App\Repositories\Oag\Crime\CriminalCaseRepository;
 use App\Repositories\Oag\Crime\IslandRepository;
 

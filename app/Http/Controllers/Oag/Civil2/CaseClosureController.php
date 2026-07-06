@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Repositories\Oag\Civil2\CaseClosureRepository;
-use App\Models\Oag\Civil2\Civil2Case;
+use App\Models\OAG\Civil2\Civil2Case;
 
 class CaseClosureController extends Controller
 {

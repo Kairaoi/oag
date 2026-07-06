@@ -11,7 +11,7 @@ use App\Repositories\Oag\Crime\UserRepository;
 use App\Repositories\Oag\Crime\ReasonsForClosureRepository;
 use App\Repositories\Oag\Crime\OffenceRepository;
 use App\Repositories\Oag\Crime\OffenceCategoryRepository;
-use App\Repositories\OAG\Crime\CourtRepository;
+use App\Repositories\Oag\Crime\CourtRepository;
 use App\Repositories\Oag\Crime\CaseReviewRepository;
 use App\Repositories\Oag\Crime\CourtCaseRepository;
 use App\Repositories\Oag\Crime\AppealDetailRepository;
@@ -20,7 +20,7 @@ use App\Repositories\Oag\Crime\CourtOfAppealRepository;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
-use App\Models\Oag\Crime\CaseReallocation;
+use App\Models\OAG\Crime\CaseReallocation;
 
 use DataTables;
 

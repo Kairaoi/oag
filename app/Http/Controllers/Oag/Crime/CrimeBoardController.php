@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Oag\Crime;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
-use App\Models\Oag\Crime\CriminalCase;
+use App\Models\OAG\Crime\CriminalCase;
 use App\Models\User;
 
 class CrimeBoardController extends Controller

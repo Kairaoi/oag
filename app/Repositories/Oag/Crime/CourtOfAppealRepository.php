@@ -2,7 +2,7 @@
 
 namespace App\Repositories\Oag\Crime;
 
-use App\Models\Oag\Crime\CourtOfAppeal;
+use App\Models\OAG\Crime\CourtOfAppeal;
 use App\Repositories\CustomBaseRepository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;

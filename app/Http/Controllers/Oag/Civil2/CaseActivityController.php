@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Oag\Civil2;
 use App\Http\Controllers\Controller;
 
 use App\Models\Oag\Civil2\CivilCase;
-use App\Models\Oag\Civil2\CaseActivity;
+use App\Models\OAG\Civil2\CaseActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;

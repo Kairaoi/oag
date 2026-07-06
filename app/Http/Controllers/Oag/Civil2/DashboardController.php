@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Oag\Civil2;
 use App\Http\Controllers\Controller;
 
 use App\Models\Oag\Civil2\CivilCase;
-use App\Models\Oag\Civil2\CaseActivity;
-use App\Models\Oag\Civil2\CaseStatus;
-use App\Models\Oag\Civil2\QuarterlyReport;
+use App\Models\OAG\Civil2\CaseActivity;
+use App\Models\OAG\Civil2\CaseStatus;
+use App\Models\OAG\Civil2\QuarterlyReport;
 use App\Models\Oag\Civil2\Counsel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

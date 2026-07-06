@@ -7,7 +7,7 @@ use App\Http\Controllers\Concerns\AuthorizesCriminalCase;
 use Illuminate\Http\Request;
 use App\Repositories\Oag\Crime\AppealDetailRepository;
 use App\Repositories\Oag\Crime\CriminalCaseRepository;
-use App\Repositories\OAG\Crime\CourtRepository;
+use App\Repositories\Oag\Crime\CourtRepository;
 use App\Repositories\Oag\Crime\IslandRepository;
 use App\Repositories\Oag\Crime\UserRepository;
 use Illuminate\Support\Facades\Log;

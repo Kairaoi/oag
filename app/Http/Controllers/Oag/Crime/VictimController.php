@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Oag\Crime;
 
 use App\Http\Controllers\Controller;
-use App\Repositories\OAG\Crime\VictimRepository;
-use App\Repositories\OAG\Crime\CriminalCaseRepository;
-use App\Repositories\OAG\Crime\IslandRepository;
+use App\Repositories\Oag\Crime\VictimRepository;
+use App\Repositories\Oag\Crime\CriminalCaseRepository;
+use App\Repositories\Oag\Crime\IslandRepository;
 use App\Repositories\Oag\Crime\UserRepository;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;

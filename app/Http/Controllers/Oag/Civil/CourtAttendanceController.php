@@ -7,7 +7,7 @@ use App\Repositories\Oag\Civil\CourtAttendanceRepository;
 use App\Repositories\Oag\Civil\CivilCaseRepository;
 use App\Repositories\Oag\Crime\UserRepository;
 use Illuminate\Http\Request;
-use App\Models\Oag\Civil\CourtAttendance;
+use App\Models\OAG\Civil\CourtAttendance;
 use DataTables;
 use DB;
 use Illuminate\Support\Facades\Log;

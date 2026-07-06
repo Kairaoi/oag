@@ -2,7 +2,7 @@
 
 namespace App\Repositories\Oag\Civil2;
 
-use App\Models\Oag\Civil2\Civil2Case;
+use App\Models\OAG\Civil2\Civil2Case;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use App\Repositories\CustomBaseRepository;
@@ -96,7 +96,7 @@ class CaseRepository extends CustomBaseRepository
         })
         ->leftJoin('external_counsels as plaintiff_external', function ($join) {
             $join->on('cc_plaintiff.counsel_id', '=', 'plaintiff_external.id')
-                ->where('cc_plaintiff.counsel_type', '=', \App\Models\Oag\Civil2\ExternalCounsel::class);
+                ->where('cc_plaintiff.counsel_type', '=', \App\Models\OAG\Civil2\ExternalCounsel::class);
         })
 
         // Join for defendant
@@ -110,7 +110,7 @@ class CaseRepository extends CustomBaseRepository
         })
         ->leftJoin('external_counsels as defendant_external', function ($join) {
             $join->on('cc_defendant.counsel_id', '=', 'defendant_external.id')
-                ->where('cc_defendant.counsel_type', '=', \App\Models\Oag\Civil2\ExternalCounsel::class);
+                ->where('cc_defendant.counsel_type', '=', \App\Models\OAG\Civil2\ExternalCounsel::class);
         })
 
         ->select([

@@ -13,8 +13,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Response;
 use DataTables;
 use Carbon\Carbon;
-use App\Models\Oag\Civil\CivilCase;
-use App\Models\Oag\Civil\CaseCounsel;
+use App\Models\OAG\Civil\CivilCase;
+use App\Models\OAG\Civil\CaseCounsel;
 
 
 class CivilCaseController extends Controller

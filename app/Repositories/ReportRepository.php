@@ -3,7 +3,7 @@
 namespace App\Repositories;
 
 
-use App\Models\Oag\Crime\Report;
+use App\Models\OAG\Crime\Report;
 
 use Illuminate\Support\Facades\DB;
 

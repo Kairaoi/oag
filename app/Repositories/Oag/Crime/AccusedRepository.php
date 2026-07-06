@@ -2,7 +2,7 @@
 
 namespace App\Repositories\Oag\Crime;
 
-use App\Models\Oag\Crime\Accused;
+use App\Models\OAG\Crime\Accused;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Collection;
 use App\Repositories\CustomBaseRepository;

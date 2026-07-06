@@ -26,7 +26,7 @@ use App\Http\Controllers\Oag\Civil\CivilCaseController;
 use App\Http\Controllers\Oag\Civil\CourtAttendanceController;
 
 
-use App\Http\Controllers\OAG\Legal\LegalTaskController;
+use App\Http\Controllers\Oag\Legal\LegalTaskController;
 
 use App\Http\Controllers\RolePermissionController;
 
@@ -55,7 +55,7 @@ Route::group([
     'prefix' => 'crime',
     'middleware' => ['auth'],
 ], function () {
-    Route::resource('boards', \App\Http\Controllers\OAG\crime\CrimeBoardController::class, ['only' => ['index']]);
+    Route::resource('boards', \App\Http\Controllers\Oag\Crime\CrimeBoardController::class, ['only' => ['index']]);
 
     Route::get('criminal-case/{id}/allocate', [CriminalCaseController::class, 'showAllocationForm'])
         ->name('criminalCase.allocateForm');
@@ -160,7 +160,7 @@ Route::group([
     'prefix' => 'civil',
     'middleware' => ['auth'],
 ], function () {
-    Route::resource('boards', \App\Http\Controllers\OAG\Civil\CivilBoardController::class, ['only' => ['index']]);
+    Route::resource('boards', \App\Http\Controllers\Oag\Civil\CivilBoardController::class, ['only' => ['index']]);
 
   
     Route::match(['get', 'post'], 'courtcategory/datatables', [CourtCategoryController::class, 'getDataTables'])->name('courtcategory.datatables');
@@ -188,7 +188,7 @@ Route::group([
     'middleware' => ['auth'],
 ], function () {
 
-    Route::resource('boards', \App\Http\Controllers\OAG\Legal\LegalBoardController::class, ['only' => ['index']]);
+    Route::resource('boards', \App\Http\Controllers\Oag\Legal\LegalBoardController::class, ['only' => ['index']]);
     Route::match(['get', 'post'], 'legal_tasks/datatables', [LegalTaskController::class, 'getDataTables'])->name('legal_tasks.datatables');
     Route::resource('legal_tasks', LegalTaskController::class);
 });
@@ -201,32 +201,32 @@ Route::group([
 ], function () {
 
     // Draft Boards Route (assuming the controller is 'DraftBoardController')
-    Route::resource('boards', \App\Http\Controllers\OAG\Draft\DraftBoardController::class, ['only' => ['index']]);
+    Route::resource('boards', \App\Http\Controllers\Oag\Draft\DraftBoardController::class, ['only' => ['index']]);
 
     // Ministry Routes (assuming the controller is 'MinistryController')
-    Route::match(['get', 'post'], 'ministry/datatables', [\App\Http\Controllers\OAG\Draft\MinistryController::class, 'getDataTables'])->name('ministry.datatables');
-    Route::resource('ministry', \App\Http\Controllers\OAG\Draft\MinistryController::class);
+    Route::match(['get', 'post'], 'ministry/datatables', [\App\Http\Controllers\Oag\Draft\MinistryController::class, 'getDataTables'])->name('ministry.datatables');
+    Route::resource('ministry', \App\Http\Controllers\Oag\Draft\MinistryController::class);
 
-    Route::match(['get', 'post'], 'bills/datatables', [\App\Http\Controllers\OAG\Draft\BillController::class, 'getDataTables'])->name('bills.datatables');
+    Route::match(['get', 'post'], 'bills/datatables', [\App\Http\Controllers\Oag\Draft\BillController::class, 'getDataTables'])->name('bills.datatables');
 
     // Bill Routes (assuming the controller is 'BillController')
-    Route::resource('bills', \App\Http\Controllers\OAG\Draft\BillController::class);
+    Route::resource('bills', \App\Http\Controllers\Oag\Draft\BillController::class);
 
     // Bill Counsel Routes (assuming the controller is 'BillCounselController')
-    Route::resource('bill_counsels', \App\Http\Controllers\OAG\Draft\BillCounselController::class);
+    Route::resource('bill_counsels', \App\Http\Controllers\Oag\Draft\BillCounselController::class);
 
-    Route::match(['get', 'post'], 'counsels/datatables', [\App\Http\Controllers\OAG\Draft\CounselController::class, 'getDataTables'])->name('counsels.datatables');
+    Route::match(['get', 'post'], 'counsels/datatables', [\App\Http\Controllers\Oag\Draft\CounselController::class, 'getDataTables'])->name('counsels.datatables');
 
     // Counsel Routes (assuming the controller is 'CounselController')
-    Route::resource('counsels', \App\Http\Controllers\OAG\Draft\CounselController::class);
+    Route::resource('counsels', \App\Http\Controllers\Oag\Draft\CounselController::class);
 
-    Route::match(['get', 'post'], 'regulations/datatables', [\App\Http\Controllers\OAG\Draft\CounselController::class, 'getDataTables'])->name('regulations.datatables');
+    Route::match(['get', 'post'], 'regulations/datatables', [\App\Http\Controllers\Oag\Draft\CounselController::class, 'getDataTables'])->name('regulations.datatables');
 
     // Regulation Routes (assuming the controller is 'RegulationController')
-    Route::resource('regulations', \App\Http\Controllers\OAG\Draft\RegulationController::class);
+    Route::resource('regulations', \App\Http\Controllers\Oag\Draft\RegulationController::class);
 
     // Regulation Counsel Routes (assuming the controller is 'RegulationCounselController')
-    Route::resource('regulation_counsels', \App\Http\Controllers\OAG\Draft\RegulationCounselController::class);
+    Route::resource('regulation_counsels', \App\Http\Controllers\Oag\Draft\RegulationCounselController::class);
 });
 
 

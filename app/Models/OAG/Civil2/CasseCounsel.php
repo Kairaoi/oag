@@ -5,7 +5,7 @@ namespace App\Models\Oag\Civil2;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\Oag\Civil2\CivilCase;
-use App\Models\Oag\Civil2\ExternalCounsel;
+use App\Models\OAG\Civil2\ExternalCounsel;
 
 class CasseCounsel extends Model
 {

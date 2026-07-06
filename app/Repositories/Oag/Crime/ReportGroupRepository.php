@@ -2,8 +2,8 @@
 namespace App\Repositories\Oag\Crime;
 
 use App\Repositories\CustomBaseRepository;
-use App\Models\Oag\Crime\Report;
-use App\Models\Oag\Crime\ReportGroup;
+use App\Models\OAG\Crime\Report;
+use App\Models\OAG\Crime\ReportGroup;
 
 class ReportGroupRepository extends CustomBaseRepository
 {

@@ -5,11 +5,11 @@ namespace App\Http\Controllers\Oag\Civil2;
 use App\Http\Controllers\Controller;
 
 use App\Models\Oag\Civil2\CivilCase;
-use App\Models\Oag\Civil2\CaseStatus;
-use App\Models\Oag\Civil2\CauseOfAction;
+use App\Models\OAG\Civil2\CaseStatus;
+use App\Models\OAG\Civil2\CauseOfAction;
 use App\Models\Oag\Civil2\Counsel;
-use App\Models\Oag\Civil2\CaseOriginType;
-use App\Models\Oag\Civil2\QuarterlyReport;
+use App\Models\OAG\Civil2\CaseOriginType;
+use App\Models\OAG\Civil2\QuarterlyReport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
