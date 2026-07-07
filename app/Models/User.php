@@ -3,15 +3,27 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     use HasRoles, HasApiTokens, HasFactory, Notifiable;
+
+    /**
+     * Gate for the Filament admin panel itself — separate from any
+     * permission checked once inside it. Only cm.sysadmin may log in here;
+     * everyone else gets a 403 at the panel's own auth layer.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->hasRole('cm.sysadmin');
+    }
 
     /**
      * The attributes that are mass assignable.

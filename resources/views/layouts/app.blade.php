@@ -82,7 +82,7 @@
                                     <a class="dropdown-item" href="{{ route('draft.boards.index') }}">Drafting</a>
                                     @role('cm.sysadmin')
                                         <li>
-                                            <a href="{{ route('admin.roles.index') }}">Roles Management</a>
+                                            <a href="{{ route('filament.admin.resources.users.index') }}">Roles Management</a>
                                         </li>
                                     @endrole
 

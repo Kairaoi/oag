@@ -28,8 +28,6 @@ use App\Http\Controllers\Oag\Civil\CourtAttendanceController;
 
 use App\Http\Controllers\Oag\Legal\LegalTaskController;
 
-use App\Http\Controllers\RolePermissionController;
-
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -233,17 +231,6 @@ Route::group([
 
 
 
-Route::group([
-    'as' => 'admin.',
-    'prefix' => 'admin',
-    'middleware' => ['auth'],
-], function () {
-    Route::get('/roles', [RolePermissionController::class, 'index'])->name('roles.index');
-    Route::post('/users', [RolePermissionController::class, 'storeUser'])->name('users.store');
-    Route::post('/roles', [RolePermissionController::class, 'storeRole'])->name('roles.store');
-    Route::post('/permissions', [RolePermissionController::class, 'storePermission'])->name('permissions.store');
-    Route::post('/assign-role', [RolePermissionController::class, 'assignRole'])->name('roles.assign');
-});
 
 
 use App\Http\Controllers\Oag\Civil2\{
