@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Oag\Crime;
+namespace App\Models\OAG\Crime;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;

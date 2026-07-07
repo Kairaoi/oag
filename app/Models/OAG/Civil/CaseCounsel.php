@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Oag\Civil;
+namespace App\Models\OAG\Civil;
 
 
 use Illuminate\Database\Eloquent\Model;

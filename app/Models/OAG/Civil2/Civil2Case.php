@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Oag\Civil2;
+namespace App\Models\OAG\Civil2;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
