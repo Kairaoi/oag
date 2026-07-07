@@ -248,6 +248,8 @@
 
         // Dynamic offence groups logic
         const offenceContainer = document.getElementById('offenceGroupsContainer');
+        const offenceCategoryMap = @json($offenceCategoryMap);
+
         document.getElementById('addOffenceGroup').addEventListener('click', function () {
             const original = offenceContainer.querySelector('.offence-group');
             const clone = original.cloneNode(true);
@@ -263,6 +265,19 @@
                     e.target.closest('.offence-group').remove();
                 }
             }
+        });
+
+        // Selecting an offence auto-selects its category, since each offence
+        // belongs to exactly one category — the user shouldn't have to pick
+        // both independently and risk mismatching them.
+        offenceContainer.addEventListener('change', function (e) {
+            if (!e.target.matches('select[name="offence_id[]"]')) {
+                return;
+            }
+
+            const categorySelect = e.target.closest('.offence-group').querySelector('select[name="category_id[]"]');
+            const categoryId = offenceCategoryMap[e.target.value];
+            categorySelect.value = categoryId ?? '';
         });
     });
 </script>

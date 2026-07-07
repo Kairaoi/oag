@@ -71,12 +71,14 @@ class CaseReviewController extends Controller
         $councils = $this->userRepository->pluck();
         $offences = $this->offenceRepository->pluck2();
         $categories = $this->offenceCategoryRepository->pluck();
+        $offenceCategoryMap = $this->offenceRepository->categoryMap();
 
         return view('oag.crime.case_reviews.create')
             ->with('case', $case)
             ->with('reasonsForClosure', $reasonsForClosure)
             ->with('offences', $offences)
             ->with('categories', $categories)
+            ->with('offenceCategoryMap', $offenceCategoryMap)
             ->with('councils', $councils);
     }
 
@@ -221,13 +223,15 @@ class CaseReviewController extends Controller
         $councils = $this->userRepository->pluck();
         $offences = $this->offenceRepository->pluck2();
         $categories = $this->offenceCategoryRepository->pluck();
-    
+        $offenceCategoryMap = $this->offenceRepository->categoryMap();
+
         return view('oag.crime.case_reviews.edit')
         ->with('case', $case)
         ->with('caseReview', $review) // <- changed here
         ->with('reasonsForClosure', $reasonsForClosure)
         ->with('offences', $offences)
         ->with('categories', $categories)
+        ->with('offenceCategoryMap', $offenceCategoryMap)
         ->with('councils', $councils);
     
     }

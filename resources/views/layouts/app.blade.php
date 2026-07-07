@@ -34,7 +34,7 @@
             border-top: 1px solid #e0e0e0;
         }
     </style>
-     <!-- Styles from @stack('styles') -->
+     {{-- Styles from @stack('styles') --}}
     @stack('styles')
 </head>
 <body>
@@ -116,7 +116,7 @@
         @include('partials.footer')
     @endauth
 
-    <!-- Scripts from @stack('scripts') -->
+    {{-- Scripts from @stack('scripts') --}}
     @stack('scripts')
 </body>
 </html>

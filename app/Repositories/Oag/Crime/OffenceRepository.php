@@ -124,5 +124,15 @@ class OffenceRepository extends CustomBaseRepository
         ->pluck('offence_name', 'id');
 }
 
-    
+    /**
+     * Map each offence id to its category id, so a form can auto-select the
+     * matching category the moment an offence is chosen instead of relying
+     * on the user to pick both independently.
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    public function categoryMap(): \Illuminate\Support\Collection
+    {
+        return $this->getModelInstance()->pluck('offence_category_id', 'id');
+    }
 }
