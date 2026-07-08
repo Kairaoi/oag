@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
 {
     $this->call(CriminalJusticeSystemSeeder::class);
     $this->call(CivilCaseSystemSeeder::class);
-    
+    $this->call(UserSeeder::class);
     $this->call(CourtAttendanceSeeder::class);
     $this->call(LegalTasksTableSeeder::class);
     $this->call(LegalSystemSeeder::class);
@@ -28,6 +28,6 @@ class DatabaseSeeder extends Seeder
     ExternalCounselSeeder::class,
 ]);
 
-    $this->call(UserSeeder::class);
+    
 }
 }
