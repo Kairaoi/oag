@@ -28,7 +28,7 @@
             <thead class="thead-dark" style="background: #343a40; color: #f8f9fa; text-transform: uppercase; letter-spacing: 1px;">
                 <tr>
                     <th>ID</th>
-                    <th>Case File Number</th>
+                    <th>Police Case File Number</th>
                     <th>Lawyer Name</th>
                     <th>Island Name</th>
                     <th>Date of Incident (Start)</th>

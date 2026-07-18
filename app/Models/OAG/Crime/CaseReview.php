@@ -27,7 +27,8 @@ class CaseReview extends Model
         'reallocation_reason',// Stores reason for reassignment
        'offence_particulars',
         'date_file_closed',   // Add this field
-        'reason_for_closure_id' // Add this field
+        'reason_for_closure_id', // Add this field
+        'closure_decision',
     ];
     /**
      * Default relationships to prevent N+1 queries.

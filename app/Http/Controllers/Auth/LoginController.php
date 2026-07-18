@@ -37,4 +37,20 @@ class LoginController extends Controller
         $this->middleware('guest')->except('logout');
         $this->middleware('auth')->only('logout');
     }
+
+    /**
+     * Overrides the static $redirectTo property (AuthenticatesUsers'
+     * RedirectsUsers::redirectPath() prefers this method when it exists) so
+     * an AG reviewer lands on their pending review queue instead of the
+     * generic case list — that's the only thing a cm.ag account needs to see
+     * after logging in.
+     */
+    public function redirectTo(): string
+    {
+        if (auth()->check() && auth()->user()->hasRole('cm.ag')) {
+            return route('crime.ag-reviews.index');
+        }
+
+        return $this->redirectTo;
+    }
 }

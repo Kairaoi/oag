@@ -27,15 +27,16 @@
             <thead class="thead-dark">
                 <tr>
                     <th>ID</th>
-                    <th>Case File Number</th>
+                    <th>Police Case File Number</th>
                     <th>Case Name</th>
                     <th>Date File Received</th>
                     <th>Date of Incident</th>
                     <th>Island</th>
-                    <th>Council Name</th>
+                    <th>Counsel</th>
                     <th>Accused</th>
                     <th>Victim</th>
                     <th>Reviewer Action</th>
+                    <th>Case Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -277,9 +278,11 @@
         canReallocate: {{ auth()->user()->hasRole('cm.admin') ? 'true' : 'false' }},
         canAppeal: {{ auth()->user()->hasRole('cm.user') ? 'true' : 'false' }},
         canallocate: {{ auth()->user()->hasRole('cm.admin') ? 'true' : 'false' }},
+        canSubmitToAg: {{ auth()->user()->hasRole('cm.user') ? 'true' : 'false' }},
+        canDispatch: {{ auth()->user()->hasRole('cm.registrar') ? 'true' : 'false' }},
         canViewRelatedRecords: {{ (auth()->user()->hasRole('cm.user') || auth()->user()->hasRole('cm.admin')) ? 'true' : 'false' }},
     };
-    
+
     // Define route URLs for cleaner code
     const routeUrls = {
         edit: @json(route('crime.criminalCase.edit', ':id')),
@@ -290,6 +293,8 @@
         reallocate: @json(route('crime.criminalCase.showReallocationForm', ':id')),
         appeal: @json(route('crime.appeal.create', ':id')),
         courtOfAppeal: @json(route('crime.courtOfAppeal.create', ':id')),
+        agReview: @json(route('crime.AgReview.create', ':id')),
+        registryDispatch: @json(route('crime.RegistryDispatch.create', ':id')),
         destroy: @json(route('crime.criminalCase.destroy', ':id')),
         reviewedCases: @json(route('crime.casereview.reviewed', ':id')),
         courtCases: @json(route('crime.courtcase', ':id')),
@@ -411,35 +416,73 @@ $(document).ready(function () {
                 }
             },
             {
+                data: 'case_status',
+                render: function(caseStatus) {
+                    const badgeClasses = {
+                        'Completed': 'bg-success',
+                        'Judgment Delivered': 'bg-warning',
+                        'Pending in Court': 'bg-primary',
+                        'Appealed': 'bg-purple',
+                        'Court of Appeal': 'bg-danger',
+                        'Appeal Withdrawn': 'bg-secondary',
+                        'Rejected': 'bg-danger',
+                        'Under Review': 'bg-info',
+                        'Reviewed': 'bg-info',
+                        'Allocated': 'bg-primary',
+                        'Pending Allocation': 'bg-warning',
+                        'Returned — Further Action Required': 'bg-warning',
+                        'Closed — Insufficient Evidence': 'bg-secondary',
+                        'Submitted to AG': 'bg-info',
+                        'Returned for Revision': 'bg-danger',
+                        'AG Approved': 'bg-success',
+                        'Dispatched': 'bg-primary',
+                    };
+                    const badgeClass = badgeClasses[caseStatus] || 'bg-secondary';
+                    return `<span class="badge ${badgeClass}">${caseStatus}</span>`;
+                }
+            },
+            {
                 data: null,
                 className: 'position-relative',
                 orderable: false,
                 searchable: false,
                 render: function(row) {
-                    // A rejected case is a dead end for every action except
-                    // "Case Reallocate" (the designed recovery path) — mirrors
-                    // the server-side AuthorizesCriminalCase::assertCaseIsActionable() check.
-                    const isRejected = row.status === 'rejected';
-
                     const canReviewNow = userRoles.canCaseReview && row.status === 'accepted';
-                    const canCourtCaseNow = userRoles.canCourtCase && row.status === 'accepted';
+                    // Court Case now also requires the case to have been
+                    // dispatched by the Registry (AG-approved first) — see
+                    // AuthorizesCriminalCase::assertCaseIsDispatched().
+                    const canCourtCaseNow = userRoles.canCourtCase && row.status === 'accepted' && row.registry_dispatch_count > 0;
                     const canAllocateNow = userRoles.canallocate && row.status === 'pending';
                     const canReallocateNow = userRoles.canReallocate && row.status === 'rejected';
-                    const canAppealNow = userRoles.canAppeal && !isRejected;
-                    const hasWorkflowItems = canReviewNow || canCourtCaseNow || canAllocateNow || canReallocateNow || canAppealNow;
+                    // Appeal / Court of Appeal previously showed for any
+                    // non-rejected case — including merely "Allocated", before
+                    // the lawyer has even accepted it. Now matches the same
+                    // "accepted" gate as Case Review / Submit to AG.
+                    const canAppealNow = userRoles.canAppeal && row.status === 'accepted';
+                    // A case is ready for AG submission once reviewed with
+                    // sufficient evidence, and either has no submission yet or
+                    // its last one was rejected (the lawyer can revise and
+                    // resubmit — see AgReviewController).
+                    const canSubmitToAgNow = userRoles.canSubmitToAg && row.status === 'accepted' && row.reviewed_count > 0
+                        && (!row.latest_ag_decision || row.latest_ag_decision === 'rejected');
+                    const canDispatchNow = userRoles.canDispatch && row.latest_ag_decision === 'approved' && !row.registry_dispatch_count;
+                    const hasWorkflowItems = canReviewNow || canCourtCaseNow || canAllocateNow || canReallocateNow
+                        || canAppealNow || canSubmitToAgNow || canDispatchNow;
 
                     // Record actions dropdown: Edit / Show / Delete only
-                    let actions = `
-                    <div class="d-md-flex gap-2">
+                    let actions = `<div class="d-md-flex gap-2">`;
+
+                    // Edit/Show/Delete are hidden until the case is accepted,
+                    // matching the Workflow dropdown — nothing here to act on
+                    // for a case that's still pending/allocated/rejected.
+                    if (row.status === 'accepted') {
+                        actions += `
                         <!-- Record Actions Dropdown -->
                         <div class="dropdown mb-2 mb-md-0">
                             <button class="btn btn-primary btn-sm dropdown-toggle btn-actions-compact" type="button" id="actionsDropdown${row.id}" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fas fa-cog me-1"></i> Actions
                             </button>
-                            <ul class="dropdown-menu shadow" aria-labelledby="actionsDropdown${row.id}">`;
-
-                    if (!isRejected) {
-                        actions += `
+                            <ul class="dropdown-menu shadow" aria-labelledby="actionsDropdown${row.id}">
                                 <li><a class="dropdown-item" href="${routeUrls.edit.replace(':id', row.id)}">
                                     <i class="fas fa-edit text-primary"></i> Edit
                                 </a></li>
@@ -454,12 +497,10 @@ $(document).ready(function () {
                                     <form id="delete-form-${row.id}" action="${routeUrls.destroy.replace(':id', row.id)}" method="POST" class="d-none">
                                         @csrf @method('DELETE')
                                     </form>
-                                </li>`;
-                    }
-
-                    actions += `
+                                </li>
                             </ul>
                         </div>`;
+                    }
 
                     // Workflow Actions Dropdown: Case Review / Court Case / Allocate / Reallocate / Appeal / Court of Appeal
                     if (hasWorkflowItems) {
@@ -475,6 +516,24 @@ $(document).ready(function () {
                                 <a class="dropdown-item d-flex justify-content-between align-items-center" href="${routeUrls.caseReview.replace(':id', row.id)}">
                                     <span><i class="fas fa-clipboard-check text-success"></i> Case Review</span>
                                     ${row.reviewed_count > 0 ? '<span class="badge bg-success">✓</span>' : ''}
+                                </a>
+                            </li>`;
+                        }
+
+                        if (canSubmitToAgNow) {
+                            actions += `<li>
+                                <a class="dropdown-item d-flex justify-content-between align-items-center" href="${routeUrls.agReview.replace(':id', row.id)}">
+                                    <span><i class="fas fa-landmark text-info"></i> Submit to AG</span>
+                                    ${row.latest_ag_decision ? '<span class="badge bg-info">✓</span>' : ''}
+                                </a>
+                            </li>`;
+                        }
+
+                        if (canDispatchNow) {
+                            actions += `<li>
+                                <a class="dropdown-item d-flex justify-content-between align-items-center" href="${routeUrls.registryDispatch.replace(':id', row.id)}">
+                                    <span><i class="fas fa-paper-plane text-primary"></i> Dispatch to Court</span>
+                                    ${row.registry_dispatch_count > 0 ? '<span class="badge bg-primary">✓</span>' : ''}
                                 </a>
                             </li>`;
                         }
@@ -513,7 +572,7 @@ $(document).ready(function () {
                             actions += `<li>
                                 <a class="dropdown-item d-flex justify-content-between align-items-center" href="${routeUrls.courtOfAppeal.replace(':id', row.id)}">
                                     <span><i class="fas fa-balance-scale text-danger"></i> Court of Appeal</span>
-                                    ${row.appeal_count > 0 ? '<span class="badge bg-danger">✓</span>' : ''}
+                                    ${row.court_of_appeal_count > 0 ? '<span class="badge bg-danger">✓</span>' : ''}
                                 </a>
                             </li>`;
                         }
@@ -523,7 +582,7 @@ $(document).ready(function () {
                         </div>`;
                     }
 
-                    if (!isRejected && userRoles.canViewRelatedRecords) {
+                    if (row.status === 'accepted' && userRoles.canViewRelatedRecords) {
                         actions += `
                         <a href="${routeUrls.relatedRecords.replace(':id', row.id)}" class="btn btn-related">
                             <i class="fas fa-folder-open me-1"></i> Related Records

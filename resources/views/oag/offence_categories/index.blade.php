@@ -23,7 +23,7 @@
             <thead>
                 <tr class="bg-gradient">
                     <th>Case ID</th>
-                    <th>Case File Number</th>
+                    <th>Police Case File Number</th>
                     <th>Case Name</th>
                     <th>Date File Received</th>
                     <th>Date File Closed</th>

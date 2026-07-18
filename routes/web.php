@@ -17,6 +17,8 @@ use App\Http\Controllers\Oag\Crime\CourtHearingController;
 use App\Http\Controllers\Oag\Crime\CourtCaseController;
 
 use App\Http\Controllers\Oag\Crime\AppealDetailController;
+use App\Http\Controllers\Oag\Crime\AgReviewController;
+use App\Http\Controllers\Oag\Crime\RegistryDispatchController;
 
 
 use App\Http\Controllers\Oag\Civil\CivilBoardController;
@@ -140,6 +142,17 @@ Route::get('CourtCase/{id}/create', [CourtCaseController::class, 'create'])->nam
 // Court Case CRUD routes
 Route::resource('court-cases',CourtCaseController::class);
 
+// AG Review routes
+Route::match(['get', 'post'], 'ag-reviews/datatables', [AgReviewController::class, 'getDataTables'])->name('ag-reviews.datatables');
+Route::get('AgReview/{id}/create', [AgReviewController::class, 'create'])->name('AgReview.create');
+Route::resource('ag-reviews', AgReviewController::class)->except(['create']);
+
+// Registry Dispatch routes (no edit/update — a dispatch is a one-time record)
+Route::match(['get', 'post'], 'registry-dispatches/datatables', [RegistryDispatchController::class, 'getDataTables'])->name('registry-dispatches.datatables');
+Route::get('RegistryDispatch/{id}/create', [RegistryDispatchController::class, 'create'])->name('RegistryDispatch.create');
+Route::get('registry-dispatches/{id}/certificate', [RegistryDispatchController::class, 'certificate'])->name('registry-dispatches.certificate');
+Route::resource('registry-dispatches', RegistryDispatchController::class)->only(['index', 'store', 'show', 'destroy']);
+
 
 // Court of Appeal Routes
 Route::get('courtOfAppeal/create/{caseId?}', [\App\Http\Controllers\Oag\Crime\CourtOfAppealController::class, 'create'])
@@ -150,8 +163,16 @@ Route::match(['get', 'post'], 'courtOfAppeal/datatables', [\App\Http\Controllers
 
 Route::resource('courtOfAppeal', \App\Http\Controllers\Oag\Crime\CourtOfAppealController::class)->except(['create']);
 
- 
+
 });
+
+// Unauthenticated, signature-verified route so the High Court Registry can
+// open a specific dispatch certificate from a shared link without an OAG
+// account. Deliberately outside the 'auth' group above — the 'signed'
+// middleware is what protects it instead.
+Route::get('crime/registry-dispatches/{id}/certificate/public', [\App\Http\Controllers\Oag\Crime\RegistryDispatchController::class, 'publicCertificate'])
+    ->name('crime.registry-dispatches.public-certificate')
+    ->middleware('signed');
 
 Route::group([
     'as' => 'civil.',

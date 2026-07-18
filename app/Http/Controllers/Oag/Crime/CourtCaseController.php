@@ -46,29 +46,18 @@ class CourtCaseController extends Controller
         abort_unless(auth()->user()->hasRole('cm.user'), 403);
 
         $case = $this->criminalCaseRepository->getById($id);
+        abort_if(!$case, 404);
+        $this->assertCaseIsDispatched($case);
 
         return view('oag.court_cases.create', compact('case'));
     }
 
-    public function store(Request $request)
+    public function store(\App\Http\Requests\Oag\Crime\CourtCaseStoreRequest $request)
     {
-        abort_unless(auth()->user()->hasRole('cm.user'), 403);
-
         $case = $this->criminalCaseRepository->getById($request->input('case_id'));
         abort_if(!$case, 404);
-        $this->assertCanActOnCase($case, auth()->user());
-        $this->assertCaseIsActionable($case);
 
-        $data = $request->validate([
-            'case_id' => 'required|exists:cases,id',
-            'charge_file_dated' => 'required|date',
-            'high_court_case_number' => 'nullable|string|max:255',
-            'verdict' => 'nullable|in:guilty,not_guilty,dismissed,withdrawn,other',
-           
-            'judgment_delivered_date' => 'nullable|date',
-            'court_outcome' => 'nullable|in:win,lose',
-            'decision_principle_established' => 'nullable|string',
-        ]);
+        $data = $request->validated();
 
         $data['created_by'] = auth()->id();
         $data['updated_by'] = null;
@@ -109,20 +98,11 @@ class CourtCaseController extends Controller
         return view('oag.court_cases.edit', compact('courtCase', 'cases'));
     }
 
-    public function update(Request $request, $id)
+    public function update(\App\Http\Requests\Oag\Crime\CourtCaseUpdateRequest $request, $id)
     {
         $courtCase = $this->courtCaseRepository->getById($id);
 
-        $data = $request->validate([
-            'case_id' => 'required|exists:cases,id',
-            'charge_file_dated' => 'required|date',
-            'high_court_case_number' => 'nullable|string|max:255',
-            'verdict' => 'nullable|in:guilty,not_guilty,dismissed,withdrawn,other',
-           
-            'judgment_delivered_date' => 'nullable|date',
-            'court_outcome' => 'nullable|in:win,lose',
-            'decision_principle_established' => 'nullable|string',
-        ]);
+        $data = $request->validated();
 
         $data['updated_by'] = auth()->id();
 

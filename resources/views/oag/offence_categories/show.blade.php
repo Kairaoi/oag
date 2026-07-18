@@ -11,7 +11,7 @@
 
     <div class="card shadow-lg rounded" style="border: 2px solid #007bff; border-radius: 20px;">
         <div class="card-header text-white" style="background: linear-gradient(90deg, #007bff, #00c6ff);">
-            <h5>Case File Number: <strong>{{ $criminalCase->case_file_number }}</strong></h5>
+            <h5>Police Case File Number: <strong>{{ $criminalCase->case_file_number }}</strong></h5>
         </div>
         <div class="card-body">
             <p><strong>Case Name:</strong> {{ $criminalCase->case_name }}</p>

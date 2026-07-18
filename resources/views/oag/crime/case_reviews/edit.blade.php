@@ -93,9 +93,9 @@
             <input type="text" class="form-control" id="court_case_number" name="court_case_number" value="{{ old('court_case_number', $caseReview->court_case_number) }}">
         </div>
 
-        <!-- Reason for Closure (moved below Evidence Status) -->
+        <!-- Reason for Closure / Return (moved below Evidence Status) -->
         <div class="form-group" id="reason_for_closure_container" style="display: none;">
-            <label for="reason_for_closure_id" class="text-white">Reason for Closure</label>
+            <label for="reason_for_closure_id" class="text-white" id="reason_for_closure_label">Reason for Closure</label>
             <select class="form-control @error('reason_for_closure_id') is-invalid @enderror" id="reason_for_closure_id" name="reason_for_closure_id">
                 <option value="">Select a reason</option>
                 @foreach($reasonsForClosure as $id => $reason)
@@ -103,6 +103,21 @@
                 @endforeach
             </select>
             @error('reason_for_closure_id')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+            @enderror
+        </div>
+
+        <!-- Closure Decision (insufficient evidence only) -->
+        <div class="form-group" id="closure_decision_container" style="display: none;">
+            <label for="closure_decision" class="text-white">Closure Decision</label>
+            <select class="form-control @error('closure_decision') is-invalid @enderror" id="closure_decision" name="closure_decision">
+                <option value="">Select a decision</option>
+                <option value="nfa" {{ old('closure_decision', $caseReview->closure_decision) == 'nfa' ? 'selected' : '' }}>No Further Action (NFA)</option>
+                <option value="nolle_prosequi" {{ old('closure_decision', $caseReview->closure_decision) == 'nolle_prosequi' ? 'selected' : '' }}>Nolle Prosequi</option>
+            </select>
+            @error('closure_decision')
                 <span class="invalid-feedback" role="alert">
                     <strong>{{ $message }}</strong>
                 </span>
@@ -206,6 +221,8 @@
         const reallocationContainer = document.getElementById('reallocation_container');
         const courtInfoContainer = document.getElementById('court_info_container');
         const reasonForClosureContainer = document.getElementById('reason_for_closure_container');
+        const reasonForClosureLabel = document.getElementById('reason_for_closure_label');
+        const closureDecisionContainer = document.getElementById('closure_decision_container');
         const evidenceStatusSelect = document.getElementById('evidence_status');
         const offenceSection = document.getElementById('offenceGroupsSection');
 
@@ -228,12 +245,17 @@
                 courtInfoContainer.style.display = 'none';
             }
 
-            // Toggle Reason for Closure Fields based on Evidence Status
+            // Toggle Reason for Closure/Return Fields based on Evidence Status
             if (evidenceStatus === 'insufficient_evidence' || evidenceStatus === 'returned_to_police') {
                 reasonForClosureContainer.style.display = 'block';
+                reasonForClosureLabel.innerText = evidenceStatus === 'insufficient_evidence' ? 'Reason for Closure' : 'Reason for Return';
             } else {
                 reasonForClosureContainer.style.display = 'none';
             }
+
+            // Closure Decision only applies to an actual closure (insufficient
+            // evidence) — "returned_to_police" reopens the case instead.
+            closureDecisionContainer.style.display = evidenceStatus === 'insufficient_evidence' ? 'block' : 'none';
 
             // Toggle Offences Fields based on Evidence Status
             offenceSection.style.display = evidenceStatus === 'sufficient_evidence' ? 'block' : 'none';

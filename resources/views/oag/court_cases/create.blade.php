@@ -60,6 +60,17 @@
             @enderror
         </div>
 
+        <!-- Magistrate Court Case Number -->
+        <div class="form-group">
+            <label for="magistrate_court_case_number" class="text-white">Magistrate Court Case Number</label>
+            <input type="text" name="magistrate_court_case_number" id="magistrate_court_case_number"
+                   class="form-control @error('magistrate_court_case_number') is-invalid @enderror"
+                   value="{{ old('magistrate_court_case_number') }}">
+            @error('magistrate_court_case_number')
+                <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
+            @enderror
+        </div>
+
         <!-- Verdict -->
         <div class="form-group">
             <label for="verdict" class="text-white">Verdict</label>
@@ -114,6 +125,25 @@
             @enderror
         </div>
 
+        <!-- Appeal Status -->
+        <div class="form-group">
+            <label class="text-white d-block">Appeal Status</label>
+            <div class="form-check form-check-inline">
+                <input type="checkbox" class="form-check-input" id="appealed_checkbox"
+                       {{ old('is_appealed') === '1' ? 'checked' : '' }}>
+                <label class="form-check-label text-white" for="appealed_checkbox">Appealed</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input type="checkbox" class="form-check-input" id="not_appealed_checkbox"
+                       {{ old('is_appealed') === '0' ? 'checked' : '' }}>
+                <label class="form-check-label text-white" for="not_appealed_checkbox">Not Appealed</label>
+            </div>
+            <input type="hidden" name="is_appealed" id="is_appealed" value="{{ old('is_appealed') }}">
+            @error('is_appealed')
+                <span class="invalid-feedback d-block" role="alert"><strong>{{ $message }}</strong></span>
+            @enderror
+        </div>
+
         <!-- Hidden Created By -->
         <input type="hidden" name="created_by" value="{{ auth()->id() }}">
 
@@ -128,4 +158,30 @@
         </div>
     </form>
 </div>
+
+<script>
+    (function () {
+        const appealedCheckbox = document.getElementById('appealed_checkbox');
+        const notAppealedCheckbox = document.getElementById('not_appealed_checkbox');
+        const isAppealedInput = document.getElementById('is_appealed');
+
+        appealedCheckbox.addEventListener('change', function () {
+            if (this.checked) {
+                notAppealedCheckbox.checked = false;
+                isAppealedInput.value = '1';
+            } else {
+                isAppealedInput.value = '';
+            }
+        });
+
+        notAppealedCheckbox.addEventListener('change', function () {
+            if (this.checked) {
+                appealedCheckbox.checked = false;
+                isAppealedInput.value = '0';
+            } else {
+                isAppealedInput.value = '';
+            }
+        });
+    })();
+</script>
 @endsection

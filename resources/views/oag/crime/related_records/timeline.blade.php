@@ -23,7 +23,7 @@
         title="Case Proof"
         subtitle="Certified Record of Case Proceedings"
         :doc-ref="$docRef"
-        secondary-label="Case File Number"
+        secondary-label="Police Case File Number"
         :secondary-value="$case->case_file_number"
     >
         <!-- 1. Particulars of the Case -->
@@ -35,7 +35,7 @@
                     <td>{{ $case->case_name }}</td>
                 </tr>
                 <tr>
-                    <th>Case File Number</th>
+                    <th>Police Case File Number</th>
                     <td>{{ $case->case_file_number }}</td>
                 </tr>
                 <tr>

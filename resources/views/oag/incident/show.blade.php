@@ -20,7 +20,7 @@
     <div class="card shadow-lg rounded-3 overflow-hidden" style="background: linear-gradient(145deg, #f1f1f1, #ffffff); border: 2px solid #007bff; border-radius: 20px;">
         <div class="card-body">
             <h5 class="card-title">Incident ID: {{ $incident->id }}</h5>
-            <p class="card-text"><strong>Case File Number:</strong> {{ $incident->case_file_number }}</p>
+            <p class="card-text"><strong>Police Case File Number:</strong> {{ $incident->case_file_number }}</p>
             <p class="card-text"><strong>Lawyer Name:</strong> {{ $incident->lawyer_name }}</p>
             <p class="card-text"><strong>Island Name:</strong> {{ $incident->island_name }}</p>
             <p class="card-text"><strong>Date of Incident (Start):</strong> {{ $incident->date_of_incident_start->format('Y-m-d') }}</p>

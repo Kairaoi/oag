@@ -13,6 +13,22 @@
         @method('PUT')
 
         <div class="form-group">
+            <label for="high_court_case_number" class="text-white">High Court Case Number</label>
+            <input type="text" name="high_court_case_number" id="high_court_case_number" class="form-control @error('high_court_case_number') is-invalid @enderror" value="{{ old('high_court_case_number', $appeal->high_court_case_number) }}">
+            @error('high_court_case_number')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
+
+        <div class="form-group">
+            <label for="magistrate_court_case_number" class="text-white">Magistrate Court Case Number</label>
+            <input type="text" name="magistrate_court_case_number" id="magistrate_court_case_number" class="form-control @error('magistrate_court_case_number') is-invalid @enderror" value="{{ old('magistrate_court_case_number', $appeal->magistrate_court_case_number) }}">
+            @error('magistrate_court_case_number')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
+
+        <div class="form-group">
             <label for="appeal_case_number" class="text-white">Appeal Case Number</label>
             <input type="text" name="appeal_case_number" id="appeal_case_number" class="form-control @error('appeal_case_number') is-invalid @enderror" value="{{ old('appeal_case_number', $appeal->appeal_case_number) }}">
             @error('appeal_case_number')
@@ -43,7 +59,7 @@
             <label for="appeal_status" class="text-white">Appeal Status</label>
             <select name="appeal_status" id="appeal_status" class="form-control @error('appeal_status') is-invalid @enderror" required>
                 <option value="">-- Select Status --</option>
-                @foreach(['pending', 'in_progress', 'decided', 'withdrawn'] as $status)
+                @foreach(['pending', 'appealed', 'dismissed', 'withdrawn'] as $status)
                     <option value="{{ $status }}" {{ old('appeal_status', $appeal->appeal_status) == $status ? 'selected' : '' }}>
                         {{ ucfirst(str_replace('_', ' ', $status)) }}
                     </option>

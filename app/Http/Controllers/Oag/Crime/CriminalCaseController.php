@@ -17,6 +17,8 @@ use App\Repositories\Oag\Crime\CourtCaseRepository;
 use App\Repositories\Oag\Crime\AppealDetailRepository;
 use App\Repositories\Oag\Crime\CaseReallocationRepository;
 use App\Repositories\Oag\Crime\CourtOfAppealRepository;
+use App\Repositories\Oag\Crime\AgReviewRepository;
+use App\Repositories\Oag\Crime\RegistryDispatchRepository;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -48,6 +50,8 @@ class CriminalCaseController extends Controller
     protected $appealDetailRepository;
     protected $caseReallocationRepository;
     protected $courtOfAppealRepository;
+    protected $agReviewRepository;
+    protected $registryDispatchRepository;
 
     /**
      * CriminalCaseController constructor.
@@ -68,7 +72,9 @@ class CriminalCaseController extends Controller
         ReasonsForClosureRepository $reasonsForClosureRepository,
         OffenceRepository $offenceRepository,
         OffenceCategoryRepository $offenceCategoryRepository,
-        CourtRepository $courtRepository
+        CourtRepository $courtRepository,
+        AgReviewRepository $agReviewRepository,
+        RegistryDispatchRepository $registryDispatchRepository
     ) {
         $this->criminalCaseRepository = $criminalCaseRepository;
         $this->accusedRepository = $accusedRepository;
@@ -83,6 +89,8 @@ class CriminalCaseController extends Controller
         $this->appealDetailRepository = $appealDetailRepository;
         $this->caseReallocationRepository = $caseReallocationRepository;
         $this->courtOfAppealRepository = $courtOfAppealRepository;
+        $this->agReviewRepository = $agReviewRepository;
+        $this->registryDispatchRepository = $registryDispatchRepository;
     }
 
     /**
@@ -159,23 +167,13 @@ class CriminalCaseController extends Controller
     /**
      * Store a newly created criminal case in storage.
      *
-     * @param Request $request
+     * @param \App\Http\Requests\Oag\Crime\CriminalCaseStoreRequest $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(\App\Http\Requests\Oag\Crime\CriminalCaseStoreRequest $request)
     {
-        $data = $request->validate([
-            'case_file_number'      => 'required|string|max:255|unique:cases,case_file_number',
-            'date_file_received'    => 'required|date',
-            'case_name'             => 'required|string|max:255',
-            'date_of_incident'    => 'nullable|date',
-            'date_file_closed'      => 'nullable|date',
-            'reason_for_closure_id' => 'nullable|exists:reasons_for_closure,id',
-           'lawyer_id'              => ['nullable', 'exists:users,id', new \App\Rules\UserHasRole('cm.user')],
-            'island_id'             => 'required|exists:islands,id',
-            'court_case_number'     => 'nullable|string|max:255', // Added to match update method
-        ]);
-    
+        $data = $request->validated();
+
         $data['created_by'] = auth()->id(); // Set the current user as the creator
         $data['updated_by'] = null; // Initially set to null
     
@@ -267,11 +265,11 @@ class CriminalCaseController extends Controller
     /**
      * Update the specified criminal case in storage.
      *
-     * @param Request $request
+     * @param \App\Http\Requests\Oag\Crime\CriminalCaseUpdateRequest $request
      * @param int $id
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, $id)
+    public function update(\App\Http\Requests\Oag\Crime\CriminalCaseUpdateRequest $request, $id)
     {
         // Retrieve the criminal case
         $criminalCase = $this->criminalCaseRepository->getById($id);
@@ -281,21 +279,8 @@ class CriminalCaseController extends Controller
                 ->with('error', 'Criminal Case not found');
         }
 
-        $this->assertCaseIsActionable($criminalCase);
+        $data = $request->validated();
 
-        // Validation rules
-        $data = $request->validate([
-            'case_file_number'      => 'required|string|max:255|unique:cases,case_file_number,' . $criminalCase->id,
-            'date_file_received'    => 'required|date',
-            'case_name'             => 'required|string|max:255',
-            'date_of_incident'    => 'nullable|date',
-            'date_file_closed'      => 'nullable|date',
-            'reason_for_closure_id' => 'nullable|exists:reasons_for_closure,id',
-            'lawyer_id'             => ['required', 'exists:users,id', new \App\Rules\UserHasRole('cm.user')],
-            'island_id'             => 'required|exists:islands,id',
-            'court_case_number'     => 'nullable|string|max:255',
-        ]);
-    
         $data['updated_by'] = auth()->id(); // Track who updated it
     
         // Check if lawyer_id has changed
@@ -308,7 +293,7 @@ class CriminalCaseController extends Controller
         // Ensure the status is updated correctly here
         $this->criminalCaseRepository->update($id, $data);
     
-        return redirect()->route('crime.criminalCase.edit', $id)
+        return redirect()->route('crime.criminalCase.index')
             ->with('success', 'Case updated successfully.');
     }
     
@@ -403,17 +388,10 @@ public function createIncident($id)
  */
 
 
-public function accept($id)
+public function accept(\App\Http\Requests\Oag\Crime\CriminalCaseAcceptRequest $request, $id)
 {
     $case = $this->criminalCaseRepository->getById($id);
     $user = auth()->user();
-
-    if (!$user->hasRole('cm.user')) {
-        abort(403);
-    }
-
-    $this->assertCanActOnCase($case, $user);
-    abort_unless(in_array($case->status, ['allocated', 'reallocated']), 403, 'This case must be allocated to a lawyer before it can be accepted or rejected.');
 
     $case->status = 'accepted';
     $case->rejection_reason = null;
@@ -424,21 +402,13 @@ public function accept($id)
     return back()->with('success', 'Case accepted successfully.');
 }
 
-public function reject(Request $request, $id)
+public function reject(\App\Http\Requests\Oag\Crime\CriminalCaseRejectRequest $request, $id)
 {
-    $request->validate(['rejection_reason' => 'required|string']);
     $case = $this->criminalCaseRepository->getById($id);
     $user = auth()->user();
 
-    if (!$user->hasRole('cm.user')) {
-        abort(403);
-    }
-
-    $this->assertCanActOnCase($case, $user);
-    abort_unless(in_array($case->status, ['allocated', 'reallocated']), 403, 'This case must be allocated to a lawyer before it can be accepted or rejected.');
-
     $case->status = 'rejected';
-    $case->rejection_reason = $request->rejection_reason;
+    $case->rejection_reason = $request->validated('rejection_reason');
     $case->rejected_at = now();
     $case->rejected_by = $user->id;
     $case->save();
@@ -456,24 +426,12 @@ public function showReallocationForm($id)
 
 
 
-public function reallocateCase(Request $request, $caseId)
+public function reallocateCase(\App\Http\Requests\Oag\Crime\CriminalCaseReallocateRequest $request, $caseId)
 {
     Log::info("Reallocation request received", ['case_id' => $caseId, 'request' => $request->all()]);
 
-    $request->validate([
-        'to_lawyer_id' => ['required', 'exists:users,id', new \App\Rules\UserHasRole('cm.user')],
-        'reallocation_reason' => 'required|string',
-        'reallocation_date' => 'required|date',
-    ]);
-
     $user = Auth::user();
     Log::info("Authenticated user", ['user_id' => $user->id, 'roles' => $user->getRoleNames()]);
-
-    // Check if the user has the 'cm.user' role
-    if (!$user->hasRole('cm.admin')) {
-        Log::warning("User does not have permission to reallocate", ['user_id' => $user->id]);
-        abort(403, 'Unauthorized action.');
-    }
 
     try {
         DB::transaction(function () use ($request, $caseId, $user) {
@@ -638,11 +596,17 @@ public function showCaseTimeline($id)
         'Case Accepted' => 3,
         'Case Rejected' => 3,
         'Case Reviewed' => 4,
-        'Court Case Filed' => 5,
-        'Court Case Judgment' => 6,
-        'Appeal Filed' => 7,
-        'Court of Appeal Filed' => 8,
-        'Court of Appeal Judgment' => 9,
+        'Returned — Further Action Required' => 4,
+        'Closed — Insufficient Evidence' => 4,
+        'Submitted to AG' => 5,
+        'AG Approved' => 6,
+        'Returned for Revision' => 6,
+        'Dispatched' => 7,
+        'Court Case Filed' => 8,
+        'Court Case Judgment' => 9,
+        'Appeal Filed' => 10,
+        'Court of Appeal Filed' => 11,
+        'Court of Appeal Judgment' => 12,
     ];
 
     $events = [];
@@ -691,11 +655,20 @@ public function showCaseTimeline($id)
     $dateFileClosed = null;
 
     foreach ($this->caseReviewRepository->getReviewsByCaseId($id) as $review) {
+        // Mirror the wording CriminalCaseRepository::determineCaseStatus()
+        // uses for these same outcomes (Steps 7/8 of the case workflow), so
+        // the timeline reads consistently with the Case Status badge.
+        $reviewStage = match ($review->evidence_status) {
+            'returned_to_police' => 'Returned — Further Action Required',
+            'insufficient_evidence' => 'Closed — Insufficient Evidence',
+            default => 'Case Reviewed',
+        };
+
         $events[] = [
             'date' => $review->review_date,
-            'stage' => 'Case Reviewed',
-            'icon' => 'fa-clipboard-check',
-            'color' => 'success',
+            'stage' => $reviewStage,
+            'icon' => $reviewStage === 'Case Reviewed' ? 'fa-clipboard-check' : 'fa-undo',
+            'color' => $reviewStage === 'Case Reviewed' ? 'success' : 'danger',
             'summary' => 'Evidence status: ' . ucfirst(str_replace('_', ' ', $review->evidence_status))
                 . ($review->created_by_name ? ' — reviewed by ' . $review->created_by_name : ''),
         ];
@@ -706,15 +679,59 @@ public function showCaseTimeline($id)
         }
     }
 
+    // Step 9 (Submit to AG for Final Review) and its decision — a case can be
+    // rejected, revised and resubmitted multiple times, so each round of the
+    // loop is its own pair of events.
+    foreach ($this->agReviewRepository->getSubmissionsForCase($id) as $agReview) {
+        $events[] = [
+            'date' => $agReview->submitted_at,
+            'stage' => 'Submitted to AG',
+            'icon' => 'fa-paper-plane',
+            'color' => 'info',
+            'summary' => 'Submitted for review' . ($agReview->submittedBy ? ' by ' . $agReview->submittedBy->name : '') . '.',
+        ];
+
+        if ($agReview->ag_decision === 'approved') {
+            $events[] = [
+                'date' => $agReview->decision_date,
+                'stage' => 'AG Approved',
+                'icon' => 'fa-stamp',
+                'color' => 'success',
+                'summary' => 'Approved by the Attorney General.',
+            ];
+        } elseif ($agReview->ag_decision === 'rejected') {
+            $events[] = [
+                'date' => $agReview->decision_date,
+                'stage' => 'Returned for Revision',
+                'icon' => 'fa-undo',
+                'color' => 'danger',
+                'summary' => trim('Returned by the Attorney General for revision.'
+                    . ($agReview->ag_comments ? ' ' . $agReview->ag_comments : '')),
+            ];
+        }
+    }
+
+    // Step 10 (Registry Dispatch to High Court).
+    foreach ($this->registryDispatchRepository->getByCaseId($id) as $dispatch) {
+        $events[] = [
+            'date' => $dispatch->date_dispatched,
+            'stage' => 'Dispatched',
+            'icon' => 'fa-truck',
+            'color' => 'primary',
+            'summary' => trim('Dispatched to ' . $dispatch->dispatched_to . '.'
+                . ($dispatch->dispatchedBy ? ' Dispatched by ' . $dispatch->dispatchedBy->name . '.' : '')),
+        ];
+    }
+
     foreach ($this->courtCaseRepository->getCourtCasesByCaseId($id) as $courtCase) {
         $events[] = [
             'date' => $courtCase->charge_file_dated,
             'stage' => 'Court Case Filed',
             'icon' => 'fa-gavel',
             'color' => 'warning',
-            'summary' => trim(($courtCase->high_court_case_number ? 'High Court Case ' . $courtCase->high_court_case_number . '. ' : '')
-                . ($courtCase->verdict ? 'Verdict: ' . ucfirst(str_replace('_', ' ', $courtCase->verdict)) . '. ' : '')
-                . ($courtCase->court_outcome ? 'Outcome: ' . ucfirst($courtCase->court_outcome) . '.' : '')),
+            'summary' => $courtCase->high_court_case_number
+                ? 'High Court Case ' . $courtCase->high_court_case_number . '.'
+                : null,
         ];
 
         if ($courtCase->judgment_delivered_date) {
@@ -723,7 +740,8 @@ public function showCaseTimeline($id)
                 'stage' => 'Court Case Judgment',
                 'icon' => 'fa-gavel',
                 'color' => 'warning',
-                'summary' => $courtCase->court_outcome ? 'Outcome: ' . ucfirst($courtCase->court_outcome) : null,
+                'summary' => trim(($courtCase->verdict ? 'Verdict: ' . ucfirst(str_replace('_', ' ', $courtCase->verdict)) . '. ' : '')
+                    . ($courtCase->court_outcome ? 'Outcome: ' . ucfirst($courtCase->court_outcome) . '.' : '')) ?: null,
             ];
         }
     }
@@ -812,17 +830,15 @@ public function showAllocationForm($id)
 /**
  * Process lawyer allocation to a specific case.
  *
- * @param Request $request
+ * @param \App\Http\Requests\Oag\Crime\CriminalCaseAllocateRequest $request
  * @param int $id Criminal case ID
  * @return \Illuminate\Http\RedirectResponse
  */
-public function allocateLawyer(Request $request, $id)
+public function allocateLawyer(\App\Http\Requests\Oag\Crime\CriminalCaseAllocateRequest $request, $id)
 {
     $case = $this->criminalCaseRepository->getById($id);
     abort_if(!$case, 404);
     $user = auth()->user();
-
-    $this->assertCaseIsActionable($case);
 
     Log::info('Reallocation request received', [
         'case_id' => $id,
@@ -836,12 +852,7 @@ public function allocateLawyer(Request $request, $id)
         'lawyer_id' => $case->lawyer_id
     ]);
 
-    $validated = $request->validate([
-        'to_lawyer_id' => ['required', 'exists:users,id', new \App\Rules\UserHasRole('cm.user')],
-        'reallocation_reason' => 'nullable|string|max:1000',
-        'reallocation_date' => 'required|date',
-    ]);
-
+    $validated = $request->validated();
 
     DB::beginTransaction();
 
@@ -854,7 +865,7 @@ public function allocateLawyer(Request $request, $id)
                 'case_id' => $case->id,
                 'from_lawyer_id' => $case->lawyer_id,
                 'to_lawyer_id' => $validated['to_lawyer_id'],
-                'reallocation_reason' => $validated['reallocation_reason'],
+                'reallocation_reason' => $validated['reallocation_reason'] ?? null,
                 'reallocation_date' => $validated['reallocation_date'],
                 'created_by' => $user->id,
                 'updated_by' => $user->id,

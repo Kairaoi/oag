@@ -83,7 +83,7 @@
             <label for="court_outcome" class="text-white">Court Outcome</label>
             <select name="court_outcome" id="court_outcome" class="form-control @error('court_outcome') is-invalid @enderror">
                 <option value="">-- Select Outcome --</option>
-                @foreach(['win', 'lose', 'remand'] as $outcome)
+                @foreach(['win', 'lose'] as $outcome)
                     <option value="{{ $outcome }}" {{ old('court_outcome') == $outcome ? 'selected' : '' }}>
                         {{ ucfirst($outcome) }}
                     </option>

@@ -21,7 +21,7 @@
 
         <!-- Case File Number -->
         <div class="form-group">
-            <label for="case_file_number" class="text-white">Case File Number</label>
+            <label for="case_file_number" class="text-white">Police Case File Number</label>
             <input type="text" class="form-control @error('case_file_number') is-invalid @enderror" id="case_file_number" name="case_file_number" value="{{ old('case_file_number', $criminalCase->case_file_number) }}" required>
             @error('case_file_number')
                 <span class="invalid-feedback" role="alert">
@@ -104,6 +104,13 @@
         <a href="{{ route('crime.criminalCase.createAccused', $criminalCase->id) }}" class="btn btn-success">
             Add Accused to this Case
         </a>
+
+        <!-- Add Victim -->
+        <div class="form-check mt-3">
+            <input type="checkbox" class="form-check-input" id="add_victim_checkbox"
+                   onclick="window.location.href='{{ route('crime.criminalCase.createVictim', $criminalCase->id) }}'">
+            <label class="form-check-label text-white" for="add_victim_checkbox">Add Victim to this Case</label>
+        </div>
     </form>
 </div>
 @endsection

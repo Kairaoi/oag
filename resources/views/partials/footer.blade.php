@@ -1,32 +1,60 @@
 <!-- resources/views/partials/footer.blade.php -->
-<footer class="bg-dark text-white py-3">
+<style>
+    .site-footer {
+        background: #0a2463;
+        color: #c3ccdf;
+    }
+    .site-footer h5 {
+        color: #fff;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 0.9rem;
+    }
+    .site-footer a {
+        color: #c3ccdf;
+        text-decoration: none;
+    }
+    .site-footer a:hover {
+        color: #7fe3ee;
+    }
+    .site-footer .footer-bottom {
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        color: #8b98b8;
+        font-size: 12.5px;
+    }
+</style>
+
+<footer class="site-footer py-4">
     <div class="container">
-        <div class="row">
-            <!-- Contact Information -->
-            <div class="col-md-4 mb-3">
-                <h5 class="text-uppercase">Contact Us</h5>
-                <p class="mb-1"><i class="bi bi-geo-alt"></i> 123 Justice Street, City, Country</p>
-                <p class="mb-1"><i class="bi bi-telephone"></i> +1 (123) 456-7890</p>
-                <p><i class="bi bi-envelope"></i> contact@ministryofjustice.example.com</p>
+        <div class="row gy-4">
+            <div class="col-md-4">
+                <h5>Office of the Attorney General</h5>
+                <p class="mb-1">Republic of Kiribati</p>
+                <p class="mb-0">Bairiki, Tarawa</p>
             </div>
 
-           
+            <div class="col-md-4">
+                <h5>Case Management</h5>
+                <p class="mb-1"><a href="{{ route('crime.criminalCase.index') }}">Criminal Case List</a></p>
+                <p class="mb-1"><a href="{{ route('crime.CaseReview.index') }}">Case Reviews</a></p>
+                <p class="mb-1"><a href="{{ route('crime.court-hearings.index') }}">Court Hearings</a></p>
+                <p class="mb-1"><a href="{{ route('crime.ag-reviews.index') }}">AG Reviews</a></p>
+                <p class="mb-0"><a href="{{ route('crime.registry-dispatches.index') }}">Registry Dispatches</a></p>
+            </div>
 
-            <!-- Social Media Links -->
-            <div class="col-md-4 mb-3">
-                <h5 class="text-uppercase">Follow Us</h5>
-                <a href="#" class="btn btn-outline-light btn-sm me-2"><i class="bi bi-facebook"></i></a>
-                <a href="#" class="btn btn-outline-light btn-sm me-2"><i class="bi bi-twitter"></i></a>
-                <a href="#" class="btn btn-outline-light btn-sm me-2"><i class="bi bi-linkedin"></i></a>
-                <a href="#" class="btn btn-outline-light btn-sm"><i class="bi bi-instagram"></i></a>
+            <div class="col-md-4">
+                <h5>Other Divisions</h5>
+                <p class="mb-1"><a href="{{ route('civil.boards.index') }}">Civil Case</a></p>
+                <p class="mb-1"><a href="{{ route('legal.boards.index') }}">Legal Advice</a></p>
+                <p class="mb-0"><a href="{{ route('draft.boards.index') }}">Drafting</a></p>
             </div>
         </div>
 
-        <!-- Footer Bottom -->
         <div class="row mt-4">
-            <div class="col text-center">
-                <p class="mb-0">© {{ date('Y') }} Office of the Attorney General. All rights reserved.</p>
-                <p class="mb-0"><a href="" class="text-white">Privacy Policy</a> | <a href="" class="text-white">Terms of Service</a></p>
+            <div class="col text-center footer-bottom pt-3">
+                <p class="mb-0">&copy; {{ date('Y') }} Government of Kiribati &middot; Office of the Attorney General. Internal system for authorised personnel only.</p>
             </div>
         </div>
     </div>

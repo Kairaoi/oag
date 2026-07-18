@@ -16,7 +16,7 @@
                     <th>Case Name</th>
                     <th>Appeal Case No.</th>
                     <th>Filing Date</th>
-                    <th>Verdict</th>
+                    <th>Appeal Status</th>
                     <th>Outcome</th>
                     <th>Judgment Date</th>
                     <th>Actions</th>
@@ -52,7 +52,7 @@ $(document).ready(function () {
             { data: 'case_name', defaultContent: '' },
             { data: 'appeal_case_number', defaultContent: '' },
             { data: 'appeal_filing_date', render: data => data ? new Date(data).toLocaleDateString() : '' },
-            { data: 'verdict', render: data => data ? data.charAt(0).toUpperCase() + data.slice(1).replace('_', ' ') : '' },
+            { data: 'appeal_status', render: data => data ? data.charAt(0).toUpperCase() + data.slice(1).replace('_', ' ') : '' },
             { data: 'court_outcome', render: data => data ? data.charAt(0).toUpperCase() + data.slice(1) : '' },
             { data: 'judgment_delivered_date', render: data => data ? new Date(data).toLocaleDateString() : '' },
             {

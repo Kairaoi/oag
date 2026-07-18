@@ -21,6 +21,8 @@ class AppealDetail extends Model
    // In AppealDetail model
    protected $fillable = [
     'case_id',
+    'high_court_case_number',
+    'magistrate_court_case_number',
     'appeal_case_number',
     'appeal_filing_date',
     'appeal_filing_received_date',

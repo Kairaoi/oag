@@ -54,26 +54,14 @@ class CourtOfAppealController extends Controller
         return view('oag.crime.court_of_appeals.create', compact('cases', 'caseId'));
     }
 
-    public function store(Request $request)
+    public function store(\App\Http\Requests\Oag\Crime\CourtOfAppealStoreRequest $request)
     {
-        abort_unless(auth()->user()->hasRole('cm.user'), 403);
-
         $case = $this->criminalCaseRepository->getById($request->input('case_id'));
         abort_if(!$case, 404);
-        $this->assertCanActOnCase($case, auth()->user());
-        $this->assertCaseIsActionable($case);
 
         \Log::info('Court of Appeal create request:', $request->all());
 
-        $validated = $request->validate([
-            'case_id' => 'required|exists:cases,id',
-            'appeal_case_number' => 'nullable|string',
-            'appeal_filing_date' => 'required|date',
-            'filing_date_source' => 'required|string',
-            'judgment_delivered_date' => 'nullable|date',
-            'court_outcome' => 'nullable|in:win,lose,remand',
-            'decision_principle_established' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         $validated['created_by'] = Auth::id();
         $validated['updated_by'] = Auth::id();
@@ -106,16 +94,9 @@ class CourtOfAppealController extends Controller
         return view('oag.crime.court_of_appeals.edit', compact('appeal', 'cases'));
     }
 
-    public function update(Request $request, $id)
+    public function update(\App\Http\Requests\Oag\Crime\CourtOfAppealUpdateRequest $request, $id)
     {
-        $validated = $request->validate([
-            'appeal_case_number' => 'nullable|string',
-            'appeal_filing_date' => 'required|date',
-            'filing_date_source' => 'required|string',
-            'judgment_delivered_date' => 'nullable|date',
-            'court_outcome' => 'nullable|in:win,lose,remand',
-            'decision_principle_established' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         $validated['updated_by'] = Auth::id();
 

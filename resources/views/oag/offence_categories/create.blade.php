@@ -16,7 +16,7 @@
     <form action="{{ route('crime.criminalCase.store') }}" method="POST" class="p-4 shadow-lg rounded" style="background: linear-gradient(90deg, #ff416c, #ff4b2b); border-radius: 20px;">
         @csrf
         <div class="form-group">
-            <label for="case_file_number" class="text-white">Case File Number</label>
+            <label for="case_file_number" class="text-white">Police Case File Number</label>
             <input type="text" class="form-control @error('case_file_number') is-invalid @enderror" id="case_file_number" name="case_file_number" value="{{ old('case_file_number') }}" required>
             @error('case_file_number')
                 <span class="invalid-feedback" role="alert">

@@ -33,16 +33,39 @@
             text-align: center;
             border-top: 1px solid #e0e0e0;
         }
+        .navbar-utility {
+            background: #0a2463 !important;
+            font-size: 12.5px;
+            padding-top: 6px;
+            padding-bottom: 6px;
+        }
+        .navbar-utility .navbar-brand {
+            font-size: 12.5px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: #b9c4e0 !important;
+        }
+        .navbar-utility .nav-link,
+        .navbar-utility .dropdown-toggle {
+            color: #d7deee !important;
+        }
+        .navbar-utility .badge-official {
+            color: #7fe3ee;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-size: 11.5px;
+        }
     </style>
      {{-- Styles from @stack('styles') --}}
     @stack('styles')
 </head>
 <body>
     <div id="app">
-        <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
+        <nav class="navbar navbar-expand-md navbar-dark navbar-utility">
             <div class="container">
                 <a class="navbar-brand" href="{{ url('/') }}">
-                    {{ config('app.name', 'Laravel') }}
+                    Government of Kiribati &mdash; Office of the Attorney General
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
                     <span class="navbar-toggler-icon"></span>
@@ -52,6 +75,8 @@
                     <!-- Left Side Of Navbar -->
                     <ul class="navbar-nav me-auto">
                     </ul>
+
+                    <span class="badge-official d-none d-lg-inline">Official Government Portal</span>
 
                     <!-- Right Side Of Navbar -->
                     <ul class="navbar-nav ms-auto">

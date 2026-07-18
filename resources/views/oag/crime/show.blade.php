@@ -18,7 +18,7 @@
     <div class="card shadow-lg rounded-3 overflow-hidden" style="background: linear-gradient(145deg, #f1f1f1, #ffffff); border: 2px solid #007bff; border-radius: 20px;">
         <div class="card-body">
             <div class="mb-3">
-                <strong>Case File Number:</strong>
+                <strong>Police Case File Number:</strong>
                 <p>{{ $criminalCase->case_file_number }}</p>
             </div>
             <div class="mb-3">
@@ -42,7 +42,7 @@
                 <p>{{ $criminalCase->island_name ?? 'N/A' }}</p>
             </div>
             <div class="mb-3">
-                <strong>Council Name:</strong>
+                <strong>Counsel:</strong>
                 <p>{{ $criminalCase->lawyer_name ?? 'N/A' }}</p>
             </div>
             

@@ -268,6 +268,48 @@ Breadcrumbs::for('crime.court-cases.edit', function (BreadcrumbTrail $trail, $co
     $trail->push('Edit Court Case');
 });
 
+// AG Reviews
+Breadcrumbs::for('crime.ag-reviews.index', function (BreadcrumbTrail $trail) {
+    $trail->parent('crime.boards.index');
+    $trail->push('AG Reviews', route('crime.ag-reviews.index'));
+});
+
+Breadcrumbs::for('crime.AgReview.create', function (BreadcrumbTrail $trail) {
+    $trail->parent('crime.ag-reviews.index');
+    $trail->push('Submit to AG');
+});
+
+Breadcrumbs::for('crime.ag-reviews.show', function (BreadcrumbTrail $trail, $agReview) {
+    $trail->parent('crime.ag-reviews.index');
+    $trail->push('AG Review Details');
+});
+
+Breadcrumbs::for('crime.ag-reviews.edit', function (BreadcrumbTrail $trail, $agReview) {
+    $trail->parent('crime.ag-reviews.index');
+    $trail->push('Record AG Decision');
+});
+
+// Registry Dispatches
+Breadcrumbs::for('crime.registry-dispatches.index', function (BreadcrumbTrail $trail) {
+    $trail->parent('crime.boards.index');
+    $trail->push('Registry Dispatches', route('crime.registry-dispatches.index'));
+});
+
+Breadcrumbs::for('crime.RegistryDispatch.create', function (BreadcrumbTrail $trail) {
+    $trail->parent('crime.registry-dispatches.index');
+    $trail->push('Dispatch to Court');
+});
+
+Breadcrumbs::for('crime.registry-dispatches.show', function (BreadcrumbTrail $trail, $dispatch) {
+    $trail->parent('crime.registry-dispatches.index');
+    $trail->push('Registry Dispatch Details');
+});
+
+Breadcrumbs::for('crime.registry-dispatches.certificate', function (BreadcrumbTrail $trail, $id) {
+    $trail->parent('crime.registry-dispatches.index');
+    $trail->push('Dispatch Certificate');
+});
+
 // Reports
 Breadcrumbs::for('crime.reports.index', function (BreadcrumbTrail $trail) {
     $trail->parent('crime.boards.index');

@@ -47,9 +47,9 @@
             @enderror
         </div>
 
-        <!-- Reason for Closure -->
+        <!-- Reason for Closure / Return -->
         <div class="form-group" id="reason_for_closure_container" style="display: none;">
-            <label for="reason_for_closure_id" class="text-white">Reason for Closure</label>
+            <label for="reason_for_closure_id" class="text-white" id="reason_for_closure_label">Reason for Closure</label>
             <select class="form-control @error('reason_for_closure_id') is-invalid @enderror" id="reason_for_closure_id" name="reason_for_closure_id">
                 <option value="">Select a reason</option>
                 @foreach($reasonsForClosure as $id => $reason)
@@ -57,6 +57,21 @@
                 @endforeach
             </select>
             @error('reason_for_closure_id')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+            @enderror
+        </div>
+
+        <!-- Closure Decision (insufficient evidence only) -->
+        <div class="form-group" id="closure_decision_container" style="display: none;">
+            <label for="closure_decision" class="text-white">Closure Decision</label>
+            <select class="form-control @error('closure_decision') is-invalid @enderror" id="closure_decision" name="closure_decision">
+                <option value="">Select a decision</option>
+                <option value="nfa" {{ old('closure_decision') == 'nfa' ? 'selected' : '' }}>No Further Action (NFA)</option>
+                <option value="nolle_prosequi" {{ old('closure_decision') == 'nolle_prosequi' ? 'selected' : '' }}>Nolle Prosequi</option>
+            </select>
+            @error('closure_decision')
                 <span class="invalid-feedback" role="alert">
                     <strong>{{ $message }}</strong>
                 </span>
@@ -136,6 +151,8 @@
     document.addEventListener('DOMContentLoaded', function () {
         const evidenceStatus = document.getElementById('evidence_status');
         const reasonContainer = document.getElementById('reason_for_closure_container');
+        const reasonLabel = document.getElementById('reason_for_closure_label');
+        const closureDecisionContainer = document.getElementById('closure_decision_container');
         const dateFileClosed = document.getElementById('date_file_closed');
         const offenceSection = document.getElementById('offenceGroupsSection');
 
@@ -143,11 +160,20 @@
             const status = evidenceStatus.value;
 
             reasonContainer.style.display = 'none';
+            closureDecisionContainer.style.display = 'none';
             offenceSection.style.display = 'none';
             dateFileClosed.value = '';
 
             if (status === 'insufficient_evidence' || status === 'returned_to_police') {
                 reasonContainer.style.display = 'block';
+                reasonLabel.innerText = status === 'insufficient_evidence' ? 'Reason for Closure' : 'Reason for Return';
+            }
+
+            // Only an actual closure (insufficient evidence) stamps a closure
+            // date or asks for a Closure Decision — "returned_to_police" sends
+            // the file back to the lawyer instead of closing the case.
+            if (status === 'insufficient_evidence') {
+                closureDecisionContainer.style.display = 'block';
                 dateFileClosed.value = new Date().toISOString().slice(0, 16);
             }
 

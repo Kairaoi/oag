@@ -24,6 +24,9 @@ class UserSeeder extends Seeder
         // holds none of cm.user's powers (accept/reject, case review, court
         // case, appeal, court of appeal) or cm.admin's (allocate/reallocate).
         Role::firstOrCreate(['name' => 'cm.registrar', 'guard_name' => 'web']);
+        // AG Review gate: approves/rejects a case before it can be dispatched
+        // to court — distinct from cm.admin (allocation) and cm.user (review).
+        Role::firstOrCreate(['name' => 'cm.ag', 'guard_name' => 'web']);
 
         $admin = User::updateOrCreate(
             ['email' => 'adminuser@example.com'],
@@ -31,24 +34,33 @@ class UserSeeder extends Seeder
         );
         $admin->syncRoles(['cm.admin', 'cm.user']);
 
-        $lawyer1 = User::updateOrCreate(
+        // Named "Registrar", not "Lawyer 1" — this account only ever holds
+        // cm.registrar (case intake + Registry dispatch), never cm.user, so a
+        // lawyer-style name was misleading about what it can actually do.
+        $registrar = User::updateOrCreate(
             ['email' => 'lawyer1@example.com'],
-            ['name' => 'Lawyer 1', 'password' => Hash::make('password')]
+            ['name' => 'Registrar', 'password' => Hash::make('Password123!')]
         );
-        $lawyer1->syncRoles(['cm.registrar']);
+        $registrar->syncRoles(['cm.registrar']);
 
         foreach (['Lawyer 2', 'Lawyer 3'] as $name) {
             $lawyer = User::updateOrCreate(
                 ['email' => strtolower(str_replace(' ', '', $name)) . '@example.com'],
-                ['name' => $name, 'password' => Hash::make('password')]
+                ['name' => $name, 'password' => Hash::make('Password123!')]
             );
             $lawyer->syncRoles(['cm.user']);
         }
 
         $assistant = User::updateOrCreate(
             ['email' => 'adminassistant@example.com'],
-            ['name' => 'Admin Assistant', 'password' => Hash::make('password')]
+            ['name' => 'Admin Assistant', 'password' => Hash::make('Password123!')]
         );
         $assistant->syncRoles(['cm.admin']);
+
+        $agReviewer = User::updateOrCreate(
+            ['email' => 'agreviewer@example.com'],
+            ['name' => 'AG Reviewer', 'password' => Hash::make('Password123!')]
+        );
+        $agReviewer->syncRoles(['cm.ag']);
     }
 }

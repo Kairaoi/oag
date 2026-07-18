@@ -55,10 +55,12 @@ class CourtCase extends Model
         'case_id',
         'charge_file_dated',
         'high_court_case_number',
+        'magistrate_court_case_number',
         'court_outcome',
         'judgment_delivered_date',
         'verdict',
         'decision_principle_established',
+        'is_appealed',
         'created_by',
         'updated_by',
     ];
@@ -70,8 +72,9 @@ class CourtCase extends Model
      */
     protected $casts = [
         'charge_file_dated' => 'date',
-       
+
         'judgment_delivered_date' => 'date',
+        'is_appealed' => 'boolean',
     ];
 
     /**

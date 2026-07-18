@@ -67,6 +67,15 @@ class CaseReviewController extends Controller
         $this->assertCanActOnCase($case, auth()->user());
         abort_unless($case->status === 'accepted', 403, 'This case must be accepted before it can be reviewed.');
 
+        // case_reviews.case_id is unique — a case only ever has one review
+        // row, updated over time (e.g. after "returned to police" reopens
+        // the case for re-review). If one already exists, edit it instead of
+        // landing on the create form, which would violate that constraint.
+        $existingReview = $this->caseReviewRepository->getReviewsByCaseId($id)->first();
+        if ($existingReview) {
+            return redirect()->route('crime.CaseReview.edit', $existingReview->id);
+        }
+
         $reasonsForClosure = $this->reasonsForClosureRepository->pluck();
         $councils = $this->userRepository->pluck();
         $offences = $this->offenceRepository->pluck2();
@@ -82,43 +91,32 @@ class CaseReviewController extends Controller
             ->with('councils', $councils);
     }
 
-    public function store(Request $request)
+    public function store(\App\Http\Requests\Oag\Crime\CaseReviewStoreRequest $request)
     {
-        abort_unless(auth()->user()->hasRole('cm.user'), 403);
-
         // Retrieve the case ID from the request
         $caseId = $request->input('case_id');
         $case = $this->criminalCaseRepository->getById($caseId);
         abort_if(!$case, 404);
-        $this->assertCanActOnCase($case, auth()->user());
-        abort_unless($case->status === 'accepted', 403, 'This case must be accepted before it can be reviewed.');
-        $this->assertCaseIsActionable($case);
+
+        // Defensive duplicate: case_reviews.case_id is unique, so a second
+        // insert for the same case (e.g. a stale create form still open in
+        // another tab) would otherwise fail with a raw SQL constraint error.
+        $existingReview = $this->caseReviewRepository->getReviewsByCaseId($caseId)->first();
+        if ($existingReview) {
+            return redirect()->route('crime.CaseReview.edit', $existingReview->id)
+                ->with('error', 'This case already has a review — please edit it instead.');
+        }
 
         Log::info("Full request:", $request->all());
-    
-        // Define validation rules
-        $rules = [
-            'case_id' => 'required|exists:cases,id',
-            'evidence_status' => 'required|in:pending_review,sufficient_evidence,insufficient_evidence,returned_to_police',
-           
-            'review_date' => 'required|date',
-            'reason_for_closure_id' => 'required_if:evidence_status,insufficient_evidence,returned_to_police|nullable|exists:reasons_for_closure,id',
-            'offence_id.*' => 'required_if:evidence_status,sufficient_evidence|nullable|exists:offences,id',
-            'category_id.*' => 'required_if:evidence_status,sufficient_evidence|nullable|exists:offence_categories,id',
-            'offence_particulars' => 'required_if:evidence_status,sufficient_evidence|nullable|string', // changed to single field
-        ];
-    
-        // Custom error messages
-        $customMessages = [
-            'reason_for_closure_id.required_if' => 'Please select a reason for closing the case.',
-        ];
-    
-        // Validate incoming data
-        $data = $request->validate($rules, $customMessages);
+
+        $data = $request->validated();
         $data['created_by'] = auth()->id();
     
-        // If the case is closed, set closure date
-        if (in_array($data['evidence_status'], ['insufficient_evidence', 'returned_to_police'])) {
+        // Only an actual closure ("insufficient evidence") stamps date_file_closed.
+        // "returned_to_police" sends the file back to the lawyer's queue instead
+        // of closing the case (see handleCaseStatusUpdate()), so it must not be
+        // marked as closed here.
+        if ($data['evidence_status'] === 'insufficient_evidence') {
             $data['date_file_closed'] = now()->format('Y-m-d');
         }
     
@@ -176,11 +174,17 @@ class CaseReviewController extends Controller
         $caseStatus = null;
     
         // Determine case status based on evidence status
-        if (in_array($data['evidence_status'], ['insufficient_evidence', 'returned_to_police'])) {
+        if ($data['evidence_status'] === 'insufficient_evidence') {
             $caseStatus = 'closed';
-            Log::info("Case Closure Triggered: Evidence marked as '{$data['evidence_status']}'. Case ID {$data['case_id']} will be closed.");
-            
+            Log::info("Case Closure Triggered: insufficient evidence. Case ID {$data['case_id']} will be closed.");
+
             // Assumes that reason_for_closure_id and date_file_closed are handled during the review creation
+        } elseif ($data['evidence_status'] === 'returned_to_police') {
+            // Not a closure — the file is sent back to Police for further
+            // action and reopens on the same lawyer's queue once resubmitted,
+            // rather than ending the case.
+            $caseStatus = 'accepted';
+            Log::info("Case Returned for Further Action: Case ID {$data['case_id']} reopened as 'accepted' pending resubmission.");
         } elseif ($data['evidence_status'] === 'sufficient_evidence') {
             $caseStatus = 'accepted';
             Log::info("Case Processing: Sufficient evidence found. Case ID {$data['case_id']} marked as 'accepted'.");
@@ -237,7 +241,7 @@ class CaseReviewController extends Controller
     }
     
 
-    public function update(Request $request, $id)
+    public function update(\App\Http\Requests\Oag\Crime\CaseReviewUpdateRequest $request, $id)
     {
         Log::info('CaseReview update request received', [
             'review_id' => $id,
@@ -246,50 +250,8 @@ class CaseReviewController extends Controller
             'request' => $request->except(['_token']),
         ]);
 
-        try {
-            $validated = $request->validate([
-                'case_id' => 'required|exists:cases,id',
-                'evidence_status' => 'required|in:pending_review,sufficient_evidence,insufficient_evidence,returned_to_police',
-
-                'review_date' => 'required|date',
-                'reason_for_closure_id' => 'required_if:evidence_status,insufficient_evidence,returned_to_police|exists:reasons_for_closure,id|nullable',
-                'offence_id.*' => 'required_if:evidence_status,sufficient_evidence|nullable|exists:offences,id',
-                'category_id.*' => 'required_if:evidence_status,sufficient_evidence|nullable|exists:offence_categories,id',
-                'action_type' => 'nullable|in:review,reallocate,update_court_info',
-                'new_lawyer_id' => ['required_if:action_type,reallocate', 'nullable', 'exists:users,id', new \App\Rules\UserHasRole('cm.user')],
-                'reallocation_reason' => 'required_if:action_type,reallocate|nullable|string',
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            // The edit form has no @error/error-summary markup for
-            // new_lawyer_id or reallocation_reason, so a validation failure
-            // on either of those fields previously looked like the button
-            // silently did nothing — logged here so a failed reallocation
-            // attempt is visible even though the UI won't show it.
-            Log::warning('CaseReview update validation failed', [
-                'review_id' => $id,
-                'action_type' => $request->input('action_type'),
-                'errors' => $e->errors(),
-            ]);
-            throw $e;
-        }
-
+        $validated = $request->validated();
         $actionType = $validated['action_type'] ?? 'review';
-
-        // Reallocation is an admin-level action everywhere else in the app
-        // (CriminalCaseController::allocateLawyer/reallocateCase both require
-        // cm.admin) — enforced here too, before any side effects, so a
-        // lawyer can't use this form to move a case to themselves or
-        // someone else without approval.
-        if ($actionType === 'reallocate') {
-            if (!auth()->user()->hasRole('cm.admin')) {
-                Log::warning('CaseReview reallocation blocked: user lacks cm.admin role', [
-                    'review_id' => $id,
-                    'user_id' => auth()->id(),
-                    'roles' => auth()->user()->roles->pluck('name'),
-                ]);
-            }
-            abort_unless(auth()->user()->hasRole('cm.admin'), 403, 'Only an administrator can reallocate a case.');
-        }
 
         // action_type and reallocation_reason are form-only concepts with no
         // matching column on case_reviews (only new_lawyer_id is a real
@@ -300,6 +262,15 @@ class CaseReviewController extends Controller
             'evidence_status' => $validated['evidence_status'],
             'review_date' => $validated['review_date'],
             'reason_for_closure_id' => $validated['reason_for_closure_id'] ?? null,
+            'closure_decision' => $validated['evidence_status'] === 'insufficient_evidence'
+                ? ($validated['closure_decision'] ?? null)
+                : null,
+            // Only an actual closure (insufficient evidence) stamps the
+            // review's own date_file_closed — mirrors store()'s behavior,
+            // which this update() path previously didn't replicate.
+            'date_file_closed' => $validated['evidence_status'] === 'insufficient_evidence'
+                ? now()->format('Y-m-d')
+                : null,
             'updated_by' => auth()->id(),
         ];
 
@@ -341,10 +312,21 @@ class CaseReviewController extends Controller
         }
 
         if ($currentReview && $currentReview->evidence_status !== $newStatus) {
-            if (in_array($newStatus, ['insufficient_evidence', 'returned_to_police'])) {
+            // Note: `cases` has no date_file_closed/reason_for_closure_id
+            // columns of its own — that data lives only on this case_reviews
+            // row (already saved above via $data). Only `status` is a real
+            // column on `cases` here.
+            if ($newStatus === 'insufficient_evidence') {
+                // An actual closure — flip the case to 'closed'.
                 $this->criminalCaseRepository->update($data['case_id'], [
-                    'date_file_closed' => now()->format('Y-m-d'),
-                    'reason_for_closure_id' => $data['reason_for_closure_id'],
+                    'status' => 'closed',
+                    'updated_by' => auth()->id()
+                ]);
+            } elseif ($newStatus === 'returned_to_police') {
+                // Not a closure — send the file back to the lawyer's queue
+                // instead of closing the case.
+                $this->criminalCaseRepository->update($data['case_id'], [
+                    'status' => 'accepted',
                     'updated_by' => auth()->id()
                 ]);
             } elseif (
@@ -352,8 +334,7 @@ class CaseReviewController extends Controller
                 in_array($currentReview->evidence_status, ['insufficient_evidence', 'returned_to_police'])
             ) {
                 $this->criminalCaseRepository->update($data['case_id'], [
-                    'date_file_closed' => null,
-                    'reason_for_closure_id' => null,
+                    'status' => 'accepted',
                     'updated_by' => auth()->id()
                 ]);
             }

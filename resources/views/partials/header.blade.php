@@ -1,48 +1,42 @@
 <style>
-    header {
-        background: linear-gradient(135deg, #ffeb3b, #ff9800);
-        color: #fff;
-        text-align: center;
-        padding: 18px 20px;
-        position: relative;
-        border-bottom: 4px solid #ff9800;
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    header.site-header {
+        background: #fff;
+        border-bottom: 3px solid #f5a623;
+        padding: 14px 0;
     }
-
-    header img {
-        max-height: 56px;
-        margin-bottom: 8px;
-        border-radius: 50%;
-        border: 3px solid #fff;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    header.site-header .header-crest {
+        max-height: 52px;
     }
-
-    header h1 {
-        font-size: 26px;
-        font-weight: bold;
-        margin-bottom: 4px;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    header.site-header .header-title {
+        font-family: Georgia, 'Times New Roman', serif;
+        font-size: 19px;
+        font-weight: 700;
+        color: #0a2463;
+        line-height: 1.2;
     }
-
-    header p {
-        font-size: 15px;
-        margin-top: 0;
-        margin-bottom: 8px;
+    header.site-header .header-subtitle {
+        font-size: 11.5px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: #777;
     }
-
-    .header-decorative {
-        background: linear-gradient(90deg, #ffeb3b, #ff9800);
-        height: 5px;
-        margin-top: 8px;
-        border-radius: 5px;
+    header.site-header .header-breadcrumb {
+        font-size: 13.5px;
+        color: #555;
     }
 </style>
 
-<header>
-    <div class="container">
-        <img src="{{ asset('images/oag_logo.png') }}" alt="Office Logo">
-        <h1>Office of the Attorney General</h1>
-        <p class="header-description">Ensuring Justice and Legal Integrity</p>
-        <div class="header-decorative"></div>
+<header class="site-header">
+    <div class="container d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <img src="{{ asset('images/oag_logo.png') }}" alt="Coat of Arms of the Republic of Kiribati" class="header-crest">
+            <div>
+                <div class="header-title">Case Management System</div>
+                <div class="header-subtitle">Office of the Attorney General</div>
+            </div>
+        </div>
+        <div class="header-breadcrumb d-none d-md-block">
+            Office of the Attorney General &middot; Criminal Justice Division &middot; South Tarawa
+        </div>
     </div>
 </header>

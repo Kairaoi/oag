@@ -34,7 +34,7 @@
             @if(count($cases) === 0)
                 <div class="alert alert-warning mb-0">
                     No eligible cases found. Every case either already has an unresolved appeal in progress,
-                    or is itself an appeal case. Resolve an existing appeal (mark it decided or withdrawn) to
+                    or is itself an appeal case. Resolve an existing appeal (mark it dismissed or withdrawn) to
                     make its case eligible again.
                 </div>
             @else
@@ -50,6 +50,24 @@
             @enderror
         </div>
 
+        <!-- High Court Case Number -->
+        <div class="form-group">
+            <label for="high_court_case_number" class="text-white">High Court Case Number</label>
+            <input type="text" name="high_court_case_number" id="high_court_case_number" class="form-control @error('high_court_case_number') is-invalid @enderror" value="{{ old('high_court_case_number') }}">
+            @error('high_court_case_number')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
+
+        <!-- Magistrate Court Case Number -->
+        <div class="form-group">
+            <label for="magistrate_court_case_number" class="text-white">Magistrate Court Case Number</label>
+            <input type="text" name="magistrate_court_case_number" id="magistrate_court_case_number" class="form-control @error('magistrate_court_case_number') is-invalid @enderror" value="{{ old('magistrate_court_case_number') }}">
+            @error('magistrate_court_case_number')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
+
         <!-- Appeal Case Number -->
         <div class="form-group">
             <label for="appeal_case_number" class="text-white">Appeal Case Number</label>
@@ -61,11 +79,11 @@
 
        <!-- Date Source Dropdown -->
 <div class="form-group">
-    <label for="filing_date_type" class="text-white">Select Date Source</label>
+    <label for="filing_date_type" class="text-white">Party Positions</label>
     <select id="filing_date_type" name="filing_date_type" class="form-control" onchange="toggleFilingDateInput()" required>
         <option value="">-- Select Source --</option>
-        <option value="court" {{ old('filing_date_type') == 'court' ? 'selected' : '' }}>Date from Court</option>
-        <option value="defendant" {{ old('filing_date_type') == 'defendant' ? 'selected' : '' }}>Date from Defendant</option>
+        <option value="court" {{ old('filing_date_type') == 'court' ? 'selected' : '' }}>Appellant</option>
+        <option value="defendant" {{ old('filing_date_type') == 'defendant' ? 'selected' : '' }}>Defendant</option>
     </select>
 </div>
 
@@ -81,18 +99,18 @@
 </div>
 
 
-        <!-- Verdict (Matches Schema Enum) -->
+        <!-- Appeal Status (Matches Schema Enum) -->
         <div class="form-group">
-            <label for="verdict" class="text-white">Verdict</label>
-            <select name="verdict" id="verdict" class="form-control @error('verdict') is-invalid @enderror">
-                <option value="">-- Select Verdict --</option>
-                @foreach(['guilty', 'not_guilty', 'dismissed', 'withdrawn', 'other'] as $verdict)
-                    <option value="{{ $verdict }}" {{ old('verdict') == $verdict ? 'selected' : '' }}>
-                        {{ ucfirst(str_replace('_', ' ', $verdict)) }}
+            <label for="appeal_status" class="text-white">Appeal Status</label>
+            <select name="appeal_status" id="appeal_status" class="form-control @error('appeal_status') is-invalid @enderror">
+                <option value="">-- Select Status --</option>
+                @foreach(['pending', 'appealed', 'dismissed', 'withdrawn'] as $status)
+                    <option value="{{ $status }}" {{ old('appeal_status') == $status ? 'selected' : '' }}>
+                        {{ ucfirst(str_replace('_', ' ', $status)) }}
                     </option>
                 @endforeach
             </select>
-            @error('verdict')
+            @error('appeal_status')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
@@ -152,10 +170,10 @@
         const dateLabel = document.getElementById('filing_date_label');
 
         if (selectedType === 'court') {
-            dateLabel.innerText = 'Date from Court';
+            dateLabel.innerText = 'Appellant';
             dateGroup.style.display = 'block';
         } else if (selectedType === 'defendant') {
-            dateLabel.innerText = 'Date from Defendant';
+            dateLabel.innerText = 'Defendant';
             dateGroup.style.display = 'block';
         } else {
             dateGroup.style.display = 'none';

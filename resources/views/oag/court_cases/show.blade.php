@@ -28,6 +28,9 @@
                 <strong>High Court Case Number:</strong> {{ $courtCase->high_court_case_number ?? 'N/A' }}
             </div>
             <div class="mb-4">
+                <strong>Magistrate Court Case Number:</strong> {{ $courtCase->magistrate_court_case_number ?? 'N/A' }}
+            </div>
+            <div class="mb-4">
                 <strong>Court Outcome:</strong> {{ ucfirst($courtCase->court_outcome) ?? 'N/A' }}
             </div>
             <div class="mb-4">
@@ -48,6 +51,10 @@
             <div class="mb-4">
                 <strong>Decision Principle Established:</strong>
                 <p>{{ $courtCase->decision_principle_established ?? 'N/A' }}</p>
+            </div>
+            <div class="mb-4">
+                <strong>Appeal Status:</strong>
+                {{ $courtCase->is_appealed === null ? 'N/A' : ($courtCase->is_appealed ? 'Appealed' : 'Not Appealed') }}
             </div>
             <div class="mb-4">
                 <strong>Created By:</strong> {{ $courtCase->createdBy->name ?? 'N/A' }}

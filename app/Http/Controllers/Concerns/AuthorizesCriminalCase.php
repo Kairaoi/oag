@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Concerns;
 
 use App\Models\OAG\Crime\CriminalCase;
+use App\Models\OAG\Crime\RegistryDispatch;
 use App\Models\User;
 
 trait AuthorizesCriminalCase
@@ -44,5 +45,20 @@ trait AuthorizesCriminalCase
     private function assertCanViewRelatedRecords(): void
     {
         abort_unless(auth()->user()->hasRole('cm.user') || auth()->user()->hasRole('cm.admin'), 403);
+    }
+
+    /**
+     * No case may advance to court filing without a recorded AG approval
+     * followed by a Registry dispatch — this is what actually enforces that
+     * rule (AgReviewController/RegistryDispatchController only gate their
+     * own creation, not Court Case's).
+     */
+    private function assertCaseIsDispatched(CriminalCase $case): void
+    {
+        abort_unless(
+            RegistryDispatch::where('case_id', $case->id)->exists(),
+            403,
+            'This case must be dispatched by the Registry (following AG approval) before it can be filed in court.'
+        );
     }
 }

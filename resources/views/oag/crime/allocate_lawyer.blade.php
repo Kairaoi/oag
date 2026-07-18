@@ -21,7 +21,7 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
-                    <p><strong>Case File Number:</strong> {{ $criminalCase->case_file_number }}</p>
+                    <p><strong>Police Case File Number:</strong> {{ $criminalCase->case_file_number }}</p>
                     <p><strong>Case Name:</strong> {{ $criminalCase->case_name }}</p>
                 </div>
                 <div class="col-md-6">

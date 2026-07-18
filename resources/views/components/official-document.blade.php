@@ -3,7 +3,7 @@
     'subtitle' => 'Certified Record of Case Proceedings',
     'docRef',
     'docRefLabel' => 'Document Reference',
-    'secondaryLabel' => 'Case File Number',
+    'secondaryLabel' => 'Police Case File Number',
     'secondaryValue' => null,
     'dateIssued' => null,
     'classification' => 'Official — For Internal Use',

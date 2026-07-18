@@ -85,40 +85,25 @@ class AppealDetailController extends Controller
 
 
 
-    public function store(Request $request, AppealDetailRepository $appealRepo)
+    public function store(\App\Http\Requests\Oag\Crime\AppealDetailStoreRequest $request, AppealDetailRepository $appealRepo)
 {
-    abort_unless(auth()->user()->hasRole('cm.user'), 403);
-
     $originalCaseForAuth = $this->criminalCaseRepository->getById($request->input('case_id'));
     abort_if(!$originalCaseForAuth, 404);
-    $this->assertCanActOnCase($originalCaseForAuth, auth()->user());
-    $this->assertCaseIsActionable($originalCaseForAuth);
 
     \Log::info('Incoming Appeal Detail form submission: ', $request->all());
 
-    $validatedData = $request->validate([
-        'case_id' => 'required|exists:cases,id',
-        'appeal_case_number' => [
-            'required',
-            'string',
-            \Illuminate\Validation\Rule::unique('appeal_details', 'appeal_case_number')->whereNull('deleted_at'),
-        ],
-        'filing_date_type' => 'required|in:court,defendant',
-        'filing_date_value' => 'required|date',
-        'court_outcome' => 'required|string',
-        'judgment_delivered_date' => 'nullable|date',
-        'verdict' => 'required|string',
-        'decision_principle_established' => 'nullable|string',
-    ]);
+    $validatedData = $request->validated();
 
     // Map validated fields to actual columns
     // Map validated fields to actual columns
 $data = [
     'case_id' => $validatedData['case_id'],
+    'high_court_case_number' => $validatedData['high_court_case_number'] ?? null,
+    'magistrate_court_case_number' => $validatedData['magistrate_court_case_number'] ?? null,
     'appeal_case_number' => $validatedData['appeal_case_number'],
     'court_outcome' => $validatedData['court_outcome'],
     'judgment_delivered_date' => $validatedData['judgment_delivered_date'] ?? null,
-    'verdict' => $validatedData['verdict'],
+    'appeal_status' => $validatedData['appeal_status'],
     'decision_principle_established' => $validatedData['decision_principle_established'] ?? null,
     'appeal_filing_date' => $validatedData['filing_date_value'],
     'filing_date_source' => $validatedData['filing_date_type'], // 🔧 added
@@ -174,32 +159,20 @@ $data = [
         return view('oag.crime.appeal_details.edit', compact('appeal'));
     }
 
-    public function update(Request $request, $id)
+    public function update(\App\Http\Requests\Oag\Crime\AppealDetailUpdateRequest $request, $id)
     {
-        $data = $request->validate([
-            'appeal_case_number' => [
-                'nullable',
-                'string',
-                'max:255',
-                \Illuminate\Validation\Rule::unique('appeal_details', 'appeal_case_number')->ignore($id)->whereNull('deleted_at'),
-            ],
-            'appeal_filing_date' => 'nullable|date',
-            'filing_date_source' => 'nullable|in:court,defendant',
-            'appeal_status' => 'required|in:pending,in_progress,decided,withdrawn',
-            'appeal_grounds' => 'nullable|string',
-            'appeal_decision' => 'nullable|string',
-            'appeal_decision_date' => 'nullable|date',
-        ]);
+        $data = $request->validated();
 
         $data['updated_by'] = Auth::id();
 
         try {
             $appeal = $this->appealDetailRepository->update($id, $data);
 
-            // Once an appeal is resolved (decided/withdrawn), free up the case
-            // so it's eligible for a fresh appeal again if ever needed — only
-            // an unresolved appeal should block a new one.
-            if (in_array($data['appeal_status'], ['decided', 'withdrawn'])) {
+            // Once an appeal is resolved (dismissed/withdrawn), free up the case
+            // so it's eligible for a fresh appeal again if ever needed. "Appealed"
+            // means it has escalated to the Court of Appeal, not resolved — it
+            // should still block a new appeal at this level, same as "pending".
+            if (in_array($data['appeal_status'], ['dismissed', 'withdrawn'])) {
                 $originalCase = $this->criminalCaseRepository->getById($appeal->case_id);
                 if ($originalCase) {
                     $originalCase->is_on_appeal = false;

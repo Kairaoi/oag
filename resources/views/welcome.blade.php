@@ -9,42 +9,48 @@
     <!-- Tailwind CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
-        /* Custom Styles */
-        .bg-crime-pattern {
-            background-image: url('https://www.transparenttextures.com/patterns/black-linen.png');
-        }
-        .highlight {
-            background: linear-gradient(90deg, rgba(255,165,0,0.8) 0%, rgba(255,0,0,0.8) 100%);
-            color: white;
-            padding: 0.5rem;
-            border-radius: 0.375rem;
-        }
-        /* Additional Custom Styles for Enhanced Layout */
-        .hero-overlay {
-            background: rgba(0, 0, 0, 0.5);
-        }
+        body { font-family: 'Roboto', sans-serif; }
+        .font-serif-heading { font-family: Georgia, 'Times New Roman', serif; }
+        .bg-navy { background-color: #0a2463; }
+        .text-navy { color: #0a2463; }
+        .border-navy { border-color: #0a2463; }
+        .border-gold { border-color: #f5a623; }
+        .text-accent { color: #4fd6e6; }
+        .bg-accent { background-color: #17a2b8; }
+        .bg-accent:hover { background-color: #128a9d; }
     </style>
 </head>
-<body class="bg-gray-100 font-roboto">
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Utility Bar -->
+    <div class="bg-navy text-blue-100 text-xs uppercase tracking-wide">
+        <div class="container mx-auto px-6 py-1 flex justify-between">
+            <span>Government of Kiribati &mdash; Office of the Attorney General</span>
+            <span class="hidden md:inline text-accent font-semibold">Official Government Portal</span>
+        </div>
+    </div>
 
     <!-- Header -->
-    <header class="bg-crime-pattern text-white">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <!-- Logo / Title -->
-            <div>
-                <a href="{{ url('/') }}" class="text-2xl font-bold">CrimeStats</a>
+    <header class="bg-white border-b-4 border-gold">
+        <div class="container mx-auto px-6 py-4 flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center gap-3">
+                <img src="{{ asset('images/oag_logo.png') }}" alt="Coat of Arms of the Republic of Kiribati" class="h-12">
+                <div>
+                    <div class="font-serif-heading font-bold text-navy text-lg leading-tight">Case Management System</div>
+                    <div class="text-xs uppercase tracking-wider text-gray-500">Office of the Attorney General</div>
+                </div>
             </div>
             <!-- Navigation Links -->
             <nav>
                 @if (Route::has('login'))
-                    <div class="flex space-x-4">
+                    <div class="flex space-x-3">
                         @auth
-                            <a href="{{ url('/home') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Home</a>
+                            <a href="{{ url('/home') }}" class="px-4 py-2 rounded text-sm font-semibold text-navy border border-navy hover:bg-navy hover:text-white transition">Go to Dashboard</a>
                         @else
-                            <a href="{{ route('login') }}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Log in</a>
+                            <a href="{{ route('login') }}" class="px-4 py-2 rounded text-sm font-semibold text-navy border border-navy hover:bg-navy hover:text-white transition">Log in</a>
 
                             @if (Route::has('register'))
-                                <a href="{{ route('register') }}" class="px-3 py-2 rounded-md text-sm font-medium bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Register</a>
+                                <a href="{{ route('register') }}" class="px-4 py-2 rounded text-sm font-semibold text-white bg-accent hover:opacity-90 transition">Register</a>
                             @endif
                         @endauth
                     </div>
@@ -54,107 +60,36 @@
     </header>
 
     <!-- Hero Section -->
-    <section class="relative bg-cover bg-center h-96" style="background-image: url('https://images.unsplash.com/photo-1593642532973-d31b6557fa68?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80');">
-        <div class="absolute inset-0 hero-overlay flex flex-col justify-center items-center">
-            <h2 class="text-4xl md:text-6xl font-bold text-white mb-4">Understanding Crime Trends</h2>
-            <p class="text-lg md:text-2xl text-gray-200">Stay informed with the latest crime statistics and analyses.</p>
-            <a href="#statistics" class="mt-6 px-6 py-3 bg-red-500 text-white rounded-full hover:bg-red-600 transition">View Statistics</a>
+    <section class="bg-navy text-white">
+        <div class="container mx-auto px-6 py-20 max-w-3xl">
+            <span class="inline-block text-xs font-bold uppercase tracking-widest text-accent border border-blue-300 border-opacity-40 rounded px-3 py-1 mb-4">Official Case Management System</span>
+            <h1 class="font-serif-heading text-4xl md:text-5xl font-bold mb-4">Criminal Case <span class="text-accent">Management Portal</span></h1>
+            <p class="text-lg text-blue-100 mb-6">Register, review and track criminal cases through every stage &mdash; from initial complaint to court hearing and appeal &mdash; in one system used across the Office of the Attorney General.</p>
+            <p class="text-xs uppercase tracking-widest text-blue-300 mb-8">Te Mauri &middot; Te Raoi &middot; Ao Te Tabomoa</p>
+            @auth
+                <a href="{{ url('/home') }}" class="inline-block px-6 py-3 bg-accent text-white rounded font-semibold hover:opacity-90 transition">Go to Dashboard &rarr;</a>
+            @else
+                <a href="{{ route('login') }}" class="inline-block px-6 py-3 bg-accent text-white rounded font-semibold hover:opacity-90 transition">Staff Login &rarr;</a>
+            @endauth
         </div>
     </section>
 
     <!-- Main Content -->
-    <main class="container mx-auto px-6 py-8">
-
-        <!-- Crime Statistics -->
-        <section id="statistics" class="mb-16">
-            <h2 class="text-3xl font-semibold text-center mb-8">Crime Statistics</h2>
-            <p class="text-center text-gray-700 mb-12">Explore the latest data on various crime categories to understand the current landscape.</p>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Statistic Card -->
-                <div class="bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-2xl transition duration-300">
-                    <div class="p-6">
-                        <h3 class="text-xl font-semibold mb-2">Total Crimes</h3>
-                        <p class="text-3xl text-red-500">5,678</p>
-                    </div>
-                    <div class="bg-red-100 h-2"></div>
-                </div>
-                <!-- Statistic Card -->
-                <div class="bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-2xl transition duration-300">
-                    <div class="p-6">
-                        <h3 class="text-xl font-semibold mb-2">Violent Crimes</h3>
-                        <p class="text-3xl text-red-500">1,234</p>
-                    </div>
-                    <div class="bg-red-100 h-2"></div>
-                </div>
-                <!-- Statistic Card -->
-                <div class="bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-2xl transition duration-300">
-                    <div class="p-6">
-                        <h3 class="text-xl font-semibold mb-2">Property Crimes</h3>
-                        <p class="text-3xl text-red-500">4,444</p>
-                    </div>
-                    <div class="bg-red-100 h-2"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Notable Cases -->
-        <section class="mb-16">
-            <h2 class="text-3xl font-semibold text-center mb-8">Notable Crime Cases</h2>
-            <div class="space-y-6">
-                <!-- Case Card -->
-                <div class="bg-white shadow-md rounded-lg p-6 flex flex-col md:flex-row items-center">
-                    <div class="md:w-1/3">
-                        <img src="https://via.placeholder.com/150" alt="John Doe's Burglary" class="w-full h-32 object-cover rounded-md">
-                    </div>
-                    <div class="md:w-2/3 mt-4 md:mt-0 md:ml-6">
-                        <h3 class="text-2xl font-semibold">John Doe's Burglary</h3>
-                        <p class="mt-2 text-gray-600">A high-profile burglary that shocked the community.</p>
-                    </div>
-                </div>
-                <!-- Case Card -->
-                <div class="bg-white shadow-md rounded-lg p-6 flex flex-col md:flex-row items-center">
-                    <div class="md:w-1/3">
-                        <img src="https://via.placeholder.com/150" alt="Jane Smith's Abduction" class="w-full h-32 object-cover rounded-md">
-                    </div>
-                    <div class="md:w-2/3 mt-4 md:mt-0 md:ml-6">
-                        <h3 class="text-2xl font-semibold">Jane Smith's Abduction</h3>
-                        <p class="mt-2 text-gray-600">A missing person case that garnered national attention.</p>
-                    </div>
-                </div>
-                <!-- Case Card -->
-                <div class="bg-white shadow-md rounded-lg p-6 flex flex-col md:flex-row items-center">
-                    <div class="md:w-1/3">
-                        <img src="https://via.placeholder.com/150" alt="Bank Robbery at Central Bank" class="w-full h-32 object-cover rounded-md">
-                    </div>
-                    <div class="md:w-2/3 mt-4 md:mt-0 md:ml-6">
-                        <h3 class="text-2xl font-semibold">Bank Robbery at Central Bank</h3>
-                        <p class="mt-2 text-gray-600">A daring robbery involving multiple suspects.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Call to Action -->
-        <section class="bg-red-500 text-white rounded-lg p-8 text-center">
-            <h2 class="text-2xl md:text-4xl font-bold mb-4">Stay Informed</h2>
-            <p class="mb-6">Subscribe to our newsletter to receive the latest crime statistics and updates directly to your inbox.</p>
-            <form class="flex flex-col sm:flex-row justify-center items-center">
-                <input type="email" placeholder="Enter your email" class="w-full sm:w-1/3 px-4 py-2 rounded-md text-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white" required>
-                <button type="submit" class="mt-4 sm:mt-0 sm:ml-4 px-6 py-2 bg-white text-red-500 font-semibold rounded-md hover:bg-gray-100 transition">Subscribe</button>
-            </form>
-        </section>
-
+    <main class="container mx-auto px-6 py-16 max-w-3xl">
+        <h2 class="font-serif-heading text-2xl font-bold text-navy mb-4 text-center">About This System</h2>
+        <p class="text-gray-600 text-center">
+            This is the internal case management system for the Office of the Attorney General, Republic of Kiribati.
+            It supports the registration, review and tracking of criminal, civil and appeal cases, court hearings and
+            victim records, and is restricted to authorised staff.
+        </p>
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-6">
-        <div class="container mx-auto text-center">
-            <p>&copy; 2024 CrimeStats. All rights reserved.</p>
-            <div class="mt-4 flex justify-center space-x-4">
-                <a href="#" class="hover:text-red-500">Privacy Policy</a>
-                <a href="#" class="hover:text-red-500">Terms of Service</a>
-                <a href="#" class="hover:text-red-500">Contact Us</a>
-            </div>
+    <footer class="bg-navy text-blue-100 py-6">
+        <div class="container mx-auto px-6 text-center text-sm">
+            <p class="mb-1 font-semibold text-white">Office of the Attorney General</p>
+            <p class="mb-3">Republic of Kiribati &middot; Bairiki, Tarawa</p>
+            <p class="text-xs text-blue-300">&copy; {{ date('Y') }} Government of Kiribati &middot; Office of the Attorney General. Internal system for authorised personnel only.</p>
         </div>
     </footer>
 
