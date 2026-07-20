@@ -84,13 +84,6 @@
     .reports-section p {
         color: #c3ccdf;
     }
-    .reports-section .motto {
-        font-size: 12.5px;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        color: #8b98b8;
-        margin-bottom: 1.25rem;
-    }
     .reports-section .btn-accent {
         background: #17a2b8;
         border-color: #17a2b8;
@@ -198,7 +191,6 @@
                 <span class="hero-badge">Official Case Management System</span>
                 <h3 class="fw-bold mb-3">Criminal Case <span class="accent">Management Portal</span></h3>
                 <p class="mb-2">Register, review and track criminal cases through every stage &mdash; from initial complaint to court hearing and appeal &mdash; in one system used across the Office of the Attorney General.</p>
-                <div class="motto">Te Mauri &middot; Te Raoi &middot; Ao Te Tabomoa</div>
                 <div class="d-flex flex-wrap gap-3">
                     <a href="{{ route('crime.criminalCase.create') }}" class="btn btn-accent btn-lg">
                         <i class="fas fa-plus-circle me-2"></i> New Case

@@ -65,7 +65,6 @@
             <span class="inline-block text-xs font-bold uppercase tracking-widest text-accent border border-blue-300 border-opacity-40 rounded px-3 py-1 mb-4">Official Case Management System</span>
             <h1 class="font-serif-heading text-4xl md:text-5xl font-bold mb-4">Criminal Case <span class="text-accent">Management Portal</span></h1>
             <p class="text-lg text-blue-100 mb-6">Register, review and track criminal cases through every stage &mdash; from initial complaint to court hearing and appeal &mdash; in one system used across the Office of the Attorney General.</p>
-            <p class="text-xs uppercase tracking-widest text-blue-300 mb-8">Te Mauri &middot; Te Raoi &middot; Ao Te Tabomoa</p>
             @auth
                 <a href="{{ url('/home') }}" class="inline-block px-6 py-3 bg-accent text-white rounded font-semibold hover:opacity-90 transition">Go to Dashboard &rarr;</a>
             @else
