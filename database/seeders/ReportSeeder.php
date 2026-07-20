@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Oag\Crime\ReportGroup;
-use App\Models\Oag\Crime\Report;
+use App\Models\OAG\Crime\ReportGroup;
+use App\Models\OAG\Crime\Report;
 use Illuminate\Support\Facades\DB;
 
 class ReportSeeder extends Seeder

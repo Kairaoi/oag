@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Oag\Civil\CourtAttendance;
+use App\Models\OAG\Civil\CourtAttendance;
 use Carbon\Carbon;
 
 class CourtAttendanceSeeder extends Seeder
