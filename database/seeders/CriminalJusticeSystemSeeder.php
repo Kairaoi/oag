@@ -4,16 +4,20 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Faker\Factory as Faker;
-use Carbon\Carbon; 
+use Carbon\Carbon;
 
 
 class CriminalJusticeSystemSeeder extends Seeder
 {
+    /**
+     * The Faker-driven case/accused/victim/court_case generation below is
+     * dead code (commented out), so this no longer touches fakerphp/faker —
+     * that package is require-dev only and isn't present on a production
+     * `composer install --no-dev`, which crashed `migrate:fresh --seed`
+     * right here before it ever reached UserSeeder.
+     */
     public function run()
     {
-        $faker = Faker::create();
-
         // Seed users table
         $userIds = [];
         foreach (['Admin User', 'Lawyer 1', 'Lawyer 2', 'Lawyer 3', 'Admin Assistant'] as $name) {
@@ -28,10 +32,20 @@ class CriminalJusticeSystemSeeder extends Seeder
         $lawyerIds = array_slice($userIds, 1, 3);
         $assistantId = $userIds['Admin Assistant'];
 
-        // Seed offence_categories table
+        // Seed offence_categories table. Checked against what's already there
+        // (case-insensitive) rather than a blind insert, since the
+        // 2026_07_18_090000_seed_additional_offence_categories migration —
+        // which runs before this seeder in migrate:fresh --seed — already
+        // creates Arson/Assault/Fraud, and a second raw insert here would
+        // otherwise create duplicate rows with the same category_name.
         $offenceCategoryIds = [];
         foreach (['Theft', 'Assault', 'Fraud', 'Vandalism', 'Drug Trafficking', 'Arson', 'Burglary', 'Murder'] as $categoryName) {
-            $offenceCategoryIds[$categoryName] = DB::table('offence_categories')->insertGetId([
+            $existingId = DB::table('offence_categories')
+                ->whereRaw('LOWER(category_name) = ?', [strtolower($categoryName)])
+                ->whereNull('deleted_at')
+                ->value('id');
+
+            $offenceCategoryIds[$categoryName] = $existingId ?? DB::table('offence_categories')->insertGetId([
                 'category_name' => $categoryName,
                 'created_by' => $adminUserId,
                 'updated_by' => null,
