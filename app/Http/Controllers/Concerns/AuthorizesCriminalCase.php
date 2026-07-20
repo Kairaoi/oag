@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Concerns;
 
+use App\Models\OAG\Crime\AgReview;
 use App\Models\OAG\Crime\CriminalCase;
 use App\Models\OAG\Crime\RegistryDispatch;
 use App\Models\User;
@@ -59,6 +60,26 @@ trait AuthorizesCriminalCase
             RegistryDispatch::where('case_id', $case->id)->exists(),
             403,
             'This case must be dispatched by the Registry (following AG approval) before it can be filed in court.'
+        );
+    }
+
+    /**
+     * Appeal and Court of Appeal filings are gated the same way as Court
+     * Case: nothing moves forward without the AG's approval on record. The
+     * Workflow dropdown only offers "Appeal"/"Court of Appeal" once
+     * latest_ag_decision is 'approved' — this is the server-side half of
+     * that same rule, since the UI gate alone doesn't stop a direct request.
+     */
+    private function assertAgHasApprovedCase(CriminalCase $case): void
+    {
+        $latestDecision = AgReview::where('case_id', $case->id)
+            ->orderByDesc('id')
+            ->value('ag_decision');
+
+        abort_unless(
+            $latestDecision === 'approved',
+            403,
+            'This case must be approved by the Attorney General before an appeal can be filed.'
         );
     }
 }

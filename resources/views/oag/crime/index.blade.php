@@ -455,10 +455,11 @@ $(document).ready(function () {
                     const canAllocateNow = userRoles.canallocate && row.status === 'pending';
                     const canReallocateNow = userRoles.canReallocate && row.status === 'rejected';
                     // Appeal / Court of Appeal previously showed for any
-                    // non-rejected case — including merely "Allocated", before
-                    // the lawyer has even accepted it. Now matches the same
-                    // "accepted" gate as Case Review / Submit to AG.
-                    const canAppealNow = userRoles.canAppeal && row.status === 'accepted';
+                    // accepted case, with no link to the case's own progress —
+                    // a lawyer could file an "Appeal" before the AG had even
+                    // approved the case for court. Now gated the same way as
+                    // "Dispatch to Court": the AG must have approved it.
+                    const canAppealNow = userRoles.canAppeal && row.status === 'accepted' && row.latest_ag_decision === 'approved';
                     // A case is ready for AG submission once reviewed with
                     // sufficient evidence, and either has no submission yet or
                     // its last one was rejected (the lawyer can revise and

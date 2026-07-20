@@ -23,6 +23,7 @@ class CourtOfAppealStoreRequest extends FormRequest
 
         $this->assertCanActOnCase($case, $this->user());
         $this->assertCaseIsActionable($case);
+        $this->assertAgHasApprovedCase($case);
 
         return true;
     }
