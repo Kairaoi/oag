@@ -34,12 +34,38 @@ class CaseReviewUpdateRequest extends FormRequest
             'review_date' => 'required|date',
             'reason_for_closure_id' => 'required_if:evidence_status,insufficient_evidence,returned_to_police|exists:reasons_for_closure,id|nullable',
             'closure_decision' => 'required_if:evidence_status,insufficient_evidence|nullable|in:nfa,nolle_prosequi',
-            'offence_id.*' => 'required_if:evidence_status,sufficient_evidence|nullable|exists:offences,id',
-            'category_id.*' => 'required_if:evidence_status,sufficient_evidence|nullable|exists:offence_categories,id',
+            'offences' => 'required_if:evidence_status,sufficient_evidence|nullable|array',
+            'offences.*.offence_name' => 'required_with:offences.*.category_id|nullable|string|max:255',
+            'offences.*.category_id' => 'required_with:offences.*.offence_name|nullable|exists:offence_categories,id',
+            'offences.*.domestic_violence' => 'nullable|boolean',
             'action_type' => 'nullable|in:review,reallocate,update_court_info',
             'new_lawyer_id' => ['required_if:action_type,reallocate', 'nullable', 'exists:users,id', new \App\Rules\UserHasRole('cm.user')],
             'reallocation_reason' => 'required_if:action_type,reallocate|nullable|string',
         ];
+    }
+
+    /**
+     * "offences" being present and non-empty (per rules() above) isn't
+     * enough on its own — a row can exist with both offence_name and
+     * category_id left blank, which previously let a review save as
+     * "Sufficient Evidence" with nothing actually charged. This requires at
+     * least one row to be genuinely filled in.
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            if ($this->input('evidence_status') !== 'sufficient_evidence') {
+                return;
+            }
+
+            $rows = collect($this->input('offences', []))->filter(function ($row) {
+                return trim($row['offence_name'] ?? '') !== '' && !empty($row['category_id']);
+            });
+
+            if ($rows->isEmpty()) {
+                $validator->errors()->add('offences', 'Please charge at least one offence, with a category selected, before submitting.');
+            }
+        });
     }
 
     /**

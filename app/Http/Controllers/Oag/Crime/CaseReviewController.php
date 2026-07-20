@@ -131,23 +131,9 @@ class CaseReviewController extends Controller
             // Handle offence syncing only for sufficient evidence
             if ($request->evidence_status === 'sufficient_evidence') {
                 $case = $this->criminalCaseRepository->getById($request->case_id);
-    
+
                 if ($case) {
-                    $offenceIds = $request->offence_id;
-                    $categoryIds = $request->category_id;
-    
-                    $syncData = [];
-    
-                    foreach ($offenceIds as $index => $offenceId) {
-                        if ($offenceId) {
-                            $syncData[$offenceId] = [
-                                'category_id' => $categoryIds[$index] ?? null,
-                                // 'offence_particulars' => $request->offence_particulars, // ❌ Remove this line
-                            ];
-                        }
-                    }
-                    
-    
+                    $syncData = $this->buildOffenceSyncData($request->input('offences', []));
                     $case->offences()->syncWithoutDetaching($syncData);
                     Log::info("Linked offences to case ID {$request->case_id}", ['syncData' => $syncData]);
                 } else {
@@ -203,6 +189,37 @@ class CaseReviewController extends Controller
         }
     }
     
+
+    /**
+     * Turn the "Offences Charged" rows (free-text offence name + category +
+     * domestic violence checkbox) into case_offence pivot sync data. Each
+     * typed name is resolved to a catalog offences row (created if it's
+     * genuinely new) so the rest of the app — DataTables, the Case Proof
+     * timeline, AG review context — can keep joining case_offence to
+     * offences the way it already does.
+     */
+    private function buildOffenceSyncData(array $rows): array
+    {
+        $syncData = [];
+
+        foreach ($rows as $row) {
+            $offenceName = trim($row['offence_name'] ?? '');
+            $categoryId = $row['category_id'] ?? null;
+
+            if ($offenceName === '' || !$categoryId) {
+                continue;
+            }
+
+            $offence = $this->offenceRepository->findOrCreateByName($offenceName, (int) $categoryId, auth()->id());
+
+            $syncData[$offence->id] = [
+                'category_id' => $categoryId,
+                'is_domestic_violence' => !empty($row['domestic_violence']),
+            ];
+        }
+
+        return $syncData;
+    }
 
     public function show($id)
     {
@@ -294,18 +311,7 @@ class CaseReviewController extends Controller
         if ($newStatus === 'sufficient_evidence') {
             $case = $this->criminalCaseRepository->getById($data['case_id']);
             if ($case) {
-                $offenceIds = $request->input('offence_id', []);
-                $categoryIds = $request->input('category_id', []);
-                $syncData = [];
-
-                foreach ($offenceIds as $index => $offenceId) {
-                    if ($offenceId) {
-                        $syncData[$offenceId] = [
-                            'category_id' => $categoryIds[$index] ?? null,
-                        ];
-                    }
-                }
-
+                $syncData = $this->buildOffenceSyncData($request->input('offences', []));
                 $case->offences()->sync($syncData);
                 Log::info("Synced offences for case ID {$data['case_id']}", ['syncData' => $syncData]);
             }

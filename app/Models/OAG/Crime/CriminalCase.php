@@ -163,7 +163,7 @@ class CriminalCase extends Model
     public function offences()
 {
     return $this->belongsToMany(Offence::class, 'case_offence', 'case_id', 'offence_id')
-                ->withPivot('category_id')
+                ->withPivot('category_id', 'is_domestic_violence')
                 ->withTimestamps();
 }
 

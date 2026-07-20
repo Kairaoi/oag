@@ -135,4 +135,33 @@ class OffenceRepository extends CustomBaseRepository
     {
         return $this->getModelInstance()->pluck('offence_category_id', 'id');
     }
+
+    /**
+     * The Case Review "Offences Charged" section takes the offence name as
+     * free text rather than a pick from this catalog, but the catalog is
+     * still what case_offence's offence_id points at (other screens —
+     * DataTables, the Case Proof timeline, AG review context — join through
+     * it for offence_name/category_name). This resolves a typed name to a
+     * catalog row, matching case-insensitively so "arson" and "Arson" don't
+     * create duplicate entries, creating one only if it's genuinely new.
+     */
+    public function findOrCreateByName(string $offenceName, int $categoryId, int $userId): Offence
+    {
+        $offenceName = trim($offenceName);
+
+        $existing = $this->getModelInstance()
+            ->whereRaw('LOWER(offence_name) = ?', [strtolower($offenceName)])
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        return $this->create([
+            'offence_name' => $offenceName,
+            'offence_category_id' => $categoryId,
+            'created_by' => $userId,
+            'updated_by' => null,
+        ]);
+    }
 }

@@ -139,24 +139,26 @@
         <div id="offenceGroupsSection" style="display: none;">
             <label class="text-white">Offences Charged</label>
             <div id="offenceGroupsContainer">
-                @forelse($case->offences as $offence)
+                @forelse($case->offences as $i => $offence)
                     <div class="offence-group row mb-3">
                         <div class="form-group col-md-4">
-                            <select class="form-control" name="offence_id[]">
-                                <option value="">Select an offence</option>
-                                @foreach($offences as $id => $name)
-                                    <option value="{{ $id }}" {{ $id == $offence->id ? 'selected' : '' }}>{{ $name }}</option>
-                                @endforeach
-                            </select>
+                            <input type="text" class="form-control" name="offences[{{ $i }}][offence_name]" value="{{ $offence->offence_name }}" placeholder="Offence">
                         </div>
 
                         <div class="form-group col-md-4">
-                            <select class="form-control" name="category_id[]">
+                            <select class="form-control" name="offences[{{ $i }}][category_id]">
                                 <option value="">Select a category</option>
                                 @foreach($categories as $id => $name)
                                     <option value="{{ $id }}" {{ $id == $offence->pivot->category_id ? 'selected' : '' }}>{{ $name }}</option>
                                 @endforeach
                             </select>
+                        </div>
+
+                        <div class="form-group col-md-3 d-flex align-items-center">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="dv_{{ $i }}" name="offences[{{ $i }}][domestic_violence]" value="1" {{ $offence->pivot->is_domestic_violence ? 'checked' : '' }}>
+                                <label class="form-check-label text-white" for="dv_{{ $i }}">Domestic Violence</label>
+                            </div>
                         </div>
 
                         <div class="form-group col-md-1 d-flex align-items-end">
@@ -166,21 +168,23 @@
                 @empty
                     <div class="offence-group row mb-3">
                         <div class="form-group col-md-4">
-                            <select class="form-control" name="offence_id[]">
-                                <option value="">Select an offence</option>
-                                @foreach($offences as $id => $name)
-                                    <option value="{{ $id }}">{{ $name }}</option>
-                                @endforeach
-                            </select>
+                            <input type="text" class="form-control" name="offences[0][offence_name]" placeholder="Offence">
                         </div>
 
                         <div class="form-group col-md-4">
-                            <select class="form-control" name="category_id[]">
+                            <select class="form-control" name="offences[0][category_id]">
                                 <option value="">Select a category</option>
                                 @foreach($categories as $id => $name)
                                     <option value="{{ $id }}">{{ $name }}</option>
                                 @endforeach
                             </select>
+                        </div>
+
+                        <div class="form-group col-md-3 d-flex align-items-center">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="dv_0" name="offences[0][domestic_violence]" value="1">
+                                <label class="form-check-label text-white" for="dv_0">Domestic Violence</label>
+                            </div>
                         </div>
 
                         <div class="form-group col-md-1 d-flex align-items-end">
@@ -268,15 +272,33 @@
         actionTypeSelect.addEventListener('change', toggleActionFields);
         evidenceStatusSelect.addEventListener('change', toggleActionFields);
 
-        // Dynamic offence groups logic
+        // Dynamic offence groups logic. Each row is keyed by an
+        // ever-incrementing index (never reused, even after a row is
+        // removed) so offence_name/category_id/domestic_violence stay
+        // correlated per row once submitted — an unchecked checkbox simply
+        // omits itself from the request instead of shifting later rows out
+        // of alignment the way a flat offence_id[]/category_id[] pair would.
         const offenceContainer = document.getElementById('offenceGroupsContainer');
-        const offenceCategoryMap = @json($offenceCategoryMap);
+        let nextOffenceRowIndex = {{ max($case->offences->count(), 1) }};
 
         document.getElementById('addOffenceGroup').addEventListener('click', function () {
             const original = offenceContainer.querySelector('.offence-group');
             const clone = original.cloneNode(true);
+            const index = nextOffenceRowIndex++;
 
-            clone.querySelectorAll('select, input').forEach(el => el.value = '');
+            clone.querySelectorAll('select, input[type="text"]').forEach(el => el.value = '');
+            clone.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
+
+            clone.querySelectorAll('[name]').forEach(el => {
+                el.name = el.name.replace(/offences\[\d+\]/, `offences[${index}]`);
+            });
+            clone.querySelectorAll('[id]').forEach(el => {
+                el.id = el.id.replace(/_\d+$/, `_${index}`);
+            });
+            clone.querySelectorAll('label[for]').forEach(el => {
+                el.htmlFor = el.htmlFor.replace(/_\d+$/, `_${index}`);
+            });
+
             offenceContainer.appendChild(clone);
         });
 
@@ -287,19 +309,6 @@
                     e.target.closest('.offence-group').remove();
                 }
             }
-        });
-
-        // Selecting an offence auto-selects its category, since each offence
-        // belongs to exactly one category — the user shouldn't have to pick
-        // both independently and risk mismatching them.
-        offenceContainer.addEventListener('change', function (e) {
-            if (!e.target.matches('select[name="offence_id[]"]')) {
-                return;
-            }
-
-            const categorySelect = e.target.closest('.offence-group').querySelector('select[name="category_id[]"]');
-            const categoryId = offenceCategoryMap[e.target.value];
-            categorySelect.value = categoryId ?? '';
         });
     });
 </script>
